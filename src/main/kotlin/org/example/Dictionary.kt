@@ -31,8 +31,8 @@ fun textFromFile(path: String): String? = try {
 
 fun extractWords(text: String?, minWordLength: Int, maxWordLength: Int): List<String> =
     if (text.isNullOrEmpty()) emptyList() else
-    text.split("\\s|\\p{Punct}".toRegex())
-        .filter { it.matches(lettersRegex) && it.length in (minWordLength..maxWordLength) }
+        text.split("\\s+|\\p{Punct}+".toRegex())
+            .filter { it.matches(lettersRegex) && it.length in (minWordLength..maxWordLength) }
 
 fun String.consistsOfAny(symbols: String): Boolean {
     val chars = toCharArray().distinct()

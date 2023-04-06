@@ -29,7 +29,7 @@ class DictionaryKtTest {
 
     @Test
     fun `extractWords happy`() {
-        val text = "They'd lost their 7 keys (one each), in the so called _Good-Old-Greens_; (respectively_ äöü ÜÄÖ niße)."
+        val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
         val words = extractWords(text, 1, 100)
         words shouldBe listOf(
             "They", "d", "lost", "their", "keys", "one", "each", "in", "the",
