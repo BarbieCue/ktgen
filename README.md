@@ -1,6 +1,6 @@
 # ktgen
 
-[KTouch](https://github.com/KDE/ktouch) Lesson Generator
+[KTouch](https://github.com/KDE/ktouch) Course Generator
 
 
 ## Prerequisites
