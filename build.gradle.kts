@@ -34,4 +34,5 @@ dependencies {
     testImplementation("io.ktor:ktor-server-core-jvm:2.2.4")
     testImplementation("io.ktor:ktor-server-netty-jvm:2.2.4")
     testImplementation("ch.qos.logback:logback-classic:1.4.6")
+    testImplementation("io.mockk:mockk:1.13.4")
 }
