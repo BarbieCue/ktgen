@@ -30,8 +30,8 @@ class CourseKtTest {
     fun `readCourseSymbols happy`() {
         val filename = "ktgen_course_definition_test${UUID.randomUUID()}"
         files.add(filename)
-        File(filename).writeText("apple\npear\ngrape")
-        readCourseSymbols(filename) shouldBe listOf("apple", "pear", "grape")
+        File(filename).writeText("apple pear\ngrape     orange\n\n  peach")
+        readCourseSymbols(filename) shouldBe listOf("apple", "pear", "grape", "orange", "peach")
     }
 
     @Test

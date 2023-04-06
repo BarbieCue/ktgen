@@ -4,7 +4,7 @@ import java.io.File
 
 fun readCourseSymbols(path: String): List<String> = try {
     val text = File(path).readText().trim()
-    val list = text.split('\n')
+    val list = text.split("\\s+".toRegex())
     if (list.size == 1 && list.single().isEmpty()) emptyList() else list
 } catch (e: Exception) {
     println(e.message)
