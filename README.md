@@ -67,7 +67,7 @@ java -jar build/libs/ktgen.jar -file README.md
 ### Website
 
 Link a website of your choice with `-web <url>` and let _ktgen_
-extracts text from it.
+extract text from it.
 
 ```shell
 java -jar build/libs/ktgen.jar -web https://en.wikipedia.org/wiki/Barbie
