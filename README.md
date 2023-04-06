@@ -1,6 +1,6 @@
 # ktgen
 
-**A KTouch Lesson Generator**
+[KTouch](https://github.com/KDE/ktouch) Lesson Generator
 
 
 ## Prerequisites
