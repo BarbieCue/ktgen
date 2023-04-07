@@ -78,7 +78,7 @@ java -jar build/libs/ktgen.jar -web https://en.wikipedia.org/wiki/Barbie
 
 ## Course definition
 
-As mentioned above, you define your course with the `course_definition.ktgen` file.
+As mentioned above, the `course_definition.ktgen` file describes your course.
 The following format applies here.
 
 
@@ -96,7 +96,7 @@ EFGH
 ,.
 ```
 
-Results in 8 segments of new symbols to learn: `ab`, `cdef`, `gh`, `AB`, `CD`, `EFGH`, `123`, `,.`.
+Here we have 8 segments of new symbols to learn: `ab`, `cdef`, `gh`, `AB`, `CD`, `EFGH`, `123`, `,.`.
 
 
 #### This example leads to the following lessons:
