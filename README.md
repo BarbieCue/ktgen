@@ -168,10 +168,12 @@ java -jar build/libs/ktgen.jar -k docs/german-layout.xml
 
 ### Combination
 
-When the course definition file `course_definition.ktgen` is not empty,
-lessons for the keyboard layout will be generated.
-Followed by lessons from the course definition file.
-
+Generating keyboard layout lessons can be combined with
+your custom lesson generation.
+This happens automatically when the `course_definition.ktgen` file
+is not empty.
+Keyboard layout lessons are generated first,
+your custom lessons afterwards.
 
 ## Help
 
