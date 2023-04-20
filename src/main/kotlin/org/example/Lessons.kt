@@ -1,6 +1,7 @@
 package org.example
 
 import java.util.*
+import kotlin.math.max
 import kotlin.random.Random
 
 
@@ -16,8 +17,8 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
     val rand = Random.nextInt(0, size / 2)
     return list.subList(rand, size).plus(list.subList(0, rand))
         .filter { it.consistsOfAny(letters(charsHistory)) &&
-                    if (letters(lessonSymbols).isEmpty()) true
-                    else it.containsAny(letters(lessonSymbols))
+                if (letters(lessonSymbols).isEmpty()) true
+                else it.containsAny(letters(lessonSymbols))
         }
 }
 
@@ -26,8 +27,9 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
  String filter
  */
 
+val wwRegex = "\\p{Punct}*WW\\p{Punct}*".toRegex()
 fun ww(s: String): String {
-    val matchResult = "\\p{Punct}*WW\\p{Punct}*".toRegex().find(s)
+    val matchResult = wwRegex.find(s)
     return matchResult?.value ?: ""
 }
 
@@ -54,53 +56,106 @@ fun unconditionalPunctuation(s: String): String =
  Lesson builder
  */
 
-fun buildLesson(title: String, lineLength: Int, newCharacters: String = "", init: L.() -> L): Lesson =
-    L(title = title, newCharacters = newCharacters, lineLength = lineLength).init().build()
+fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newCharacters: String = "", init: L.() -> L): Lesson =
+    L(title = title, newCharacters = newCharacters, lineLength = lineLength, symbolsPerLesson = symbolsPerLesson).init().build()
 
 class L(
     private val id: String = UUID.randomUUID().toString(),
-    private val title: String,
-    private val newCharacters: String,
-    private val lineLength: Int,
-    private val text: String = ""
+    private val title: String = "",
+    private val newCharacters: String = "",
+    private val lineLength: Int = 0,
+    private val symbolsPerLesson: Int = 0,
 ) {
+    internal fun build(): Lesson {
+        if (buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
+            return Lesson(id = id, title = title, newCharacters = newCharacters, text = "")
 
-    internal fun build(): Lesson = Lesson(id = id, title = title, newCharacters = newCharacters, text = text)
+        val numberOfSymbols =
+            if (symbolsPerLesson < buildSteps.size) symbolsPerLesson
+            else symbolsPerLesson / max(buildSteps.size, 1)
 
-    private val sb = StringBuilder()
+        val str = buildString {
+            var idx = 0
+            while (count { !it.isWhitespace() } < symbolsPerLesson) {
+                val str = buildSteps[idx](numberOfSymbols)
+                append(str)
+                append(" ")
+                idx++
+                if (idx == buildSteps.size && count { !it.isWhitespace() } == 0) return@buildString
+                if (idx == buildSteps.size) idx = 0
+            }
+        }.trim()
 
-    fun shuffledSymbolsLine(symbols: String, segmentLength: Int): L {
-        sb.appendLine(cutEnd(segment(shuffle(repeat(symbols, lineLength)), segmentLength), lineLength))
-        return L(id, title, newCharacters, lineLength, sb.toString().trimEnd())
+        if (str.isEmpty())
+            return Lesson(id = id, title = title, newCharacters = newCharacters, text = "")
+
+        val text = buildString {
+            if (lineLength <= symbolsPerLesson) {
+                val sb = StringBuilder(str.trim())
+                while (count { !it.isWhitespace() } < symbolsPerLesson) {
+                    val line = sb.take(lineLength).trim()
+                    sb.delete(0, lineLength)
+                    while (sb.isNotEmpty() && sb.first().isWhitespace())
+                        sb.delete(0, 1)
+                    appendLine(line)
+                    while (count { !it.isWhitespace() } > symbolsPerLesson)
+                        delete(length - 1, length)
+                }
+            } else {
+                str.forEach { char ->
+                    append(char)
+                    val symbolsCnt = count { !it.isWhitespace() }
+                    if (symbolsCnt == symbolsPerLesson) {
+                        return@buildString
+                    }
+                }
+            }
+        }.trim()
+
+        return Lesson(id = id, title = title, newCharacters = newCharacters, text = text)
     }
 
-    fun repeatedSymbolsLine(symbols: String, segmentLength: Int): L {
-        sb.appendLine(cutEnd(segment(repeat(symbols, lineLength), segmentLength), lineLength))
-        return L(id, title, newCharacters, lineLength, sb.toString().trimEnd())
+    private val buildSteps = mutableListOf<(numberOfSymbols: Int) -> String>()
+
+    fun shuffledSymbols(symbols: String, segmentLength: Int): L {
+        buildSteps.add { numberOfSymbols ->
+            segment(shuffle(repeat(symbols, numberOfSymbols)), segmentLength)
+        }
+        return this
     }
 
-    fun wordsMultiline(words: Collection<String>, wordCount: Int): L {
-        sb.appendLine(toText(words.takeRepeat(wordCount), lineLength))
-        return L(id, title, newCharacters, lineLength, sb.toString().trimEnd())
+    fun repeatSymbols(symbols: String, segmentLength: Int): L {
+        buildSteps.add { numberOfSymbols ->
+            segment(repeat(symbols, numberOfSymbols), segmentLength)
+        }
+        return this
+    }
+
+    fun words(words: Collection<String>): L {
+        buildSteps.add { numberOfSymbols ->
+            joinRepeat(words, numberOfSymbols)
+        }
+        return this
     }
 
     fun randomLeftRightPunctuationMarks(wwString: String, segmentLength: Int): L {
-        sb.appendLine(cutEnd(segment(punctuationMarksLine(wwString, lineLength, true), segmentLength), lineLength))
-        return L(id, title, newCharacters, lineLength, sb.toString().trimEnd())
+        buildSteps.add { numberOfSymbols ->
+            segment(punctuationMarks(wwString, numberOfSymbols), segmentLength)
+        }
+        return this
     }
 
-    fun wordsWithLeftRightPunctuationMarksMultiline(words: Collection<String>, wwString: String, wordCount: Int): L {
-        sb.appendLine(toText(wordsWithPunctuationMarks(words.takeRepeat(wordCount), wwString, true), lineLength))
-        return L(id, title, newCharacters, lineLength, sb.toString().trimEnd())
+    fun wordsWithLeftRightPunctuationMarks(words: Collection<String>, wwString: String): L {
+        buildSteps.add { numberOfSymbols ->
+            joinRepeat(wordsWithPunctuationMarks(words, wwString), numberOfSymbols)
+        }
+        return this
     }
 
-    fun randomUnconditionalPunctuationMarks(punctuationMarks: String, segmentLength: Int): L {
-        sb.appendLine(cutEnd(segment(punctuationMarksLine(punctuationMarks, lineLength), segmentLength), lineLength))
-        return L(id, title, newCharacters, lineLength, sb.toString().trimEnd())
-    }
-
-    fun wordsWithUnconditionalPunctuationMarksMultiline(words: Collection<String>, punctuationMarks: String, wordCount: Int): L {
-        sb.appendLine(toText(wordsWithPunctuationMarks(words.takeRepeat(wordCount), punctuationMarks), lineLength))
-        return L(id, title, newCharacters, lineLength, sb.toString().trimEnd())
+    fun wordsWithUnconditionalPunctuationMarks(words: Collection<String>, punctuationMarks: String): L {
+        buildSteps.add { numberOfSymbols ->
+            joinRepeat(wordsWithPunctuationMarks(words, punctuationMarks), numberOfSymbols)
+        }
+        return this
     }
 }

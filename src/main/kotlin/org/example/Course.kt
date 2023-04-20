@@ -7,7 +7,7 @@ fun readCourseSymbols(path: String): List<String> = try {
     val list = text.split("\\s+".toRegex())
     if (list.size == 1 && list.single().isEmpty()) emptyList() else list
 } catch (e: Exception) {
-    println(e.message)
+    System.err.println(e.message)
     emptyList()
 }
 
@@ -15,7 +15,7 @@ fun writeCourseFile(path: String, course: Course) = try {
     File(path).writeText(course.toXml())
     true
 } catch (e: Exception) {
-    println(e.message)
+    System.err.println(e.message)
     false
 }
 
@@ -23,8 +23,11 @@ fun createCourse(
     courseSymbols: List<String>,
     dictionary: Collection<String>,
     lineLength: Int,
-    wordsPerLesson: Int
+    symbolsPerLesson: Int
 ): Course {
+
+    if (courseSymbols.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
+        return Course(lessons = emptyList())
 
     val lessons = mutableListOf<Lesson>()
     val lessonCtr = generateSequence(1) { it + 1 }.iterator()
@@ -32,55 +35,72 @@ fun createCourse(
 
     courseSymbols.forEach { lessonSymbols ->
 
+        // Letter permutations
         val letters = letters(lessonSymbols)
         if (letters.isNotEmpty()) {
             lessons.add(
                 buildLesson(
                     "${lessonCtr.next()}: $letters",
-                    lineLength,
+                    lineLength, symbolsPerLesson,
                     charsHistory.newCharacters(letters)) {
-                    repeatedSymbolsLine(letters, 2)
-                    repeatedSymbolsLine(letters, 3)
-                    shuffledSymbolsLine(letters, 4)
-                    repeatedSymbolsLine(letters, 3)
-                    repeatedSymbolsLine(letters, 2)
+                    repeatSymbols(letters, 2)
+                    repeatSymbols(letters, 3)
+                    shuffledSymbols(letters, 4)
+                    repeatSymbols(letters, 3)
+                    repeatSymbols(letters, 2)
                 }
             )
+
+            // Letters and words mixed
             val words = dictionary.lessonWords(charsHistory.toString(), lessonSymbols)
+            lessons.add(
+                buildLesson(
+                    "${lessonCtr.next()}: $letters and text",
+                    lineLength, symbolsPerLesson,
+                    charsHistory.newCharacters(letters)) {
+                    repeatSymbols(letters, 4)
+                    words(words)
+                    shuffledSymbols(letters, 4)
+                }
+            )
+
+            // Words
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(
                         "${lessonCtr.next()}: Text ($letters)",
-                        lineLength,
+                        lineLength, symbolsPerLesson,
                         charsHistory.newCharacters(letters)) {
-                        wordsMultiline(words, wordsPerLesson)
+                        words(words)
                     }
                 )
             }
         }
 
+        // Digit permutations
         val digits = digits(lessonSymbols)
         if (digits.isNotEmpty()) {
             lessons.add(
                 buildLesson(
                     "${lessonCtr.next()}: $digits",
-                    lineLength,
+                    lineLength, symbolsPerLesson,
                     charsHistory.newCharacters(digits)) {
-                    repeatedSymbolsLine(digits, 1)
-                    repeatedSymbolsLine(digits, 3)
-                    shuffledSymbolsLine(digits, 5)
-                    repeatedSymbolsLine(digits, 3)
-                    repeatedSymbolsLine(digits, 1)
+                    repeatSymbols(digits, 1)
+                    repeatSymbols(digits, 3)
+                    shuffledSymbols(digits, 5)
+                    repeatSymbols(digits, 3)
+                    repeatSymbols(digits, 1)
                 }
             )
         }
 
+        // Punctuation marks (left right) permutations
         val leftRightPunctuationMarks = ww(lessonSymbols)
         if (leftRightPunctuationMarks.isNotEmpty()) {
             lessons.add(
                 buildLesson(
                     "${lessonCtr.next()}: ${wwSymbols(lessonSymbols)}",
-                    lineLength,
+                    lineLength, symbolsPerLesson,
                     charsHistory.newCharacters(wwSymbols(lessonSymbols))) {
                     randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 2)
                     randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 3)
@@ -90,41 +110,44 @@ fun createCourse(
                 }
             )
 
+            // Punctuation marks words (left right)
             val words = dictionary.lessonWords(charsHistory.toString(), lessonSymbols)
             if (words.isNotEmpty())
                 lessons.add(
                     buildLesson(
                         "${lessonCtr.next()}: Text ${wwSymbols(lessonSymbols)}",
-                        lineLength,
+                        lineLength, symbolsPerLesson,
                         charsHistory.newCharacters(wwSymbols(lessonSymbols))) {
-                        wordsWithLeftRightPunctuationMarksMultiline(words, leftRightPunctuationMarks, wordsPerLesson)
+                        wordsWithLeftRightPunctuationMarks(words, leftRightPunctuationMarks)
                     }
                 )
         }
 
+        // Punctuation marks permutations
         val unconditionalPunctuationMarks = unconditionalPunctuation(lessonSymbols)
         if (unconditionalPunctuationMarks.isNotEmpty()) {
             lessons.add(
                 buildLesson(
                     "${lessonCtr.next()}: $unconditionalPunctuationMarks",
-                    lineLength,
+                    lineLength, symbolsPerLesson,
                     charsHistory.newCharacters(unconditionalPunctuationMarks)) {
-                    randomUnconditionalPunctuationMarks(unconditionalPunctuationMarks, 2)
-                    randomUnconditionalPunctuationMarks(unconditionalPunctuationMarks, 3)
-                    randomUnconditionalPunctuationMarks(unconditionalPunctuationMarks, 4)
-                    randomUnconditionalPunctuationMarks(unconditionalPunctuationMarks, 3)
-                    randomUnconditionalPunctuationMarks(unconditionalPunctuationMarks, 2)
+                    repeatSymbols(unconditionalPunctuationMarks, 2)
+                    shuffledSymbols(unconditionalPunctuationMarks, 3)
+                    repeatSymbols(unconditionalPunctuationMarks, 4)
+                    shuffledSymbols(unconditionalPunctuationMarks, 3)
+                    repeatSymbols(unconditionalPunctuationMarks, 2)
                 }
             )
 
+            // Punctuation marks words
             val words = dictionary.lessonWords(charsHistory.toString(), lessonSymbols)
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(
                         "${lessonCtr.next()}: Text $unconditionalPunctuationMarks",
-                        lineLength,
+                        lineLength, symbolsPerLesson,
                         charsHistory.newCharacters(unconditionalPunctuationMarks)) {
-                        wordsWithUnconditionalPunctuationMarksMultiline(words, unconditionalPunctuationMarks, wordsPerLesson)
+                        wordsWithUnconditionalPunctuationMarks(words, unconditionalPunctuationMarks)
                     }
                 )
             }

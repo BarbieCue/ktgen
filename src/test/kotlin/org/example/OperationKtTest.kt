@@ -1,16 +1,12 @@
 package org.example
 
-import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.ints.shouldBeLessThanOrEqual
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldHaveLength
-import io.kotest.matchers.string.shouldHaveMaxLength
-import io.kotest.matchers.string.shouldNotMatch
+import io.kotest.matchers.string.*
 import org.junit.jupiter.api.Test
 
 class OperationKtTest {
@@ -28,8 +24,8 @@ class OperationKtTest {
 
     @Test
     fun `shuffle trimmed`() {
-        shuffle("  abc  ").take(1) shouldNotMatch "\\s"
-        shuffle("  abc  ").takeLast(1) shouldNotMatch "\\s"
+        shuffle("  abc  ") shouldNotStartWith "\\s"
+        shuffle("  abc  ") shouldNotEndWith "\\s"
     }
 
     @Test
@@ -45,8 +41,8 @@ class OperationKtTest {
 
     @Test
     fun `repeat trimmed`() {
-        repeat("  abc  ", 10).take(1) shouldNotMatch "\\s"
-        repeat("  abc  ", 10).takeLast(1) shouldNotMatch "\\s"
+        repeat("  abc  ", 10) shouldNotEndWith "\\s"
+        repeat("  abc  ", 10) shouldNotStartWith "\\s"
     }
 
     @Test
@@ -71,8 +67,8 @@ class OperationKtTest {
 
     @Test
     fun `segment trimmed`() {
-        segment("  abc  ", 10).take(1) shouldNotMatch "\\s"
-        segment("  abc  ", 10).takeLast(1) shouldNotMatch "\\s"
+        segment("  abc  ", 10) shouldNotStartWith "\\s"
+        segment("  abc  ", 10) shouldNotEndWith "\\s"
     }
 
     @Test
@@ -86,146 +82,90 @@ class OperationKtTest {
     }
 
     @Test
-    fun `cutEnd happy`() {
-        cutEnd("abc", 2) shouldBe "ab"
+    fun `joinRepeat happy`() {
+        val words = setOf(
+            "building", "metrics", "perimeter",
+            "expensive", "a", "b", "c", "d"
+        )
+
+        joinRepeat(words, 30)shouldBe
+                "building metrics perimeter expens"
+        joinRepeat(words, 30).count { !it.isWhitespace() } shouldBe 30
+
+        joinRepeat(words, 60) shouldBe
+                "building metrics perimeter expensive a b c d building metrics building"
+        joinRepeat(words, 60).count { !it.isWhitespace() } shouldBe 60
     }
 
     @Test
-    fun `cutEnd trimmed`() {
-        cutEnd("  abc   ", 5).take(1) shouldNotMatch "\\s"
-        cutEnd("  abc   ", 5).takeLast(1) shouldNotMatch "\\s"
+    fun `joinRepeat empty input`() {
+        joinRepeat(emptySet(), 20) shouldBe ""
     }
 
     @Test
-    fun `cutEnd empty input`() {
-        segment("", 2) shouldBe ""
+    fun `joinRepeat all words are longer than line the length in non whitespace chars`() {
+        joinRepeat(setOf("aaa", "bbb", "ccc"), 1) shouldBe ""
     }
 
     @Test
-    fun `cutEnd length range test`() {
-        cutEnd("abc", -100) shouldHaveLength 0
-        cutEnd("abc", -1) shouldHaveLength 0
-        cutEnd("abc", 0) shouldHaveLength 0
-        cutEnd("abc", 1) shouldHaveLength 1  // a
-        cutEnd("abc", 3) shouldHaveLength 3  // abc
-        cutEnd("abc", 100) shouldHaveLength 3 // abc
+    fun `joinRepeat ignore too long words`() {
+        joinRepeat(setOf("too_long", "ok"), 2) shouldBe "ok"
+        joinRepeat(setOf("too_long", "ok"), 4) shouldBe "ok ok"
     }
 
     @Test
-    fun `toText happy`() {
+    fun `joinRepeat should find a word of necessary length out of order if exists`() {
+        joinRepeat(setOf("ab", "cde", "fgh"), 7) shouldBe "ab cde ab"
+        // "fgh" would exceed the length of 7, thus take "ab"
+    }
+
+    @Test
+    fun `joinRepeat should cut last word if cannot find a word of necessary length`() {
+        joinRepeat(setOf("abc", "def"), 5) shouldBe "abc de"
+        // "def" would exceed the length of 7 and no word of length 2 can be found, thus cut "def" to "de"
+    }
+
+    @Test
+    fun `joinRepeat trimmed`() {
+        joinRepeat(setOf("aaa  ", "  bbb", "  ccc  "), 9) shouldNotStartWith "\\s"
+        joinRepeat(setOf("aaa  ", "  bbb", "  ccc  "), 9) shouldNotEndWith "\\s"
+    }
+
+    @Test
+    fun `joinRepeat each word trimmed`() {
+        joinRepeat(setOf("aaa  ", "  bbb", "  ccc  "), 9) shouldBe "aaa bbb ccc"
+    }
+
+    @Test
+    fun `joinRepeat length non whitespace chars range test`() {
         val words = setOf(
             "building", "metrics", "perimeter", "expensive", "a", "b", "c",
             "d", "engine", "of", "house", "train", "car", "bird", "door"
         )
-        toText(words, 20) shouldBe """
-            building metrics
-            perimeter expensive
-            a b c d engine of
-            house train car bird
-            door
-        """.trimIndent()
+        joinRepeat(words, -10) shouldHaveLength 0
+        joinRepeat(words, -1) shouldHaveLength 0
+        joinRepeat(words, 0) shouldHaveLength 0
+        joinRepeat(words, 1).count { !it.isWhitespace() } shouldBe 1
+        joinRepeat(words, 10).filter { !it.isWhitespace() } shouldHaveMaxLength 10
     }
 
     @Test
-    fun `toText empty input`() {
-        toText(emptySet(), 20) shouldBe ""
+    fun `Sequence repeatInfinite happy`() {
+        val repeated = setOf("a", "b", "c").asSequence().repeatInfinite().take(7).toList()
+        repeated shouldHaveSize 7
+        repeated[0] shouldBe "a"
+        repeated[1] shouldBe "b"
+        repeated[2] shouldBe "c"
+        repeated[3] shouldBe "a"
+        repeated[4] shouldBe "b"
+        repeated[5] shouldBe "c"
+        repeated[6] shouldBe "a"
     }
 
     @Test
-    fun `toText all words are shorter than line length`() {
-        toText(setOf("a", "b", "c"), 2) shouldBe """
-            a
-            b
-            c
-        """.trimIndent()
-    }
-
-    @Test
-    fun `toText all words are as long as line length`() {
-        toText(setOf("a", "b", "c"), 1) shouldBe """
-            a
-            b
-            c
-        """.trimIndent()
-    }
-
-    @Test
-    fun `toText all words are longer than line length`() {
-        toText(setOf("aaa", "bbb", "ccc"), 1) shouldBe ""
-    }
-
-    @Test
-    fun `toText trimmed`() {
-        toText(setOf("aaa  ", "  bbb", "  ccc  "), 4).take(1) shouldNotMatch "\\s"
-        toText(setOf("aaa  ", "  bbb", "  ccc  "), 4).takeLast(1) shouldNotMatch "\\s"
-    }
-
-    @Test
-    fun `toText line length range test`() {
-        val words = setOf(
-            "building", "metrics", "perimeter", "expensive", "a", "b", "c",
-            "d", "engine", "of", "house", "train", "car", "bird", "door"
-        )
-        toText(words, -10).split('\n').forAll { line -> line shouldHaveMaxLength 0 }
-        toText(words, -1).split('\n').forAll { line -> line shouldHaveMaxLength 0 }
-        toText(words, 0).split('\n').forAll { line -> line shouldHaveMaxLength 0 }
-        toText(words, 1).split('\n').forAll { line -> line shouldHaveMaxLength 1 }
-        toText(words, 10).split('\n').forAll { line -> line shouldHaveMaxLength 10 }
-    }
-
-    @Test
-    fun `toText does not exceed line-length when concatenating words`() {
-        val words = setOf(
-            "building", "metrics", "perimeter", "expensive", "a", "b", "c",
-            "d", "engine", "of", "house", "train", "car", "bird", "door"
-        )
-        toText(words, 20).lines().forAll { it.length shouldBeLessThanOrEqual 20 }
-        toText(words, 20) shouldBe """
-            building metrics
-            perimeter expensive
-            a b c d engine of
-            house train car bird
-            door
-        """.trimIndent()
-    }
-
-    @Test
-    fun `takeRepeat happy`() {
-        val words = setOf("building", "metrics", "perimeter")
-        words.takeRepeat(1)  shouldBe listOf("building")
-        words.takeRepeat(3)  shouldBe listOf("building", "metrics", "perimeter")
-        words.takeRepeat(10)  shouldBe listOf(
-            "building", "metrics", "perimeter",
-            "building", "metrics", "perimeter",
-            "building", "metrics", "perimeter",
-            "building")
-    }
-
-    @Test
-    fun `takeRepeat empty source`() {
-        val words = emptySet<String>()
-        words.takeRepeat(1) shouldBe emptyList()
-        words.takeRepeat(3) shouldBe emptyList()
-        words.takeRepeat(10) shouldBe emptyList()
-    }
-
-    @Test
-    fun `takeRepeat trimmed`() {
-        val words = emptySet<String>()
-        words.takeRepeat(4).forAll {
-            it.take(1) shouldNotMatch "\\s"
-            it.takeLast(1) shouldNotMatch "\\s"
-        }
-    }
-
-    @Test
-    fun `takeRepeat length range test`() {
-        val words = setOf("building", "metrics", "perimeter")
-        words.takeRepeat(-10) shouldHaveSize 0
-        words.takeRepeat(-1) shouldHaveSize 0
-        words.takeRepeat(0)  shouldHaveSize 0
-        words.takeRepeat(1)  shouldHaveSize 1
-        words.takeRepeat(10)  shouldHaveSize 10
+    fun `Sequence repeatInfinite empty sequence`() {
+        val looped = emptyList<String>().asSequence().repeatInfinite().toList()
+        looped shouldHaveSize 0
     }
 
     @Test
@@ -243,6 +183,12 @@ class OperationKtTest {
     @Test
     fun `splitWWLeftRight wrong separator`() {
         splitWWLeftRight("XXX") shouldBe Pair("XXX", "XXX")
+    }
+
+    @Test
+    fun `splitWWLeftRight no separator`() {
+        splitWWLeftRight("[{}]") shouldBe Pair("[{}]", "[{}]")
+        splitWWLeftRight("[{") shouldBe Pair("[{", "[{")
     }
 
     @Test
@@ -304,14 +250,14 @@ class OperationKtTest {
     }
 
     @Test
-    fun `randomPair on both unknown symbols, one side (randomly) should be empty`() {
+    fun `randomPair both unknown symbols, one side (randomly) should be empty`() {
         repeat(10) {
             randomPair("X", "T") shouldBeIn listOf(("X" to ""), ("" to "T"))
         }
     }
 
     @Test
-    fun `randomPair on one known and one unknown symbol, one side (randomly) should be empty`() {
+    fun `randomPair one known and one unknown symbol, one side (randomly) should be empty`() {
         repeat(10) {
             randomPair("(", "T") shouldBeIn listOf(("(" to ""), ("" to "T"))
             randomPair("X", ")") shouldBeIn listOf(("X" to ""), ("" to ")"))
@@ -328,91 +274,72 @@ class OperationKtTest {
     }
 
     @Test
-    fun `punctuationMarksLine do not try to pair`() {
-        val wwString = "!WW="
+    fun `punctuationMarks non-pair-able symbols`() {
+        val punctuationMarks = "!WW="
         repeat(10) {
-            punctuationMarksLine(wwString, 3) shouldBeIn setOf(
+            punctuationMarks(punctuationMarks, 3) shouldBeIn setOf(
                 "!!!", "!!=", "!==", "===", "=!!", "==!", "!=!", "=!="
             )
         }
     }
 
     @Test
-    fun `punctuationMarksLine do not try to pair, left and right empty`() {
-        val wwString = "WW"
+    fun `punctuationMarks WW left and right empty`() {
+        val punctuationMarks = "WW"
         repeat(10) {
-            punctuationMarksLine(wwString, 3) shouldBe ""
+            punctuationMarks(punctuationMarks, 3) shouldBe ""
         }
     }
 
     @Test
-    fun `punctuationMarksLine do not try to pair, empty input`() {
-        val wwString = ""
+    fun `punctuationMarks empty punctuation marks`() {
+        val punctuationMarks = ""
         repeat(10) {
-            punctuationMarksLine(wwString, 3) shouldBe ""
+            punctuationMarks(punctuationMarks, 3) shouldBe ""
         }
     }
 
     @Test
-    fun `punctuationMarksLine do not try to pair, WW missing`() {
-        val wwString = "()"
+    fun `punctuationMarks no WW`() {
+        val punctuationMarks = "()"
         repeat(10) {
-            punctuationMarksLine(wwString, 2) shouldBeIn setOf(
+            punctuationMarks(punctuationMarks, 2) shouldBeIn setOf(
                 "((", "))", "()", ")("
             )
         }
     }
 
     @Test
-    fun `punctuationMarksLine do not try to pair, length test`() {
-        val wwString = "!WW="
+    fun `punctuationMarks length range test`() {
+        val punctuationMarks = "!WW="
         repeat(10) {
-            punctuationMarksLine(wwString, -3) shouldHaveLength 0
-            punctuationMarksLine(wwString, -1) shouldHaveLength 0
-            punctuationMarksLine(wwString, 0) shouldHaveLength 0
-            punctuationMarksLine(wwString, 1) shouldHaveLength 1
-            punctuationMarksLine(wwString, 3) shouldHaveLength 3
+            punctuationMarks(punctuationMarks, -100) shouldHaveLength 0
+            punctuationMarks(punctuationMarks, -1) shouldHaveLength 0
+            punctuationMarks(punctuationMarks, 0) shouldHaveLength 0
+            punctuationMarks(punctuationMarks, 1) shouldHaveLength 1
+            punctuationMarks(punctuationMarks, 100) shouldHaveLength 100
         }
     }
 
     @Test
-    fun `punctuationMarksLine try to pair`() {
-        val wwString = "!WW="
-        repeat(10) {
-            punctuationMarksLine(wwString, 3, true) shouldBeIn setOf(
-                "!!!", "!!=", "!==", "===", "=!!", "==!", "!=!", "=!="
-            )
-        }
-    }
-
-    @Test
-    fun `punctuationMarksLine try to pair, length test`() {
-        val wwString = "!WW="
-        repeat(10) {
-            punctuationMarksLine(wwString, -3, true) shouldHaveLength 0
-            punctuationMarksLine(wwString, -1, true) shouldHaveLength 0
-            punctuationMarksLine(wwString, 0, true) shouldHaveLength 0
-            punctuationMarksLine(wwString, 1, true) shouldHaveLength 1
-            punctuationMarksLine(wwString, 3, true) shouldHaveLength 3
-        }
-    }
-
-    @Test
-    fun `punctuationMarksLine try to pair, WW missing`() {
-        val wwString = "()"
-        repeat(10) {
-            punctuationMarksLine(wwString, 2) shouldBeIn setOf(
-                "((", "))", "()", ")("
-            )
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks do not try to pair`() {
+    fun `wordsWithPunctuationMarks no WW`() {
         val words = setOf("grape", "apple", "pear")
-        val wwString = "!WW="
+        val punctuationMarks = "!;"
         repeat(10) {
-            wordsWithPunctuationMarks(words, wwString) shouldContainAnyOf setOf(
+            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
+                "!grape", "!apple", "!pear",
+                "grape!", "apple!", "pear!",
+                ";grape", ";apple", ";pear",
+                "grape;", "apple;", "pear;")
+        }
+    }
+
+    @Test
+    fun `wordsWithPunctuationMarks WW with non-pair-able symbols`() {
+        val words = setOf("grape", "apple", "pear")
+        val punctuationMarks = "!WW="
+        repeat(10) {
+            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
                 "=grape", "=apple", "=pear",
                 "grape=", "apple=", "pear=",
                 "!grape", "!apple", "!pear",
@@ -421,76 +348,54 @@ class OperationKtTest {
     }
 
     @Test
-    fun `wordsWithPunctuationMarks do not try to pair, left and right empty`() {
+    fun `wordsWithPunctuationMarks WW with pair-able symbols`() {
         val words = setOf("grape", "apple", "pear")
-        val wwString = "WW"
+        val punctuationMarks = "{[WW]}"
         repeat(10) {
-            wordsWithPunctuationMarks(words, wwString) shouldContainAnyOf setOf(
+            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
+                "{grape}", "{apple}", "{pear}",
+                "[grape]", "[apple]", "[pear]")
+        }
+    }
+
+    @Test
+    fun `wordsWithPunctuationMarks WW left and right empty`() {
+        val words = setOf("grape", "apple", "pear")
+        val punctuationMarks = "WW"
+        repeat(10) {
+            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
                 "grape", "apple", "pear")
         }
     }
 
     @Test
-    fun `wordsWithPunctuationMarks do not try to pair, empty input`() {
+    fun `wordsWithPunctuationMarks empty punctuation marks`() {
         val words = setOf("grape", "apple", "pear")
-        val wwString = ""
+        val punctuationMarks = ""
         repeat(10) {
-            wordsWithPunctuationMarks(words, wwString) shouldContainAnyOf setOf(
-                "grape", "apple", "pear")
+            wordsWithPunctuationMarks(words, punctuationMarks) shouldBe emptyList()
         }
     }
 
     @Test
-    fun `wordsWithPunctuationMarks try to pair, no pair-able characters`() {
-        val words = setOf("grape", "apple", "pear")
-        val wwString = "!WW="
+    fun `wordsWithPunctuationMarks empty word list`() {
+        val words = emptySet<String>()
+        val punctuationMarks = "!WW="
         repeat(10) {
-            wordsWithPunctuationMarks(words, wwString, true) shouldContainAnyOf setOf(
-                "grape=", "apple=", "pear=",
-                "!grape", "!apple", "!pear")
+            wordsWithPunctuationMarks(words, punctuationMarks) shouldBe emptyList()
         }
     }
 
     @Test
-    fun `wordsWithPunctuationMarks try to pair, build pairs`() {
+    fun `wordsWithPunctuationMarks mix pair-able and non-pair-able symbols`() {
         val words = setOf("grape", "apple", "pear")
-        val wwString = "(WW)"
+        val punctuationMarks = "!?(WW)="
         repeat(10) {
-            wordsWithPunctuationMarks(words, wwString, true) shouldContainAnyOf setOf(
-                "(grape)", "(apple)", "(pear)")
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks try to pair, mix pair-able and non-pair-able characters`() {
-        val words = setOf("grape", "apple", "pear")
-        val wwString = "!?(WW)="
-        repeat(10) {
-            wordsWithPunctuationMarks(words, wwString, true) shouldContainAnyOf setOf(
+            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
                 "!grape", "!apple", "!pear",
                 "?grape", "?apple", "?pear",
                 "grape=", "apple=", "pear=",
                 "(grape)", "(apple)", "(pear)")
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks try to pair, left and right empty`() {
-        val words = setOf("grape", "apple", "pear")
-        val wwString = "WW"
-        repeat(10) {
-            wordsWithPunctuationMarks(words, wwString, true) shouldContainAnyOf setOf(
-                "grape", "apple", "pear")
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks try to pair, empty input`() {
-        val words = setOf("grape", "apple", "pear")
-        val wwString = ""
-        repeat(10) {
-            wordsWithPunctuationMarks(words, wwString, true) shouldContainAnyOf setOf(
-                "grape", "apple", "pear")
         }
     }
 }

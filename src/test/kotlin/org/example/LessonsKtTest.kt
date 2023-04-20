@@ -219,9 +219,118 @@ class LessonsKtTest {
     }
 
     @Test
+    fun `buildLesson repeatSymbols happy`() {
+        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
+            repeatSymbols("ab", 10)
+        }.text shouldBe "ababababab"
+
+        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
+            repeatSymbols("ab", 3)
+        }.text shouldBe "aba bab aba b"
+    }
+
+    @Test
+    fun `buildLesson repeatSymbols empty input`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("", 10)
+        }.text.length shouldBe 0
+    }
+
+    @Test
+    fun `buildLesson repeatSymbols line length range test`() {
+        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 1, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 10)
+        }.text.count { !it.isWhitespace() } shouldBe 10
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 10
+    }
+
+    @Test
+    fun `buildLesson repeatSymbols segment length range test`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("abc", -10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("abc", -1)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 0)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 1)
+        }.text shouldBe """
+            a b c a b
+            c a b c a
+        """.trimIndent()
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 10
+    }
+
+    @Test
+    fun `buildLesson repeatSymbols symbols per lesson range test`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = -100) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 10, symbolsPerLesson = -10) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 10, symbolsPerLesson = -1) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 0) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 1) {
+            repeatSymbols("abc", 10)
+        }.text shouldHaveLength 1
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 10)
+        }.text.count { !it.isWhitespace() } shouldBe 10
+
+        val text100 = buildLesson(lineLength = 10, symbolsPerLesson = 100) {
+            repeatSymbols("abc", 10)
+        }.text
+        text100.split("\n") shouldHaveSize 10
+        text100.count { !it.isWhitespace() } shouldBe 100
+    }
+
+    @Test
+    fun `buildLesson repeatSymbols trimmed`() {
+        val lesson = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("abc", 1)
+        }
+        lesson.text shouldNotStartWith "\\s"
+        lesson.text shouldNotEndWith "\\s"
+    }
+
+    @Test
     fun `buildLesson properties assignment`() {
-        val lesson = buildLesson("my lesson", 10, "ab") {
-            repeatedSymbolsLine("a", 10)
+        val lesson = buildLesson("my lesson", 10, 10,"ab") {
+            repeatSymbols("a", 10)
         }
         lesson.title shouldBe "my lesson"
         lesson.newCharacters shouldBe "ab"
@@ -229,540 +338,435 @@ class LessonsKtTest {
     }
 
     @Test
-    fun `buildLesson repeatedSymbolsLine happy`() {
-        buildLesson("", 10) {
-            repeatedSymbolsLine("ab", 10)
-        }.text shouldBe "ababababab"
-
-        buildLesson("", 10) {
-            repeatedSymbolsLine("ab", 3)
-        }.text shouldBe "aba bab ab"
-    }
-
-    @Test
-    fun `buildLesson repeatedSymbolsLine empty input`() {
-        buildLesson("", 10) {
-            repeatedSymbolsLine("", 10)
-        }.text.length shouldBe 0
-    }
-
-    @Test
-    fun `buildLesson repeatedSymbolsLine line length range test`() {
-        buildLesson("", -10) {
-            repeatedSymbolsLine("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", -1) {
-            repeatedSymbolsLine("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 0) {
-            repeatedSymbolsLine("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 1) {
-            repeatedSymbolsLine("abc", 10)
-        }.text shouldHaveLength 1
-
-        buildLesson("", 10) {
-            repeatedSymbolsLine("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson repeatedSymbolsLine segment length range test`() {
-        buildLesson("", 10) {
-            repeatedSymbolsLine("abc", -10)
-        }.text shouldBe ""
-
-        buildLesson("", 10) {
-            repeatedSymbolsLine("abc", -1)
-        }.text shouldBe ""
-
-        buildLesson("", 10) {
-            repeatedSymbolsLine("abc", 0)
-        }.text shouldBe ""
-
-        buildLesson("", 10) {
-            repeatedSymbolsLine("abc", 1)
-        }.text shouldBe "a b c a b"
-
-        buildLesson("", 10) {
-            repeatedSymbolsLine("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson repeatedSymbolsLine trimmed`() {
-        val lesson = buildLesson("", 10) {
-            repeatedSymbolsLine("abc", 1)
-        }
-        lesson.text.take(1) shouldNotMatch "\\s"
-        lesson.text.takeLast(1) shouldNotMatch "\\s"
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbolsLine happy`() {
-        buildLesson("", 10) {
-            shuffledSymbolsLine("ab", 10)
-        }.text shouldMatch "[ab]{10}"
-
-        buildLesson("", 10) {
-            repeatedSymbolsLine("ab", 3)
-        }.text shouldMatch "[ab ]{10}"
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbolsLine empty input`() {
-        buildLesson("", 10) {
-            shuffledSymbolsLine("", 10)
-        }.text.length shouldBe 0
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbolsLine line length range test`() {
-        buildLesson("", -10) {
-            shuffledSymbolsLine("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", -1) {
-            shuffledSymbolsLine("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 0) {
-            shuffledSymbolsLine("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 1) {
-            shuffledSymbolsLine("abc", 10)
-        }.text shouldHaveLength 1
-
-        buildLesson("", 10) {
-            shuffledSymbolsLine("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbolsLine segment length range test`() {
-        buildLesson("", 10) {
-            shuffledSymbolsLine("abc", -10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            shuffledSymbolsLine("abc", -1)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            shuffledSymbolsLine("abc", 0)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            shuffledSymbolsLine("abc", 1)
-        }.text shouldMatch "[abc ]{9}" // e.g. "a b c c a " 10 -> trimmed to "a b c c a" 9
-
-        buildLesson("", 10) {
-            shuffledSymbolsLine("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbolsLine trimmed`() {
-        val lesson = buildLesson("", 10) {
-            shuffledSymbolsLine("abc", 1)
-        }
-        lesson.text.take(1) shouldNotMatch "\\s"
-        lesson.text.takeLast(1) shouldNotMatch "\\s"
-    }
-
-    @Test
-    fun `buildLesson wordsMultiline happy`() {
-        buildLesson("", 10) {
-            wordsMultiline(listOf("hi", "are", "you", "ready"), 2)
-        }.text shouldBe "hi are"
-
-        buildLesson("", 4) {
-            wordsMultiline(listOf("hi", "are", "you", "ready"), 10)
+    fun `buildLesson line length smaller than symbols per lesson`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 20) {
+            repeatSymbols("ab", 10)
         }.text shouldBe """
-            hi
-            are
-            you
-            hi
-            are
-            you
-            hi
-            are
+            ababababab
+            ababababab
+        """.trimIndent()
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 20) {
+            repeatSymbols("ab", 2)
+        }.text shouldBe """
+            ab ab ab a
+            b ab ab ab
+            ab ab ab
+        """.trimIndent()
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 20) {
+            repeatSymbols("ab", 1)
+        }.text shouldBe """
+            a b a b a
+            b a b a b
+            a b a b a
+            b a b a b
         """.trimIndent()
     }
 
     @Test
-    fun `buildLesson wordsMultiline empty input`() {
-        buildLesson("", 10) {
-            wordsMultiline(emptyList(), 10)
+    fun `buildLesson line length greater than symbols per lesson`() {
+        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
+            repeatSymbols("ab", 10)
+        }.text shouldBe "ababababab"
+
+        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
+            repeatSymbols("ab", 2)
+        }.text shouldBe "ab ab ab ab ab"
+
+        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
+            repeatSymbols("ab", 1)
+        }.text shouldBe "a b a b a b a b a b"
+    }
+
+    @Test
+    fun `buildLesson line length equals symbols per lesson`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("ab", 10)
+        }.text shouldBe "ababababab"
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("ab", 2)
+        }.text shouldBe """
+            ab ab ab a
+            b ab
+        """.trimIndent()
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("ab", 1)
+        }.text shouldBe """
+            a b a b a
+            b a b a b
+        """.trimIndent()
+    }
+
+    @Test
+    fun `buildLesson shuffledSymbols happy`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            shuffledSymbols("ab", 10)
+        }.text shouldMatch "[ab]{10}"
+
+        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            repeatSymbols("ab", 1)
+        }.text
+        text.split("\n")[0] shouldMatch "[ab ]{9}" // a b a b a
+        text.split("\n")[1] shouldMatch "[ab ]{9}" // b a b a b
+    }
+
+    @Test
+    fun `buildLesson shuffledSymbols empty input`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            shuffledSymbols("", 10)
+        }.text.length shouldBe 0
+    }
+
+    @Test
+    fun `buildLesson shuffledSymbols line length range test`() {
+        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", 10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 1, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", 10)
+        }.text.count { !it.isWhitespace() } shouldBe 10
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", 10)
+        }.text shouldHaveLength 10
+    }
+
+    @Test
+    fun `buildLesson shuffledSymbols segment length range test`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", -10)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", -1)
+        }.text shouldHaveLength 0
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", 0)
+        }.text shouldHaveLength 0
+
+        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", 1)
+        }.text
+        text.split("\n")[0] shouldMatch "[abc ]{9}" // e.g. "a b c c a " 10 -> trimmed to "a b c c a" 9
+        text.split("\n")[1] shouldMatch "[abc ]{9}"
+
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", 10)
+        }.text shouldHaveLength 10
+    }
+
+    @Test
+    fun `buildLesson shuffledSymbols trimmed`() {
+        val lesson = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            shuffledSymbols("abc", 1)
+        }
+        lesson.text shouldNotStartWith "\\s"
+        lesson.text shouldNotEndWith "\\s"
+    }
+
+    @Test
+    fun `buildLesson words happy`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            words(listOf("hi", "are", "you", "ready"))
+        }.text shouldBe """
+            hi are you
+            hi
+        """.trimIndent()
+
+        buildLesson(lineLength = 4, symbolsPerLesson = 10) {
+            words(listOf("hi", "are", "you", "ready"))
+        }.text shouldBe """
+            hi a
+            re y
+            ou h
+            i
+        """.trimIndent()
+    }
+
+    @Test
+    fun `buildLesson words empty input`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            words(emptyList())
         }.text shouldBe ""
     }
 
     @Test
-    fun `buildLesson wordsMultiline line length range test`() {
-        buildLesson("", -10) {
-            wordsMultiline(listOf("hi", "are", "you", "ready"), 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 }
+    fun `buildLesson words line length range test`() {
+        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
+            words(listOf("hi", "are", "you", "ready"))
+        }.text shouldHaveLength 0
 
-        buildLesson("", -1) {
-            wordsMultiline(listOf("c", "hi", "are", "you", "ready"), 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 }
+        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
+            words(listOf("c", "hi", "are", "you", "ready"))
+        }.text shouldHaveLength 0
 
-        buildLesson("", 0) {
-            wordsMultiline(listOf("c", "hi", "are", "you", "ready"), 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 }
+        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
+            words(listOf("c", "hi", "are", "you", "ready"))
+        }.text shouldHaveLength 0
 
-        buildLesson("", 1) {
-            wordsMultiline(listOf("c", "hi", "are", "you", "ready"), 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 1 }
+        buildLesson(lineLength = 1, symbolsPerLesson = 10) {
+            words(listOf("c", "hi", "are", "you", "ready"))
+        }.text.split('\n') shouldHaveSize 10
 
-        buildLesson("", 10) {
-            wordsMultiline(listOf("c", "hi", "are", "you", "ready"), 10)
-        }.text.split('\n').forAll { line -> line shouldHaveMaxLength 10 }
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            words(listOf("c", "hi", "are", "you", "ready"))
+        }.text.count { !it.isWhitespace() } shouldBe 10
     }
 
     @Test
-    fun `buildLesson wordsMultiline word count range test`() {
-        buildLesson("", 10) {
-            wordsMultiline(listOf("hi", "are", "you", "ready"), -10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            wordsMultiline(listOf("hi", "are", "you", "ready"), -1)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            wordsMultiline(listOf("hi", "are", "you", "ready"), 0)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            wordsMultiline(listOf("hi", "are", "you", "ready"), 1)
-        }.text shouldBe "hi"
-
-        buildLesson("", 10) {
-            wordsMultiline(listOf("hi", "are", "you", "ready"), 10)
-        }.text.split("\\s".toRegex()) shouldHaveSize 10
-    }
-
-    @Test
-    fun `buildLesson wordsMultiline trimmed`() {
-        buildLesson("", 10) {
-            wordsMultiline(listOf("hi", "are", "you", "ready"), 10)
-        }.text.split("\\s").forAll { line ->
-            line.take(1) shouldNotMatch "\\s"
-            line.takeLast(1) shouldNotMatch "\\s"
+    fun `buildLesson words trimmed`() {
+        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            words(listOf("hi", "are", "you", "ready"))
+        }.text
+        text.split("\\s".toRegex()) shouldHaveSize 4
+        text.split("\\s".toRegex()).forAll { line ->
+            line shouldNotStartWith "\\s"
+            line shouldNotEndWith "\\s"
         }
     }
 
     @Test
     fun `buildLesson randomLeftRightPunctuationMarks happy`() {
-        buildLesson("", 2) {
+        val text = buildLesson(lineLength = 2, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}]", 2)
-        }.text shouldBeIn setOf("[]", "{}")
+        }.text
+        text.split("\n") shouldHaveSize 5
+        text.split("\n").forAll { it shouldBeIn setOf("[]", "{}") }
 
-        buildLesson("", 10) {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW,", 10)
         }.text shouldMatch "[\\[\\{,]{10}"
 
-        buildLesson("", 10) {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("WW}]", 10)
         }.text shouldMatch "[\\]\\}]{10}"
     }
 
     @Test
     fun `buildLesson randomLeftRightPunctuationMarks empty input`() {
-        buildLesson("", 10) {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("", 10)
         }.text shouldBe ""
     }
 
     @Test
     fun `buildLesson randomLeftRightPunctuationMarks line length range test`() {
-        buildLesson("", -10) {
+        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", 10)
         }.text shouldHaveLength 0
 
-        buildLesson("", -1) {
+        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", 10)
         }.text shouldHaveLength 0
 
-        buildLesson("", 0) {
+        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", 10)
         }.text shouldHaveLength 0
 
-        buildLesson("", 1) {
+        buildLesson(lineLength = 1, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", 10)
-        }.text shouldHaveLength 1
+        }.text.count { !it.isWhitespace() } shouldBe 10
 
-        buildLesson("", 10) {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", 10)
         }.text shouldHaveLength 10
     }
 
     @Test
     fun `buildLesson randomLeftRightPunctuationMarks segment length range test`() {
-        buildLesson("", 10) {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", -10)
         }.text shouldHaveLength 0
 
-        buildLesson("", 10) {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", -1)
         }.text shouldHaveLength 0
 
-        buildLesson("", 10) {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", 0)
         }.text shouldHaveLength 0
 
-        buildLesson("", 10) {
+        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", 1)
-        }.text shouldMatch "[\\{\\[\\]\\}., ]{9}" // e.g. "{ } [ ] , " 10 -> trimmed to "{ } [ ] ," 9
+        }.text
+        text.split("\n") shouldHaveSize 2
+        text.split("\n").forAll { it shouldMatch "[\\{\\[\\]\\}., ]{9}" } // e.g. "{ } [ ] , " 10 -> trimmed to "{ } [ ] ," 9
 
-        buildLesson("", 10) {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", 10)
         }.text shouldHaveLength 10
     }
 
     @Test
     fun `buildLesson randomLeftRightPunctuationMarks trimmed`() {
-        val lesson = buildLesson("", 10) {
+        val lesson = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
             randomLeftRightPunctuationMarks("[{WW}].,", 1)
         }
-        lesson.text.take(1) shouldNotMatch "\\s"
-        lesson.text.takeLast(1) shouldNotMatch "\\s"
+        lesson.text shouldNotStartWith "\\s"
+        lesson.text shouldNotEndWith "\\s"
     }
 
     @Test
-    fun `buildLesson wordsWithLeftRightPunctuationMarksMultiline happy`() {
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "[WW]", 10)
+    fun `buildLesson wordsWithLeftRightPunctuationMarks happy`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 50) {
+            wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
         }.text shouldBe """
             [hi] [are]
-            [you]
-            [ready]
-            [hi] [are]
-            [you]
-            [ready]
-            [hi] [are]
+            [you] [rea
+            dy] [hi] [
+            are] [you]
+            [ready] [h
+            i] [hi]
         """.trimIndent()
 
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "WW,", 10)
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "WW,")
         }.text shouldBe """
-            hi, are,
-            you,
-            ready, hi,
-            are, you,
-            ready, hi,
-            are,
+            hi, are, h
+            i,
         """.trimIndent()
     }
 
     @Test
-    fun `buildLesson wordsWithLeftRightPunctuationMarksMultiline empty input`() {
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(emptyList(), "", 10)
+    fun `buildLesson wordsWithLeftRightPunctuationMarks empty input`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            wordsWithLeftRightPunctuationMarks(emptyList(), "")
         }.text shouldBe ""
     }
 
     @Test
-    fun `buildLesson wordsWithLeftRightPunctuationMarksMultiline line length range test`() {
-        buildLesson("", -10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "[WW]", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 }
+    fun `buildLesson wordsWithLeftRightPunctuationMarks line length range test`() {
+        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
+            wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
+        }.text shouldHaveLength 0
 
-        buildLesson("", -1) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("c", "hi", "are", "you", "ready"), "[WW]", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 }
+        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
+            wordsWithLeftRightPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), "[WW]")
+        }.text shouldHaveLength 0
 
-        buildLesson("", 0) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("c", "hi", "are", "you", "ready"), "[WW]", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 }
+        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
+            wordsWithLeftRightPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), "[WW]")
+        }.text shouldHaveLength 0
 
-        buildLesson("", 1) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("c", "hi", "are", "you", "ready"), "[WW]", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 } // shortest is "[c]"
+        val text = buildLesson(lineLength = 1, symbolsPerLesson = 10) {
+            wordsWithLeftRightPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), "[WW]")
+        }.text
+        text.split('\n') shouldHaveSize 10
+        text.split('\n').forAll { line -> line shouldHaveLength 1 }
 
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("c", "hi", "are", "you", "ready"), "[WW]", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveMaxLength 10 }
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            wordsWithLeftRightPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), "[WW]")
+        }.text.count { !it.isWhitespace() } shouldBe 10
     }
 
     @Test
-    fun `buildLesson wordsWithLeftRightPunctuationMarksMultiline word count range test`() {
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "{WW}", -10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "{WW},", -1)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "{WW},", 0)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "{WW}", 1)
-        }.text shouldBe "{hi}"
-
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "{WW}", 10)
-        }.text.split("\\s".toRegex()) shouldHaveSize 10
-    }
-
-    @Test
-    fun `buildLesson wordsWithLeftRightPunctuationMarksMultiline trimmed`() {
-        buildLesson("", 10) {
-            wordsWithLeftRightPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "[{WW}].,", 10)
-        }.text.split("\\s").forAll { line ->
-            line.take(1) shouldNotMatch "\\s"
-            line.takeLast(1) shouldNotMatch "\\s"
+    fun `buildLesson wordsWithLeftRightPunctuationMarks trimmed`() {
+        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[{WW}].,")
+        }.text
+        text.split("\\s".toRegex()) shouldHaveAtLeastSize 3
+        text.split("\\s".toRegex()).forAll { line ->
+            line shouldNotStartWith "\\s"
+            line shouldNotEndWith "\\s"
         }
-    }
-
-    @Test
-    fun `buildLesson randomUnconditionalPunctuationMarks happy`() {
-        buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks(";_.,", 10)
-        }.text shouldMatch "[;_.,]{10}"
-
-        buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks(";_.,", 3)
-        }.text shouldMatch "[;_., ]{10}"
-    }
-
-    @Test
-    fun `buildLesson randomUnconditionalPunctuationMarks empty input`() {
-        buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks("", 10)
-        }.text shouldBe ""
-    }
-
-    @Test
-    fun `buildLesson randomUnconditionalPunctuationMarks line length range test`() {
-        buildLesson("", -10) {
-            randomUnconditionalPunctuationMarks(";_.,", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", -1) {
-            randomUnconditionalPunctuationMarks(";_.,", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 0) {
-            randomUnconditionalPunctuationMarks(";_.,", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 1) {
-            randomUnconditionalPunctuationMarks(";_.,", 10)
-        }.text shouldHaveLength 1
-
-        buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks(";_.,", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson randomUnconditionalPunctuationMarks segment length range test`() {
-        buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks(";_.,", -10)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks(";_.,", -1)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks(";_.,", 0)
-        }.text shouldHaveLength 0
-
-        buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks(";_.,", 1)
-        }.text shouldMatch "[;_., ]{9}" // e.g. "; , , . _ " 10 -> trimmed to "; , , . _" 9
-
-        buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks(";_.,", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson randomUnconditionalPunctuationMarks trimmed`() {
-        val lesson = buildLesson("", 10) {
-            randomUnconditionalPunctuationMarks(";_.,", 1)
-        }
-        lesson.text.take(1) shouldNotMatch "\\s"
-        lesson.text.takeLast(1) shouldNotMatch "\\s"
     }
 
     @Test
     fun `buildLesson wordsWithUnconditionalPunctuationMarksMultiline happy`() {
-        buildLesson("", 10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), ".", 10)
-        }.text.split("\\s".toRegex()).forAll { it.startsWith('.') || it.endsWith('.') }
+        val text = buildLesson(lineLength = 20, symbolsPerLesson = 34) {
+            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), ".")
+        }.text
+        text.count { !it.isWhitespace() } shouldBe 34
+        text.split("\\s".toRegex())
+            .forAll { it shouldBeIn setOf(
+                "hi.", ".hi",
+                "are.", ".are",
+                "you.", ".you",
+                "ready.", ".ready")
+            }
+
+        val text2 = buildLesson(lineLength = 20, symbolsPerLesson = 34) {
+            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
+        }.text
+        text2.count { !it.isWhitespace() } shouldBe 34
+        text2.replace("\n", "")
+            .split("\\s".toRegex())
+            .forAll { it shouldBeIn setOf("[hi]", "[are]", "[you]", "[ready]") }
     }
 
     @Test
-    fun `buildLesson wordsWithUnconditionalPunctuationMarksMultiline empty input`() {
-        buildLesson("", 10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(emptyList(), "", 10)
-        }.text shouldBe ""
+    fun `buildLesson wordsWithUnconditionalPunctuationMarks empty word list`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            wordsWithUnconditionalPunctuationMarks(emptyList(), ".,;")
+        }.text shouldHaveLength 0
     }
 
     @Test
-    fun `buildLesson wordsWithUnconditionalPunctuationMarksMultiline line length range test`() {
-        buildLesson("", -10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), ".", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 }
-
-        buildLesson("", -1) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("c", "hi", "are", "you", "ready"), ".", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 }
-
-        buildLesson("", 0) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("c", "hi", "are", "you", "ready"), ".", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 }
-
-        buildLesson("", 1) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("c", "hi", "are", "you", "ready"), ".", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveLength 0 } // shortest is ".c" or "c."
-
-        buildLesson("", 10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("c", "hi", "are", "you", "ready"), ".", 10)
-        }.text.split('\n').forAll { line -> line shouldHaveMaxLength 10 }
+    fun `buildLesson wordsWithUnconditionalPunctuationMarks no punctuation marks`() {
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "")
+        }.text shouldHaveLength 0
     }
 
     @Test
-    fun `buildLesson wordsWithUnconditionalPunctuationMarksMultiline word count range test`() {
-        buildLesson("", 10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), ".", -10)
+    fun `buildLesson wordsWithUnconditionalPunctuationMarks line length range test`() {
+        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
+            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), ".")
         }.text shouldHaveLength 0
 
-        buildLesson("", 10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), ".", -1)
+        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
+            wordsWithUnconditionalPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), ".")
         }.text shouldHaveLength 0
 
-        buildLesson("", 10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), ".", 0)
+        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
+            wordsWithUnconditionalPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), ".")
         }.text shouldHaveLength 0
 
-        buildLesson("", 10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), ".", 1)
-        }.text shouldBeIn listOf("hi.", ".hi")
+        val text = buildLesson(lineLength = 1, symbolsPerLesson = 10) {
+            wordsWithUnconditionalPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), ".")
+        }.text
+        text.split('\n') shouldHaveSize 10
+        text.split('\n').forAll { line -> line shouldHaveLength 1 }
 
-        buildLesson("", 10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), ".", 10)
-        }.text.split("\\s".toRegex()) shouldHaveSize 10
+        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            wordsWithUnconditionalPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), ".")
+        }.text.count { !it.isWhitespace() } shouldBe 10
     }
 
     @Test
-    fun `buildLesson wordsWithUnconditionalPunctuationMarksMultiline trimmed`() {
-        buildLesson("", 10) {
-            wordsWithUnconditionalPunctuationMarksMultiline(listOf("hi", "are", "you", "ready"), "_.,", 10)
-        }.text.split("\\s").forAll { line ->
-            line.take(1) shouldNotMatch "\\s"
-            line.takeLast(1) shouldNotMatch "\\s"
+    fun `buildLesson wordsWithUnconditionalPunctuationMarks trimmed`() {
+        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "_.,")
+        }.text
+        text.split("\\s".toRegex()) shouldHaveAtLeastSize 3
+        text.split("\\s".toRegex()).forAll { line ->
+            line shouldNotStartWith "\\s"
+            line shouldNotEndWith "\\s"
         }
+    }
+
+    @Test
+    fun `buildLesson apply multiple build steps happy`() {
+        buildLesson(lineLength = 30, symbolsPerLesson = 300) {
+            repeatSymbols("abc", 2)
+            shuffledSymbols("def", 10)
+            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), ",.;")
+            words(listOf("hi", "are", "you", "ready"))
+            shuffledSymbols("yz", 2)
+            repeatSymbols("{}", 3)
+        }.text.count { !it.isWhitespace() } shouldBe 300
     }
 }

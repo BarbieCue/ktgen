@@ -16,7 +16,7 @@ class RightToLeft : Comparator<Key> {
 
 fun hands(keyboardLayout: KeyboardLayout): Pair<Hand, Hand>? {
     return if (keyboardLayout.keys.keys.map { it.fingerIndex }.toSet().size != 8) { // expect 8 fingers
-        println("Error on creating key-finger map from keyboard. Please provide a valid 8-finger keyboard KTouch export.")
+        System.err.println("Error on creating key-finger map from keyboard. Please provide a valid 8-finger keyboard KTouch export.")
         null
     }
     else {

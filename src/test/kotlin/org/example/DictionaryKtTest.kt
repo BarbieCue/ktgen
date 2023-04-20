@@ -51,6 +51,13 @@ class DictionaryKtTest {
     }
 
     @Test
+    fun `extractWords max length smaller than min length`() {
+        val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
+        val words = extractWords(text, 100, 1)
+        words shouldBe emptyList()
+    }
+
+    @Test
     fun `consistsOfAny order does not matter`() {
         "abc".consistsOfAny("abc") shouldBe true
         "abc".consistsOfAny("cba") shouldBe true
