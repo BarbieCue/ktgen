@@ -2,6 +2,7 @@ package org.example
 
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.inspectors.forAll
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldHaveLength
@@ -119,34 +120,16 @@ class CourseKtTest {
         val courseSymbols = listOf("ab", "cd")
         val dictionary = listOf("apple", "pear", "grape", "cd", "in", "nice", "ai", "ab")
         val lineLength = 20
-        val wordsPerLesson = 10
+        val symbolsPerLesson = 100
 
-        val course = createCourse(courseSymbols, dictionary, lineLength, wordsPerLesson)
+        val course = createCourse(courseSymbols, dictionary, lineLength, symbolsPerLesson)
 
-        // 1. lesson: random ab's
-        // 2. lesson: words consisting of 'a' and 'b'
-        // 3. lesson: random cd's
-        // 4. lesson: words consisting of 'c' and 'd'
-        course.lessons shouldHaveSize 4
+        course.lessons shouldHaveAtLeastSize 2
 
-        course.lessons[0].newCharacters shouldBe "ab" // introducing ab
-        course.lessons[1].newCharacters shouldBe ""
-        course.lessons[2].newCharacters shouldBe "cd" // introducing cd
-        course.lessons[3].newCharacters shouldBe ""
-
-        // line length check
         course.lessons[0].text.split('\n').forAll { it shouldHaveMaxLength 20 }
+        course.lessons[0].text.count { !it.isWhitespace() } shouldBe 100
         course.lessons[1].text.split('\n').forAll { it shouldHaveMaxLength 20 }
-        course.lessons[2].text.split('\n').forAll { it shouldHaveMaxLength 20 }
-        course.lessons[3].text.split('\n').forAll { it shouldHaveMaxLength 20 }
-
-        // number of words per lessons check
-        course.lessons[1].text.split("\\s".toRegex()) shouldHaveSize 10
-        course.lessons[3].text.split("\\s".toRegex()) shouldHaveSize 10
-
-        // words content check
-        course.lessons[1].text.split("\\s".toRegex()).forAll { it.consistsOfAny("ab") }
-        course.lessons[3].text.split("\\s".toRegex()).forAll { it.consistsOfAny("abcd") }
+        course.lessons[1].text.count { !it.isWhitespace() } shouldBe 100
     }
 
     @Test
@@ -165,39 +148,27 @@ class CourseKtTest {
         val courseSymbols = listOf("ab", "cd")
         val dictionary = emptyList<String>()
         val lineLength = 20
-        val wordsPerLesson = 10
+        val symbolsPerLesson = 40
 
-        val course = createCourse(courseSymbols, dictionary, lineLength, wordsPerLesson)
+        val course = createCourse(courseSymbols, dictionary, lineLength, symbolsPerLesson)
 
-        // 1. lesson: random ab's
-        // 2. lesson: random cd's
-        course.lessons shouldHaveSize 2
-
-        course.lessons[0].newCharacters shouldBe "ab" // introducing ab
-        course.lessons[1].newCharacters shouldBe "cd" // introducing cd
-
-        // line length check
-        course.lessons[0].text.split('\n').forAll { line ->
-            line shouldHaveMinLength 19
-            line shouldHaveMaxLength 20 }
-        course.lessons[1].text.split('\n').forAll { line ->
-            line shouldHaveMinLength 19
-            line shouldHaveMaxLength 20 }
+        // some lessons with random symbol permutations should be created
+        course.lessons shouldHaveAtLeastSize 2
     }
 
     @Test
     fun `createCourse line length range test`() {
         val courseSymbols = listOf("ab", "cd")
         val dictionary = listOf("apple", "pear", "grape", "cd", "in", "nice", "ai", "ab")
-        val wordsPerLesson = 10
+        val symbolsPerLesson = 200
 
-        createCourse(courseSymbols, dictionary, -100, wordsPerLesson).lessons.forAll { it.text.split('\n').forAll { line -> line shouldHaveLength 0 } }
-        createCourse(courseSymbols, dictionary, -1, wordsPerLesson).lessons.forAll { it.text.split('\n').forAll { line -> line shouldHaveLength 0 } }
-        createCourse(courseSymbols, dictionary, 0, wordsPerLesson).lessons.forAll { it.text.split('\n').forAll { line -> line shouldHaveLength 0 } }
-        createCourse(courseSymbols, dictionary, 1, wordsPerLesson).lessons.forAll { it.text.split('\n').forAll { line ->
+        createCourse(courseSymbols, dictionary, -100, symbolsPerLesson).lessons.forAll { it.text.split('\n').forAll { line -> line shouldHaveLength 0 } }
+        createCourse(courseSymbols, dictionary, -1, symbolsPerLesson).lessons.forAll { it.text.split('\n').forAll { line -> line shouldHaveLength 0 } }
+        createCourse(courseSymbols, dictionary, 0, symbolsPerLesson).lessons.forAll { it.text.split('\n').forAll { line -> line shouldHaveLength 0 } }
+        createCourse(courseSymbols, dictionary, 1, symbolsPerLesson).lessons.forAll { it.text.split('\n').forAll { line ->
             line shouldHaveMinLength 0
             line shouldHaveMaxLength 1 } }
-        createCourse(courseSymbols, dictionary, 100, wordsPerLesson).lessons.forAll { it.text.split('\n')
+        createCourse(courseSymbols, dictionary, 100, symbolsPerLesson).lessons.forAll { it.text.split('\n')
             .dropLast(1) // last line can be shorter
             .forAll { line ->
                 line shouldHaveMinLength 99
@@ -205,17 +176,15 @@ class CourseKtTest {
     }
 
     @Test
-    fun `createCourse words per lesson range test`() {
+    fun `createCourse symbols per lesson range test`() {
         val courseSymbols = listOf("ab")
-        val dictionary = listOf("apple", "pear", "grape", "cd", "in", "nice", "ai", "ab")
-        val lineLength = 20
+        val dictionary = emptyList<String>()
+        val lineLength = 100
 
-        // 1. lesson: random ab's
-        // 2. lesson: words consisting of 'a' and 'b'
-        createCourse(courseSymbols, dictionary, lineLength, -100).lessons[1].text shouldHaveLength 0
-        createCourse(courseSymbols, dictionary, lineLength, -1).lessons[1].text shouldHaveLength 0
-        createCourse(courseSymbols, dictionary, lineLength, 0).lessons[1].text shouldHaveLength 0
-        createCourse(courseSymbols, dictionary, lineLength, 1).lessons[1].text.split("\\s".toRegex()) shouldHaveSize 1
-        createCourse(courseSymbols, dictionary, lineLength, 100).lessons[1].text.split("\\s".toRegex()) shouldHaveSize 100
+        createCourse(courseSymbols, dictionary, lineLength, -100).lessons shouldHaveSize 0
+        createCourse(courseSymbols, dictionary, lineLength, -1).lessons shouldHaveSize 0
+        createCourse(courseSymbols, dictionary, lineLength, 0).lessons shouldHaveSize 0
+        createCourse(courseSymbols, dictionary, lineLength, 1).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  1 }
+        createCourse(courseSymbols, dictionary, lineLength, 100).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  100 }
     }
 }

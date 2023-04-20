@@ -48,7 +48,7 @@ It can be imported into KTouch.
 Provide some kind of dictionary to add words to your lessons.
 The first lessons are mostly created with random combinations of letters,
 because there are not enough letters to find meaningful **words**.
-The word order will be preserved by default, making it possible to build 
+The word order will be preserved by default, making it possible to build
 meaningful **sentences** automatically.
 
 There are two ways to equip _ktgen_ with a dictionary.
@@ -85,7 +85,7 @@ The following format applies here.
 ### Separation with whitespace characters
 
 Each segment separated by whitespace characters defines new symbols
-for which lessons are generated.
+for which lessons are generated. The read order is left to right and top down.
 
 ```text
 ab cdef gh
@@ -102,27 +102,39 @@ Here we have 8 segments of new symbols to learn: `ab`, `cdef`, `gh`, `AB`, `CD`,
 #### This example leads to the following lessons:
 
 1. Random permutations of `ab`
-2. Words consisting of `ab`
-3. Random permutations of `cdef`
-4. Words consisting of `abcdef` where each word contains at least one of the symbols `cdef`
-5. Random permutations of `gh`
-6. Words consisting of `abcdefgh` where each word contains at least one of the symbols `gh`
-7. Random permutations of `AB`
-8. Words consisting of `abcdefghAB` where each word contains at least one of the symbols `AB`
-9. Random permutations of `CD`
-10. Words consisting of `abcdefghABCD` where each word contains at least one of the symbols `CD`
-11. Random permutations of `EFGH`
-12. Words consisting of `abcdefghABCDEFGH` where each word contains at least one of the symbols `EFGH`
-13. Random permutations of `123`
-14. Random permutations of `,.`
-15. Words consisting of `abcdefghABCDEFGH` where `,` or `.` is prefixed or appended randomly
+2. Random permutations of `ab` mixed with words consisting of `ab`
+3. Words consisting of `ab`
+4. Random permutations of `cdef`
+5. Random permutations of `cdef` mixed with words consisting of `abcdef` where each
+   word contains at least one of the symbols `cdef`
+6. Such words only
+7. Random permutations of `gh`
+8. Random permutations of `gh` mixed with words consisting of `abcdefgh` where each
+   word contains at least one of the symbols `gh`
+9. Such words only
+10. Random permutations of `AB`
+11. Random permutations of `AB` mixed with words consisting of `abcdefghAB` where each
+    word contains at least one of the symbols `AB`
+12. Such words only
+13. Random permutations of `CD`
+14. Random permutations of `CD` mixed with words consisting of `abcdefghABCD` where each
+    word contains at least one of the symbols `CD`
+15. Such words only
+16. Random permutations of `EFGH`
+17. Random permutations of `EFGH` mixed with words consisting of `abcdefghABCDEFGH` where each
+    word contains at least one of the symbols `EFGH`
+18. Such words only
+19. Random permutations of `123`
+20. Random permutations of `,.`
+21. Words consisting of `abcdefghABCDEFGH` where `,` or `.` is prefixed or appended randomly
 
-However, no word lessons are generated if no matching words can be found in the dictionary.
+However, no lessons containing words are generated if no matching words can be found in the dictionary.
+
 
 ### Allowed symbols
 
 Allowed symbols are `A-Z`, `ÄÖÜ`, `ß` in lowercase and uppercase, `0-9`
-and `!"#$%&'()*+,-./:;<=>?@[]^_{|}~\`. 
+and `!"#$%&'()*+,-./:;<=>?@[]^_{|}~\`.
 
 
 ### Punctuation marks
@@ -137,7 +149,7 @@ ab cd ef gh ij kl mn op qr st uv wx yz
 
 This produces words like `\pear`, `barbie/`, `+pear`, `-apple`, `,barbie`, `pear;`, ..
 
-But, if the side matters, so that the punctuation mark can only be 
+But, if the side matters, so that the punctuation mark can only be
 to the left or only to the right of a word, then use the `WW` pattern (_WW_ stands for _word_).
 
 ```text
@@ -150,7 +162,7 @@ This produces words like `(pear)`, `[barbie]`, `{pear}`, `apple.`, `barbie,` ..
 
 ## Keyboard layout
 
-You can use a keyboard layout to create finger-by-finger lessons that 
+You can use a keyboard layout to create finger-by-finger lessons that
 focus on the key neighbors. Lowercase and uppercase letters are contained.
 A course created in this way follows an intuitive path across the keys
 on the keyboard, starting with the basic finger position.

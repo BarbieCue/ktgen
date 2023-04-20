@@ -91,7 +91,7 @@ data class KeyboardLayout (
             val serializer = serializer<KeyboardLayout>()
             xml.decodeFromString(serializer, rawXml)
         } catch (e: Exception) {
-            println("Error on reading keyboard ${e.message}")
+            System.err.println("Error on reading keyboard ${e.message}")
             null
         }
     }
@@ -146,15 +146,15 @@ fun prettyPrint(xmlString: String): String {
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8")
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no")
         transformer.setOutputProperty(OutputKeys.INDENT, "yes")
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2")
         val out: Writer = StringWriter()
         transformer.transform(DOMSource(document), StreamResult(out))
         out.toString().trim()
     } catch (e: Exception) {
-        println("Error on pretty-printing xml")
-        println(xmlString)
-        println(e.message)
-        println("Proceeding with non-pretty xml (possibly erroneous)")
+        System.err.println("Error on pretty-printing xml")
+        System.err.println(xmlString)
+        System.err.println(e.message)
+        System.err.println("Proceeding with non-pretty xml (possibly erroneous)")
         xmlString
     }
 }

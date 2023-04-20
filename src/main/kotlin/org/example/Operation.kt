@@ -28,29 +28,39 @@ fun segment(symbols: String, length: Int): String {
     }.trim()
 }
 
-fun cutEnd(str: String, length: Int): String = str.take(if (length < 0) 0 else length).trim()
-
 
 /*
  Words
  */
 
-fun toText(words: Collection<String>, lineLength: Int): String =
-    if (words.isEmpty() || lineLength < 1 || words.none { it.length <= lineLength }) ""
-    else words.filter { it.length <= lineLength }.reduce { acc, word ->
-        if ("$acc $word".lines().last().length <= lineLength)
-            "$acc $word"
-        else
-            "$acc\n$word"
-}.trim()
+fun joinRepeat(words: Collection<String>, sumNonWhitespaceChars: Int): String =
+    if (words.isEmpty() || sumNonWhitespaceChars <= 0
+        || words.all { it.isEmpty() }
+        || words.none { it.length <= sumNonWhitespaceChars }) ""
+    else {
+        val wordLoop = words
+            .filter { it.length <= sumNonWhitespaceChars }
+            .asSequence().repeatInfinite().iterator()
+        buildString {
+            var ctr = 0
+            while (true) {
+                val word = wordLoop.next().trim()
+                ctr += word.length
+                if (ctr > sumNonWhitespaceChars) {
+                    val tooMuch = ctr - sumNonWhitespaceChars
+                    val fillWord = words.find { it.length == word.length - tooMuch }
+                    if (fillWord != null) append(fillWord)
+                    else append(word.take(word.length - tooMuch))
+                    break
+                }
+                append(word)
+                append(" ")
+            }
+        }.trim()
+    }
 
-fun Collection<String>.takeRepeat(n: Int): List<String> {
-    if (isEmpty()) return emptyList()
-    var idx = 0
-    return (0 until n).map {
-        if (idx == this.size) idx = 0
-        elementAt(idx++)
-    }.toList()
+fun <T> Sequence<T>.repeatInfinite() = sequence {
+    if (any()) while (true) yieldAll(this@repeatInfinite)
 }
 
 
@@ -95,13 +105,14 @@ internal fun randomPair(left: String, right: String): Pair<String, String> {
     }
 }
 
-fun punctuationMarksLine(wwString: String, length: Int, tryToPair: Boolean = false): String {
-    val (left, right) = splitWWLeftRight(wwString)
+fun punctuationMarks(punctuationMarks: String, length: Int): String {
+    if (punctuationMarks.isEmpty() || length <= 0) return ""
+    val (left, right) = splitWWLeftRight(punctuationMarks)
     if ((left+right).isEmpty()) return ""
     return buildString {
         while (this.length < length) {
             val (l, r) = randomPair(left, right)
-            append(if (tryToPair) "$l$r" else {
+            append(if (punctuationMarks.matches(wwRegex)) "$l$r" else {
                 val set = (l+r).toSet()
                 if (set.isNotEmpty()) "${set.random()}" else ""
             })
@@ -109,16 +120,17 @@ fun punctuationMarksLine(wwString: String, length: Int, tryToPair: Boolean = fal
     }
 }
 
-fun wordsWithPunctuationMarks(words: Collection<String>, wwString: String, tryToPair: Boolean = false): List<String> {
-    val (left, right) = splitWWLeftRight(wwString)
+fun wordsWithPunctuationMarks(words: Collection<String>, punctuationMarks: String): List<String> {
+    if (words.isEmpty() || punctuationMarks.isEmpty()) return emptyList()
+    val (left, right) = splitWWLeftRight(punctuationMarks)
     return words.map {
         val (l, r) = randomPair(left, right)
-        if (tryToPair) "$l$it$r" else {
+        if (punctuationMarks.matches(wwRegex)) "$l$it$r" else {
             if ((l+r).isEmpty()) it
             else if (Random().nextInt(100) > 50)
-                    "$it${(l+r).random()}"
-                 else
-                    "${(l+r).toSet().random()}$it"
+                "$it${(l+r).random()}"
+            else
+                "${(l+r).toSet().random()}$it"
         }
     }
 }

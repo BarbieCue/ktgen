@@ -17,7 +17,7 @@ fun textFromWebsite(url: String): String? = try {
         }
     }
 } catch (e: Exception) {
-    println(e.message)
+    System.err.println(e.message)
     null
 }
 
@@ -25,7 +25,7 @@ fun textFromWebsite(url: String): String? = try {
 fun textFromFile(path: String): String? = try {
     File(path).readText().trim()
 } catch (e: Exception) {
-    println(e.message)
+    System.err.println(e.message)
     null
 }
 
@@ -54,5 +54,5 @@ fun buildDictionary(
     val file = if (dictionaryPath.isEmpty()) "" else textFromFile(dictionaryPath)
     val web = if (scrapeUrl.isEmpty()) "" else textFromWebsite(scrapeUrl)
     val dict = extractWords(file?.plus(" ").plus(web), minWordMaxLength, maxWordLength)
-    return dict.takeRepeat(dictionarySize)
+    return dict.asSequence().repeatInfinite().take(dictionarySize).toList()
 }
