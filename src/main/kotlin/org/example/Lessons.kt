@@ -28,28 +28,26 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
  */
 
 val wwRegex = "\\p{Punct}*WW\\p{Punct}*".toRegex()
-fun ww(s: String): String {
-    val matchResult = wwRegex.find(s)
-    return matchResult?.value ?: ""
-}
+fun ww(s: String): String = wwRegex.find(s)?.value ?: ""
 
 fun wwSymbols(s: String): String = ww(s).replace("WW", "")
 
 val lettersRegex = "[A-Za-züäößÜÄÖẞ]+".toRegex()
 fun letters(s: String): String =
-    lettersRegex
-        .findAll(s.replace(ww(s), ""))
+    lettersRegex.findAll(
+        s.replace(wwRegex, "")
+         .replace(letterGroupRegex, ""))
         .joinToString("") { it.value }
 
-fun digits(s: String): String =
-    "\\d+".toRegex()
-        .findAll(s.replace(ww(s), ""))
-        .joinToString("") { it.value }
+fun digits(s: String): String = "\\d+".toRegex().findAll(s).joinToString("") { it.value }
+
+val letterGroupRegex = "\\[${lettersRegex.pattern}\\]".toRegex()
+fun letterGroup(s: String): String = letterGroupRegex.find(s.replace(ww(s), ""))?.value ?: ""
 
 fun unconditionalPunctuation(s: String): String =
-    "\\p{Punct}*".toRegex()
-        .findAll(s.replace(ww(s), ""))
-        .joinToString("") { it.value }
+    "\\p{Punct}+".toRegex()
+        .find(s.replace(ww(s), "")
+               .replace(letterGroup(s), ""))?.value ?: ""
 
 
 /*

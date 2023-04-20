@@ -120,6 +120,12 @@ class LessonsKtTest {
     }
 
     @Test
+    fun `ww should return the first WW part only`() {
+        ww("(WW)(WW)") shouldBe "(WW)("
+        ww("(WW)';[{(WW)}]") shouldBe "(WW)';[{("
+    }
+
+    @Test
     fun `ww should ignore everything else`() {
         ww("abcABC(WW)") shouldBe "(WW)"
         ww("abcABC(WW)1abcABC") shouldBe "(WW)"
@@ -148,6 +154,48 @@ class LessonsKtTest {
         wwSymbols("1WW1") shouldBe ""
         wwSymbols("1abcWW") shouldBe ""
         wwSymbols("()=abcWW") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroup should return groups of letters`() {
+        letterGroup("[sch]") shouldBe "[sch]"
+        letterGroup("[123]") shouldBe ""
+        letterGroup("[%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroup should return the first group`() {
+        letterGroup("[sch][ch][ss][tt]") shouldBe "[sch]"
+        letterGroup("[tt][ch][ss]") shouldBe "[tt]"
+    }
+
+    @Test
+    fun `letterGroup should not return empty an group`() {
+        letterGroup("[]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroup should not return groups of non-letters`() {
+        letterGroup("[123]") shouldBe ""
+        letterGroup("[%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroup should not return groups containing non-letters`() {
+        letterGroup("[sch12]") shouldBe ""
+        letterGroup("[sch%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroup should ignore surrounding square brackets`() {
+        letterGroup("[[sch]]") shouldBe "[sch]"
+        letterGroup("[[[sch]]]") shouldBe "[sch]"
+    }
+
+    @Test
+    fun `letterGroup WW part can not be a letter group`() {
+        letterGroup("[WW]") shouldBe ""
+        letterGroup("{[WW]}") shouldBe ""
     }
 
     @Test
@@ -194,8 +242,19 @@ class LessonsKtTest {
     fun `letters should ignore WW part`() {
         letters("WW") shouldBe ""
         letters("(WW)") shouldBe ""
-        letters("abc(WW)") shouldBe "abc"
+        letters("abc(WW)abc(WW)';abc") shouldBe "abcabcabc"
         letters("abc(WW)=;def") shouldBe "abcdef"
+    }
+
+    @Test
+    fun `letters should ignore letter groups`() {
+        letters("abc[sch]def") shouldBe "abcdef"
+        letters("abcdef[sch]") shouldBe "abcdef"
+        letters("[sch]abcdef") shouldBe "abcdef"
+        letters("[sch]abcdef[tt]") shouldBe "abcdef"
+        letters("abc[]def") shouldBe "abcdef"
+        letters("abcdef[]") shouldBe "abcdef"
+        letters("[]abcdef") shouldBe "abcdef"
     }
 
     @Test
