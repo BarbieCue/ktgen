@@ -52,7 +52,7 @@ fun createCourse(
             )
 
             // Letters and words mixed
-            val words = dictionary.lessonWords(charsHistory.toString(), lessonSymbols)
+            val words = dictionary.lessonWords(charsHistory.toString(), letters)
             lessons.add(
                 buildLesson(
                     "${lessonCtr.next()}: $letters and text",
@@ -71,6 +71,45 @@ fun createCourse(
                         "${lessonCtr.next()}: Text ($letters)",
                         lineLength, symbolsPerLesson,
                         charsHistory.newCharacters(letters)) {
+                        words(words)
+                    }
+                )
+            }
+        }
+
+        // Letter group
+        val letterGroup = letterGroup(lessonSymbols)
+        if (letterGroup.isNotEmpty()) {
+            val groupLetters = letterGroupLetters(lessonSymbols)
+            lessons.add(
+                buildLesson(
+                    "${lessonCtr.next()}: $groupLetters",
+                    lineLength, symbolsPerLesson,
+                    charsHistory.newCharacters(groupLetters)) {
+                    repeatSymbols(groupLetters, groupLetters.length)
+                }
+            )
+
+            // Letter group and words mixed
+            val words = dictionary.lessonWords(charsHistory.toString(), letterGroup)
+            lessons.add(
+                buildLesson(
+                    "${lessonCtr.next()}: $groupLetters and text",
+                    lineLength, symbolsPerLesson,
+                    charsHistory.newCharacters(groupLetters)) {
+                    repeatSymbols(groupLetters, groupLetters.length)
+                    words(words)
+                    repeatSymbols(groupLetters, groupLetters.length)
+                }
+            )
+
+            // Words
+            if (words.isNotEmpty()) {
+                lessons.add(
+                    buildLesson(
+                        "${lessonCtr.next()}: Text ($groupLetters, groupLetters.length)",
+                        lineLength, symbolsPerLesson,
+                        charsHistory.newCharacters(groupLetters)) {
                         words(words)
                     }
                 )
@@ -111,7 +150,7 @@ fun createCourse(
             )
 
             // Punctuation marks words (left right)
-            val words = dictionary.lessonWords(charsHistory.toString(), lessonSymbols)
+            val words = dictionary.lessonWords(charsHistory.toString(), leftRightPunctuationMarks)
             if (words.isNotEmpty())
                 lessons.add(
                     buildLesson(
@@ -140,7 +179,7 @@ fun createCourse(
             )
 
             // Punctuation marks words
-            val words = dictionary.lessonWords(charsHistory.toString(), lessonSymbols)
+            val words = dictionary.lessonWords(charsHistory.toString(), unconditionalPunctuationMarks)
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(

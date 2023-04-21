@@ -110,6 +110,14 @@ class LessonsKtTest {
     }
 
     @Test
+    fun `lessonWords if lesson symbols is a letter group, take words from history which contain the group`() {
+        val dict = setOf("apple", "letter", "lesson", "china", "brain")
+        val charsHistory = "ialetrsonch"
+        val lessonSymbols = "[tt]"
+        dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("letter")
+    }
+
+    @Test
     fun `ww should return the WW part`() {
         ww("WW") shouldBe "WW"
         ww("(WW)") shouldBe "(WW)"
@@ -197,6 +205,50 @@ class LessonsKtTest {
         letterGroup("[WW]") shouldBe ""
         letterGroup("{[WW]}") shouldBe ""
     }
+
+
+    @Test
+    fun `letterGroupletters should return the letters of the group`() {
+        letterGroupLetters("[sch]") shouldBe "sch"
+    }
+
+    @Test
+    fun `letterGroupLetters should return the first group`() {
+        letterGroupLetters("[sch][ch][ss][tt]") shouldBe "sch"
+        letterGroupLetters("[tt][ch][ss]") shouldBe "tt"
+    }
+
+    @Test
+    fun `letterGroupLetters should not return empty an group`() {
+        letterGroupLetters("[]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroupLetters should not return groups of non-letters`() {
+        letterGroupLetters("[123]") shouldBe ""
+        letterGroupLetters("[%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroupLetters should not return groups containing non-letters`() {
+        letterGroupLetters("[sch12]") shouldBe ""
+        letterGroupLetters("[sch%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroupLetters should ignore surrounding square brackets`() {
+        letterGroupLetters("[[sch]]") shouldBe "sch"
+        letterGroupLetters("[[[sch]]]") shouldBe "sch"
+    }
+
+    @Test
+    fun `letterGroupLetters WW part can not be a letter group`() {
+        letterGroupLetters("[WW]") shouldBe ""
+        letterGroupLetters("{[WW]}") shouldBe ""
+    }
+
+
+
 
     @Test
     fun `unconditionalPunctuation should return punctuation marks which are not related to WW`() {

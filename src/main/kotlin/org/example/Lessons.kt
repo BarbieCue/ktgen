@@ -17,8 +17,17 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
     val rand = Random.nextInt(0, size / 2)
     return list.subList(rand, size).plus(list.subList(0, rand))
         .filter { it.consistsOfAny(letters(charsHistory)) &&
-                if (letters(lessonSymbols).isEmpty()) true
-                else it.containsAny(letters(lessonSymbols))
+
+                // words for letter groups
+                if (letterGroup(lessonSymbols).isNotEmpty())
+                    it.contains(letterGroupLetters(lessonSymbols))
+
+                // words for letters
+                else if (letters(lessonSymbols).isNotEmpty())
+                    it.containsAny(letters(lessonSymbols))
+
+                // words for e.g. symbols
+                else true
         }
 }
 
@@ -43,6 +52,7 @@ fun digits(s: String): String = "\\d+".toRegex().findAll(s).joinToString("") { i
 
 val letterGroupRegex = "\\[${lettersRegex.pattern}\\]".toRegex()
 fun letterGroup(s: String): String = letterGroupRegex.find(s.replace(ww(s), ""))?.value ?: ""
+fun letterGroupLetters(s: String): String = letterGroup(s).replace("[", "").replace("]", "")
 
 fun unconditionalPunctuation(s: String): String =
     "\\p{Punct}+".toRegex()
