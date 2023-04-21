@@ -7,7 +7,7 @@ import it.skrape.fetcher.skrape
 import java.io.File
 
 
-fun textFromWebsite(url: String): String? = try {
+fun textFromWebsite(url: String): String = try {
     skrape(BrowserFetcher) {
         request {
             this.url = url
@@ -17,8 +17,8 @@ fun textFromWebsite(url: String): String? = try {
         }
     }
 } catch (e: Exception) {
-    System.err.println(e.message)
-    null
+    System.err.println("Error while trying to read text from the given website. Message: ${e.message}")
+    ""
 }
 
 
