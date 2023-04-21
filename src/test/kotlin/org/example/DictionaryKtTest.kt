@@ -163,17 +163,17 @@ class DictionaryKtTest {
     fun `textFromWebsite protocol missing`() {
         val port = ports.next()
         embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        textFromWebsite("localhost:$port/") shouldBe null
+        textFromWebsite("localhost:$port/") shouldBe ""
     }
 
     @Test
     fun `textFromWebsite unknown host`() {
-        textFromWebsite("http://cgtsirenbml8hcduygesrtiyelschtibyesr") shouldBe null
+        textFromWebsite("http://cgtsirenbml8hcduygesrtiyelschtibyesr") shouldBe ""
     }
 
     @Test
     fun `textFromWebsite empty url`() {
-        textFromWebsite("") shouldBe null
+        textFromWebsite("") shouldBe ""
     }
 
     @Test
