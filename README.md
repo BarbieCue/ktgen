@@ -160,6 +160,21 @@ WW., [(WW)] {WW}
 This produces words like `(pear)`, `[barbie]`, `{pear}`, `apple.`, `barbie,` ..
 
 
+### Letter groups
+
+In every language, letters appear as fixed groups.
+For example, _"tt"_, _"ss"_, _"ch"_, _"nn"_ or _"sch"_.
+Lessons for such groups are generated with square brackets.
+
+```text
+ab cd ef gh ij kl mn op qr st uv wx yz
+[ch] [tt] [ss]
+```
+
+This produces words like `china`, `letter`, `lesson`.
+
+
+
 ## Keyboard layout
 
 You can use a keyboard layout to create finger-by-finger lessons that
