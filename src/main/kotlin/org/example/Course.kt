@@ -99,7 +99,6 @@ fun createCourse(
                     charsHistory.newCharacters(groupLetters)) {
                     repeatSymbols(groupLetters, groupLetters.length)
                     words(words)
-                    repeatSymbols(groupLetters, groupLetters.length)
                 }
             )
 
@@ -107,7 +106,7 @@ fun createCourse(
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(
-                        "${lessonCtr.next()}: Text ($groupLetters, groupLetters.length)",
+                        "${lessonCtr.next()}: Text $groupLetters",
                         lineLength, symbolsPerLesson,
                         charsHistory.newCharacters(groupLetters)) {
                         words(words)
