@@ -80,7 +80,7 @@ fun createCourse(
         // Letter group
         val letterGroup = letterGroup(lessonSymbols)
         if (letterGroup.isNotEmpty()) {
-            val groupLetters = letterGroupLetters(lessonSymbols)
+            val groupLetters = letterGroupUnpack(lessonSymbols)
             lessons.add(
                 buildLesson(
                     "${lessonCtr.next()}: $groupLetters",

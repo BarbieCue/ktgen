@@ -208,43 +208,43 @@ class LessonsKtTest {
 
 
     @Test
-    fun `letterGroupletters should return the letters of the group`() {
-        letterGroupLetters("[sch]") shouldBe "sch"
+    fun `letterGroupUnpack should return the letters of the group`() {
+        letterGroupUnpack("[sch]") shouldBe "sch"
     }
 
     @Test
-    fun `letterGroupLetters should return the first group`() {
-        letterGroupLetters("[sch][ch][ss][tt]") shouldBe "sch"
-        letterGroupLetters("[tt][ch][ss]") shouldBe "tt"
+    fun `letterGroupUnpack should return the first group`() {
+        letterGroupUnpack("[sch][ch][ss][tt]") shouldBe "sch"
+        letterGroupUnpack("[tt][ch][ss]") shouldBe "tt"
     }
 
     @Test
-    fun `letterGroupLetters should not return empty an group`() {
-        letterGroupLetters("[]") shouldBe ""
+    fun `letterGroupUnpack should not return empty an group`() {
+        letterGroupUnpack("[]") shouldBe ""
     }
 
     @Test
-    fun `letterGroupLetters should not return groups of non-letters`() {
-        letterGroupLetters("[123]") shouldBe ""
-        letterGroupLetters("[%';]") shouldBe ""
+    fun `letterGroupUnpack should not return groups of non-letters`() {
+        letterGroupUnpack("[123]") shouldBe ""
+        letterGroupUnpack("[%';]") shouldBe ""
     }
 
     @Test
-    fun `letterGroupLetters should not return groups containing non-letters`() {
-        letterGroupLetters("[sch12]") shouldBe ""
-        letterGroupLetters("[sch%';]") shouldBe ""
+    fun `letterGroupUnpack should not return groups containing non-letters`() {
+        letterGroupUnpack("[sch12]") shouldBe ""
+        letterGroupUnpack("[sch%';]") shouldBe ""
     }
 
     @Test
-    fun `letterGroupLetters should ignore surrounding square brackets`() {
-        letterGroupLetters("[[sch]]") shouldBe "sch"
-        letterGroupLetters("[[[sch]]]") shouldBe "sch"
+    fun `letterGroupUnpack should ignore surrounding square brackets`() {
+        letterGroupUnpack("[[sch]]") shouldBe "sch"
+        letterGroupUnpack("[[[sch]]]") shouldBe "sch"
     }
 
     @Test
-    fun `letterGroupLetters WW part can not be a letter group`() {
-        letterGroupLetters("[WW]") shouldBe ""
-        letterGroupLetters("{[WW]}") shouldBe ""
+    fun `letterGroupUnpack WW part can not be a letter group`() {
+        letterGroupUnpack("[WW]") shouldBe ""
+        letterGroupUnpack("{[WW]}") shouldBe ""
     }
 
 

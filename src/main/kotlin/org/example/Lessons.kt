@@ -20,7 +20,7 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
 
                 // words for letter groups
                 if (letterGroup(lessonSymbols).isNotEmpty())
-                    it.contains(letterGroupLetters(lessonSymbols))
+                    it.contains(letterGroupUnpack(lessonSymbols))
 
                 // words for letters
                 else if (letters(lessonSymbols).isNotEmpty())
@@ -52,7 +52,7 @@ fun digits(s: String): String = "\\d+".toRegex().findAll(s).joinToString("") { i
 
 val letterGroupRegex = "\\[${lettersRegex.pattern}\\]".toRegex()
 fun letterGroup(s: String): String = letterGroupRegex.find(s.replace(ww(s), ""))?.value ?: ""
-fun letterGroupLetters(s: String): String = letterGroup(s).replace("[", "").replace("]", "")
+fun letterGroupUnpack(s: String): String = letterGroup(s).replace("[", "").replace("]", "")
 
 fun unconditionalPunctuation(s: String): String =
     "\\p{Punct}+".toRegex()
