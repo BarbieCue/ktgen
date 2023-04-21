@@ -110,6 +110,14 @@ class LessonsKtTest {
     }
 
     @Test
+    fun `lessonWords if lesson symbols is a letter group, take words from history which contain the group`() {
+        val dict = setOf("apple", "letter", "lesson", "china", "brain")
+        val charsHistory = "ialetrsonch"
+        val lessonSymbols = "[tt]"
+        dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("letter")
+    }
+
+    @Test
     fun `ww should return the WW part`() {
         ww("WW") shouldBe "WW"
         ww("(WW)") shouldBe "(WW)"
@@ -117,6 +125,12 @@ class LessonsKtTest {
         ww("_}*?/{(WW") shouldBe "_}*?/{(WW"
         ww("W") shouldBe ""
         ww("") shouldBe ""
+    }
+
+    @Test
+    fun `ww should return the first WW part only`() {
+        ww("(WW)(WW)") shouldBe "(WW)("
+        ww("(WW)';[{(WW)}]") shouldBe "(WW)';[{("
     }
 
     @Test
@@ -130,25 +144,111 @@ class LessonsKtTest {
     }
 
     @Test
-    fun `wwSymbols should remove the WW in a WW string and return only the symbols`() {
-        wwSymbols("(WW)") shouldBe "()"
-        wwSymbols("WW)=/\\") shouldBe ")=/\\"
-        wwSymbols("_}*?/{(WW") shouldBe "_}*?/{("
-        wwSymbols("WW") shouldBe ""
-        wwSymbols("W") shouldBe ""
-        wwSymbols("") shouldBe ""
+    fun `wwUnpack should remove the WW in a WW string and return only the symbols`() {
+        wwUnpack("(WW)") shouldBe "()"
+        wwUnpack("WW)=/\\") shouldBe ")=/\\"
+        wwUnpack("_}*?/{(WW") shouldBe "_}*?/{("
+        wwUnpack("WW") shouldBe ""
+        wwUnpack("W") shouldBe ""
+        wwUnpack("") shouldBe ""
     }
 
     @Test
-    fun `wwSymbols ignore everything else`() {
-        wwSymbols("abcABC(WW)") shouldBe "()"
-        wwSymbols("abcABC(WW)1abcABC") shouldBe "()"
-        wwSymbols("abc:ABC(WW)1a,bc_ABC") shouldBe "()"
-        wwSymbols("abcABCWW") shouldBe ""
-        wwSymbols("1WW1") shouldBe ""
-        wwSymbols("1abcWW") shouldBe ""
-        wwSymbols("()=abcWW") shouldBe ""
+    fun `wwUnpack ignore everything else`() {
+        wwUnpack("abcABC(WW)") shouldBe "()"
+        wwUnpack("abcABC(WW)1abcABC") shouldBe "()"
+        wwUnpack("abc:ABC(WW)1a,bc_ABC") shouldBe "()"
+        wwUnpack("abcABCWW") shouldBe ""
+        wwUnpack("1WW1") shouldBe ""
+        wwUnpack("1abcWW") shouldBe ""
+        wwUnpack("()=abcWW") shouldBe ""
     }
+
+    @Test
+    fun `letterGroup should return groups of letters`() {
+        letterGroup("[sch]") shouldBe "[sch]"
+        letterGroup("[123]") shouldBe ""
+        letterGroup("[%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroup should return the first group`() {
+        letterGroup("[sch][ch][ss][tt]") shouldBe "[sch]"
+        letterGroup("[tt][ch][ss]") shouldBe "[tt]"
+    }
+
+    @Test
+    fun `letterGroup should not return empty an group`() {
+        letterGroup("[]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroup should not return groups of non-letters`() {
+        letterGroup("[123]") shouldBe ""
+        letterGroup("[%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroup should not return groups containing non-letters`() {
+        letterGroup("[sch12]") shouldBe ""
+        letterGroup("[sch%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroup should ignore surrounding square brackets`() {
+        letterGroup("[[sch]]") shouldBe "[sch]"
+        letterGroup("[[[sch]]]") shouldBe "[sch]"
+    }
+
+    @Test
+    fun `letterGroup WW part can not be a letter group`() {
+        letterGroup("[WW]") shouldBe ""
+        letterGroup("{[WW]}") shouldBe ""
+    }
+
+
+    @Test
+    fun `letterGroupUnpack should return the letters of the group`() {
+        letterGroupUnpack("[sch]") shouldBe "sch"
+    }
+
+    @Test
+    fun `letterGroupUnpack should return the first group`() {
+        letterGroupUnpack("[sch][ch][ss][tt]") shouldBe "sch"
+        letterGroupUnpack("[tt][ch][ss]") shouldBe "tt"
+    }
+
+    @Test
+    fun `letterGroupUnpack should not return empty an group`() {
+        letterGroupUnpack("[]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroupUnpack should not return groups of non-letters`() {
+        letterGroupUnpack("[123]") shouldBe ""
+        letterGroupUnpack("[%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroupUnpack should not return groups containing non-letters`() {
+        letterGroupUnpack("[sch12]") shouldBe ""
+        letterGroupUnpack("[sch%';]") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroupUnpack should ignore surrounding square brackets`() {
+        letterGroupUnpack("[[sch]]") shouldBe "sch"
+        letterGroupUnpack("[[[sch]]]") shouldBe "sch"
+    }
+
+    @Test
+    fun `letterGroupUnpack WW part can not be a letter group`() {
+        letterGroupUnpack("[WW]") shouldBe ""
+        letterGroupUnpack("{[WW]}") shouldBe ""
+    }
+
+
+
 
     @Test
     fun `unconditionalPunctuation should return punctuation marks which are not related to WW`() {
@@ -194,8 +294,19 @@ class LessonsKtTest {
     fun `letters should ignore WW part`() {
         letters("WW") shouldBe ""
         letters("(WW)") shouldBe ""
-        letters("abc(WW)") shouldBe "abc"
+        letters("abc(WW)abc(WW)';abc") shouldBe "abcabcabc"
         letters("abc(WW)=;def") shouldBe "abcdef"
+    }
+
+    @Test
+    fun `letters should ignore letter groups`() {
+        letters("abc[sch]def") shouldBe "abcdef"
+        letters("abcdef[sch]") shouldBe "abcdef"
+        letters("[sch]abcdef") shouldBe "abcdef"
+        letters("[sch]abcdef[tt]") shouldBe "abcdef"
+        letters("abc[]def") shouldBe "abcdef"
+        letters("abcdef[]") shouldBe "abcdef"
+        letters("[]abcdef") shouldBe "abcdef"
     }
 
     @Test

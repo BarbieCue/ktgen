@@ -17,8 +17,17 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
     val rand = Random.nextInt(0, size / 2)
     return list.subList(rand, size).plus(list.subList(0, rand))
         .filter { it.consistsOfAny(letters(charsHistory)) &&
-                if (letters(lessonSymbols).isEmpty()) true
-                else it.containsAny(letters(lessonSymbols))
+
+                // words for letter groups
+                if (letterGroup(lessonSymbols).isNotEmpty())
+                    it.contains(letterGroupUnpack(lessonSymbols))
+
+                // words for letters
+                else if (letters(lessonSymbols).isNotEmpty())
+                    it.containsAny(letters(lessonSymbols))
+
+                // words for e.g. symbols
+                else true
         }
 }
 
@@ -28,28 +37,27 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
  */
 
 val wwRegex = "\\p{Punct}*WW\\p{Punct}*".toRegex()
-fun ww(s: String): String {
-    val matchResult = wwRegex.find(s)
-    return matchResult?.value ?: ""
-}
+fun ww(s: String): String = wwRegex.find(s)?.value ?: ""
 
-fun wwSymbols(s: String): String = ww(s).replace("WW", "")
+fun wwUnpack(s: String): String = ww(s).replace("WW", "")
 
 val lettersRegex = "[A-Za-züäößÜÄÖẞ]+".toRegex()
 fun letters(s: String): String =
-    lettersRegex
-        .findAll(s.replace(ww(s), ""))
+    lettersRegex.findAll(
+        s.replace(wwRegex, "")
+         .replace(letterGroupRegex, ""))
         .joinToString("") { it.value }
 
-fun digits(s: String): String =
-    "\\d+".toRegex()
-        .findAll(s.replace(ww(s), ""))
-        .joinToString("") { it.value }
+fun digits(s: String): String = "\\d+".toRegex().findAll(s).joinToString("") { it.value }
+
+val letterGroupRegex = "\\[${lettersRegex.pattern}\\]".toRegex()
+fun letterGroup(s: String): String = letterGroupRegex.find(s.replace(ww(s), ""))?.value ?: ""
+fun letterGroupUnpack(s: String): String = letterGroup(s).replace("[", "").replace("]", "")
 
 fun unconditionalPunctuation(s: String): String =
-    "\\p{Punct}*".toRegex()
-        .findAll(s.replace(ww(s), ""))
-        .joinToString("") { it.value }
+    "\\p{Punct}+".toRegex()
+        .find(s.replace(ww(s), "")
+               .replace(letterGroup(s), ""))?.value ?: ""
 
 
 /*
