@@ -138,9 +138,9 @@ fun createCourse(
         if (leftRightPunctuationMarks.isNotEmpty()) {
             lessons.add(
                 buildLesson(
-                    "${lessonCtr.next()}: ${wwSymbols(lessonSymbols)}",
+                    "${lessonCtr.next()}: ${wwUnpack(lessonSymbols)}",
                     lineLength, symbolsPerLesson,
-                    charsHistory.newCharacters(wwSymbols(lessonSymbols))) {
+                    charsHistory.newCharacters(wwUnpack(lessonSymbols))) {
                     randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 2)
                     randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 3)
                     randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 4)
@@ -154,9 +154,9 @@ fun createCourse(
             if (words.isNotEmpty())
                 lessons.add(
                     buildLesson(
-                        "${lessonCtr.next()}: Text ${wwSymbols(lessonSymbols)}",
+                        "${lessonCtr.next()}: Text ${wwUnpack(lessonSymbols)}",
                         lineLength, symbolsPerLesson,
-                        charsHistory.newCharacters(wwSymbols(lessonSymbols))) {
+                        charsHistory.newCharacters(wwUnpack(lessonSymbols))) {
                         wordsWithLeftRightPunctuationMarks(words, leftRightPunctuationMarks)
                     }
                 )

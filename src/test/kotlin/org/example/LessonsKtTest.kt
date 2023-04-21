@@ -144,24 +144,24 @@ class LessonsKtTest {
     }
 
     @Test
-    fun `wwSymbols should remove the WW in a WW string and return only the symbols`() {
-        wwSymbols("(WW)") shouldBe "()"
-        wwSymbols("WW)=/\\") shouldBe ")=/\\"
-        wwSymbols("_}*?/{(WW") shouldBe "_}*?/{("
-        wwSymbols("WW") shouldBe ""
-        wwSymbols("W") shouldBe ""
-        wwSymbols("") shouldBe ""
+    fun `wwUnpack should remove the WW in a WW string and return only the symbols`() {
+        wwUnpack("(WW)") shouldBe "()"
+        wwUnpack("WW)=/\\") shouldBe ")=/\\"
+        wwUnpack("_}*?/{(WW") shouldBe "_}*?/{("
+        wwUnpack("WW") shouldBe ""
+        wwUnpack("W") shouldBe ""
+        wwUnpack("") shouldBe ""
     }
 
     @Test
-    fun `wwSymbols ignore everything else`() {
-        wwSymbols("abcABC(WW)") shouldBe "()"
-        wwSymbols("abcABC(WW)1abcABC") shouldBe "()"
-        wwSymbols("abc:ABC(WW)1a,bc_ABC") shouldBe "()"
-        wwSymbols("abcABCWW") shouldBe ""
-        wwSymbols("1WW1") shouldBe ""
-        wwSymbols("1abcWW") shouldBe ""
-        wwSymbols("()=abcWW") shouldBe ""
+    fun `wwUnpack ignore everything else`() {
+        wwUnpack("abcABC(WW)") shouldBe "()"
+        wwUnpack("abcABC(WW)1abcABC") shouldBe "()"
+        wwUnpack("abc:ABC(WW)1a,bc_ABC") shouldBe "()"
+        wwUnpack("abcABCWW") shouldBe ""
+        wwUnpack("1WW1") shouldBe ""
+        wwUnpack("1abcWW") shouldBe ""
+        wwUnpack("()=abcWW") shouldBe ""
     }
 
     @Test
