@@ -139,6 +139,14 @@ class L(
         return this
     }
 
+    fun alternatingSymbols(symbols: String, segmentLength: Int): L {
+        buildSteps.add { numberOfSymbols ->
+            val stretched = symbols.map { "$it".repeat(segmentLength) }.joinToString("")
+            segment(repeat(stretched, numberOfSymbols), segmentLength)
+        }
+        return this
+    }
+
     fun words(words: Collection<String>): L {
         buildSteps.add { numberOfSymbols ->
             joinRepeat(words, numberOfSymbols)

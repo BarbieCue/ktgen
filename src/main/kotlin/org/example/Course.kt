@@ -43,6 +43,7 @@ fun createCourse(
                     "${lessonCtr.next()}: $letters",
                     lineLength, symbolsPerLesson,
                     charsHistory.newCharacters(letters)) {
+                    alternatingSymbols(letters, 3)
                     repeatSymbols(letters, 2)
                     repeatSymbols(letters, 3)
                     shuffledSymbols(letters, 4)
