@@ -46,8 +46,8 @@ fun createCourse(
                     repeatSymbols(letters, 2)
                     repeatSymbols(letters, 3)
                     shuffledSymbols(letters, 4)
-                    repeatSymbols(letters, 3)
-                    repeatSymbols(letters, 2)
+                    repeatSymbols(letters.reversed(), 3)
+                    repeatSymbols(letters.reversed(), 2)
                 }
             )
 
@@ -59,6 +59,7 @@ fun createCourse(
                     lineLength, symbolsPerLesson,
                     charsHistory.newCharacters(letters)) {
                     repeatSymbols(letters, 4)
+                    words(words)
                     words(words)
                     shuffledSymbols(letters, 4)
                 }
@@ -99,6 +100,8 @@ fun createCourse(
                     charsHistory.newCharacters(groupLetters)) {
                     repeatSymbols(groupLetters, groupLetters.length)
                     words(words)
+                    words(words)
+                    repeatSymbols(groupLetters, groupLetters.length)
                 }
             )
 
@@ -126,8 +129,8 @@ fun createCourse(
                     repeatSymbols(digits, 1)
                     repeatSymbols(digits, 3)
                     shuffledSymbols(digits, 5)
-                    repeatSymbols(digits, 3)
-                    repeatSymbols(digits, 1)
+                    repeatSymbols(digits.reversed(), 3)
+                    repeatSymbols(digits.reversed(), 1)
                 }
             )
         }
