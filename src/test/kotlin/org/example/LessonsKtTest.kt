@@ -156,6 +156,23 @@ class LessonsKtTest {
     }
 
     @Test
+    fun `ww regex should match WW strings`() {
+        "WW,." shouldMatch wwRegex
+        "+WW" shouldMatch wwRegex
+        "[WW]" shouldMatch wwRegex
+        "WW" shouldMatch wwRegex
+    }
+
+    @Test
+    fun `ww regex should not match anything else`() {
+        "" shouldNotMatch letterGroupRegex.pattern
+        "W" shouldNotMatch letterGroupRegex.pattern
+        ",." shouldNotMatch letterGroupRegex.pattern
+        "abc" shouldNotMatch letterGroupRegex.pattern
+        "1" shouldNotMatch letterGroupRegex.pattern
+    }
+
+    @Test
     fun `ww should return the WW part`() {
         ww("WW") shouldBe "WW"
         ww("(WW)") shouldBe "(WW)"
@@ -200,6 +217,21 @@ class LessonsKtTest {
         wwUnpack("1WW1") shouldBe ""
         wwUnpack("1abcWW") shouldBe ""
         wwUnpack("()=abcWW") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroupRegex should match letter groups`() {
+        "[sch]" shouldMatch letterGroupRegex
+    }
+
+    @Test
+    fun `letterGroupRegex should not match anything else`() {
+        "[sch]a" shouldNotMatch letterGroupRegex.pattern
+        "a[sch]" shouldNotMatch letterGroupRegex.pattern
+        "[]" shouldNotMatch letterGroupRegex.pattern
+        "abc" shouldNotMatch letterGroupRegex.pattern
+        "1" shouldNotMatch letterGroupRegex.pattern
+        "" shouldNotMatch letterGroupRegex.pattern
     }
 
     @Test

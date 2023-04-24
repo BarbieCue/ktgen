@@ -44,7 +44,6 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
 
 val wwRegex = "\\p{Punct}*WW\\p{Punct}*".toRegex()
 fun ww(s: String): String = wwRegex.find(s)?.value ?: ""
-
 fun wwUnpack(s: String): String = ww(s).replace("WW", "")
 
 val lettersRegex = "[A-Za-züäößÜÄÖẞ]+".toRegex()
