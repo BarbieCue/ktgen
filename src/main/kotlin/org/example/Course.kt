@@ -47,10 +47,9 @@ fun createCourse(
                     lineLength, symbolsPerLesson, newCharacters) {
                     alternatingSymbols(letters, 3)
                     repeatSymbols(letters, 2)
-                    repeatSymbols(letters, 3)
                     shuffledSymbols(letters, 4)
                     repeatSymbols(letters.reversed(), 3)
-                    repeatSymbols(letters.reversed(), 2)
+                    alternatingSymbols(letters, 3)
                 }
             )
 
@@ -83,7 +82,7 @@ fun createCourse(
         // Letter group
         val letterGroup = letterGroup(lessonSymbols)
         if (letterGroup.isNotEmpty()) {
-            val groupLetters = letterGroupUnpack(lessonSymbols)
+            val groupLetters = unpack(lessonSymbols)
             lessons.add(
                 buildLesson(
                     "${lessonCtr.next()}: $groupLetters",
@@ -124,13 +123,12 @@ fun createCourse(
             lessons.add(
                 buildLesson(
                     "${lessonCtr.next()}: $digits",
-                    lineLength, symbolsPerLesson,
-                    charsHistory.newCharacters(digits)) {
-                    repeatSymbols(digits, 1)
+                    lineLength, symbolsPerLesson, newCharacters) {
+                    alternatingSymbols(digits, 3)
                     repeatSymbols(digits, 3)
                     shuffledSymbols(digits, 5)
                     repeatSymbols(digits.reversed(), 3)
-                    repeatSymbols(digits.reversed(), 1)
+                    alternatingSymbols(digits, 3)
                 }
             )
         }
@@ -140,14 +138,13 @@ fun createCourse(
         if (leftRightPunctuationMarks.isNotEmpty()) {
             lessons.add(
                 buildLesson(
-                    "${lessonCtr.next()}: ${wwUnpack(lessonSymbols)}",
-                    lineLength, symbolsPerLesson,
-                    charsHistory.newCharacters(wwUnpack(lessonSymbols))) {
+                    "${lessonCtr.next()}: ${unpack(lessonSymbols)}",
+                    lineLength, symbolsPerLesson, newCharacters) {
+                    alternatingSymbols(unpack(leftRightPunctuationMarks), 3)
                     randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 2)
-                    randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 3)
                     randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 4)
-                    randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 3)
                     randomLeftRightPunctuationMarks(leftRightPunctuationMarks, 2)
+                    alternatingSymbols(unpack(leftRightPunctuationMarks), 3)
                 }
             )
 
@@ -155,9 +152,8 @@ fun createCourse(
             if (words.isNotEmpty())
                 lessons.add(
                     buildLesson(
-                        "${lessonCtr.next()}: Text ${wwUnpack(lessonSymbols)}",
-                        lineLength, symbolsPerLesson,
-                        charsHistory.newCharacters(wwUnpack(lessonSymbols))) {
+                        "${lessonCtr.next()}: Text ${unpack(lessonSymbols)}",
+                        lineLength, symbolsPerLesson, newCharacters) {
                         wordsWithLeftRightPunctuationMarks(words, leftRightPunctuationMarks)
                     }
                 )
@@ -169,13 +165,14 @@ fun createCourse(
             lessons.add(
                 buildLesson(
                     "${lessonCtr.next()}: $unconditionalPunctuationMarks",
-                    lineLength, symbolsPerLesson,
-                    charsHistory.newCharacters(unconditionalPunctuationMarks)) {
+                    lineLength, symbolsPerLesson, newCharacters) {
+                    alternatingSymbols(unconditionalPunctuationMarks, 3)
                     repeatSymbols(unconditionalPunctuationMarks, 2)
                     shuffledSymbols(unconditionalPunctuationMarks, 3)
                     repeatSymbols(unconditionalPunctuationMarks, 4)
                     shuffledSymbols(unconditionalPunctuationMarks, 3)
                     repeatSymbols(unconditionalPunctuationMarks, 2)
+                    alternatingSymbols(unconditionalPunctuationMarks, 3)
                 }
             )
 
@@ -184,8 +181,7 @@ fun createCourse(
                 lessons.add(
                     buildLesson(
                         "${lessonCtr.next()}: Text $unconditionalPunctuationMarks",
-                        lineLength, symbolsPerLesson,
-                        charsHistory.newCharacters(unconditionalPunctuationMarks)) {
+                        lineLength, symbolsPerLesson, newCharacters) {
                         wordsWithUnconditionalPunctuationMarks(words, unconditionalPunctuationMarks)
                     }
                 )
