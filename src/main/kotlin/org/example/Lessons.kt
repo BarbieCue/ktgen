@@ -6,9 +6,15 @@ import kotlin.random.Random
 
 
 fun StringBuilder.newCharacters(symbols: String): String {
-    val new = symbols.filter { !this.toString().contains(it) }
+    val new = unpack(symbols).filter { !this.toString().contains(it) }
     this.append(new)
     return new
+}
+
+fun unpack(symbols: String): String {
+    return if (symbols.matches(wwRegex)) wwUnpack(symbols)
+           else if (symbols.matches(letterGroupRegex)) letterGroupUnpack(symbols)
+           else symbols
 }
 
 fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String): List<String> {
@@ -26,7 +32,7 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
                 else if (letters(lessonSymbols).isNotEmpty())
                     it.containsAny(letters(lessonSymbols))
 
-                // words for e.g. symbols
+                // words for e.g. punctuation marks
                 else true
         }
 }

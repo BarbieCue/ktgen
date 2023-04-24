@@ -4,6 +4,8 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.*
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.*
+import io.mockk.mockkStatic
+import io.mockk.verify
 import org.junit.jupiter.api.Test
 
 class LessonsKtTest {
@@ -35,6 +37,42 @@ class LessonsKtTest {
         val history = "abcd"
         val sb = StringBuilder(history)
         sb.newCharacters("") shouldBe ""
+    }
+
+    @Test
+    fun `unpack happy`() {
+        unpack("{WW}") shouldBe "{}"
+        unpack("[sch]") shouldBe "sch"
+        unpack("apple") shouldBe "apple"
+    }
+
+    @Test
+    fun `unpack returns original input, if it is not packed`() {
+        unpack("apple") shouldBe "apple"
+    }
+
+    @Test
+    fun `unpack calls wwUnpack`() {
+        mockkStatic(::wwUnpack)
+        unpack("{WW}")
+        verify { wwUnpack("{WW}") }
+    }
+
+    @Test
+    fun `unpack calls letterGroupUnpack`() {
+        mockkStatic(::letterGroupUnpack)
+        unpack("[sch]")
+        verify { letterGroupUnpack("[sch]") }
+    }
+
+    @Test
+    fun `unpack empty input`() {
+        unpack("") shouldBe ""
+    }
+
+    @Test
+    fun `unpack input contains whitespaces`() {
+        unpack("a b c ") shouldBe "a b c "
     }
 
     @Test
