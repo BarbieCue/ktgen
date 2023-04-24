@@ -4,6 +4,8 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.*
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.*
+import io.mockk.mockkStatic
+import io.mockk.verify
 import org.junit.jupiter.api.Test
 
 class LessonsKtTest {
@@ -35,6 +37,42 @@ class LessonsKtTest {
         val history = "abcd"
         val sb = StringBuilder(history)
         sb.newCharacters("") shouldBe ""
+    }
+
+    @Test
+    fun `unpack happy`() {
+        unpack("{WW}") shouldBe "{}"
+        unpack("[sch]") shouldBe "sch"
+        unpack("apple") shouldBe "apple"
+    }
+
+    @Test
+    fun `unpack returns original input, if it is not packed`() {
+        unpack("apple") shouldBe "apple"
+    }
+
+    @Test
+    fun `unpack calls wwUnpack`() {
+        mockkStatic(::wwUnpack)
+        unpack("{WW}")
+        verify { wwUnpack("{WW}") }
+    }
+
+    @Test
+    fun `unpack calls letterGroupUnpack`() {
+        mockkStatic(::letterGroupUnpack)
+        unpack("[sch]")
+        verify { letterGroupUnpack("[sch]") }
+    }
+
+    @Test
+    fun `unpack empty input`() {
+        unpack("") shouldBe ""
+    }
+
+    @Test
+    fun `unpack input contains whitespaces`() {
+        unpack("a b c ") shouldBe "a b c "
     }
 
     @Test
@@ -118,6 +156,23 @@ class LessonsKtTest {
     }
 
     @Test
+    fun `ww regex should match WW strings`() {
+        "WW,." shouldMatch wwRegex
+        "+WW" shouldMatch wwRegex
+        "[WW]" shouldMatch wwRegex
+        "WW" shouldMatch wwRegex
+    }
+
+    @Test
+    fun `ww regex should not match anything else`() {
+        "" shouldNotMatch letterGroupRegex.pattern
+        "W" shouldNotMatch letterGroupRegex.pattern
+        ",." shouldNotMatch letterGroupRegex.pattern
+        "abc" shouldNotMatch letterGroupRegex.pattern
+        "1" shouldNotMatch letterGroupRegex.pattern
+    }
+
+    @Test
     fun `ww should return the WW part`() {
         ww("WW") shouldBe "WW"
         ww("(WW)") shouldBe "(WW)"
@@ -162,6 +217,21 @@ class LessonsKtTest {
         wwUnpack("1WW1") shouldBe ""
         wwUnpack("1abcWW") shouldBe ""
         wwUnpack("()=abcWW") shouldBe ""
+    }
+
+    @Test
+    fun `letterGroupRegex should match letter groups`() {
+        "[sch]" shouldMatch letterGroupRegex
+    }
+
+    @Test
+    fun `letterGroupRegex should not match anything else`() {
+        "[sch]a" shouldNotMatch letterGroupRegex.pattern
+        "a[sch]" shouldNotMatch letterGroupRegex.pattern
+        "[]" shouldNotMatch letterGroupRegex.pattern
+        "abc" shouldNotMatch letterGroupRegex.pattern
+        "1" shouldNotMatch letterGroupRegex.pattern
+        "" shouldNotMatch letterGroupRegex.pattern
     }
 
     @Test
