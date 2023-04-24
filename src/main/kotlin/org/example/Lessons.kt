@@ -5,39 +5,6 @@ import kotlin.math.max
 import kotlin.random.Random
 
 
-fun StringBuilder.newCharacters(symbols: String): String {
-    val new = unpack(symbols).filter { !this.toString().contains(it) }
-    this.append(new)
-    return new
-}
-
-fun unpack(symbols: String): String {
-    return if (symbols.matches(wwRegex)) wwUnpack(symbols)
-           else if (symbols.matches(letterGroupRegex)) letterGroupUnpack(symbols)
-           else symbols
-}
-
-fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String): List<String> {
-    if (isEmpty()) return emptyList()
-    val list = toList()
-    val rand = Random.nextInt(0, size / 2)
-    return list.subList(rand, size).plus(list.subList(0, rand))
-        .filter { it.consistsOfAny(letters(charsHistory)) &&
-
-                // words for letter groups
-                if (letterGroup(lessonSymbols).isNotEmpty())
-                    it.contains(letterGroupUnpack(lessonSymbols))
-
-                // words for letters
-                else if (letters(lessonSymbols).isNotEmpty())
-                    it.containsAny(letters(lessonSymbols))
-
-                // words for e.g. punctuation marks
-                else true
-        }
-}
-
-
 /*
  String filter
  */
@@ -64,6 +31,38 @@ fun unconditionalPunctuation(s: String): String =
         .find(s.replace(ww(s), "")
                .replace(letterGroup(s), ""))?.value ?: ""
 
+fun StringBuilder.newCharacters(symbols: String): String {
+    val new = unpack(symbols).filter { !this.toString().contains(it) }
+    this.append(new)
+    return new
+}
+
+fun unpack(symbols: String): String {
+    return if (symbols.matches(wwRegex)) wwUnpack(symbols)
+    else if (symbols.matches(letterGroupRegex)) letterGroupUnpack(symbols)
+    else symbols
+}
+
+fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String): List<String> {
+    if (isEmpty()) return emptyList()
+    val list = toList()
+    val rand = Random.nextInt(0, size / 2)
+    return list.subList(rand, size).plus(list.subList(0, rand))
+        .filter { it.consistsOfAny(letters(charsHistory)) &&
+
+                // words for letter groups
+                if (letterGroup(lessonSymbols).isNotEmpty())
+                    it.contains(letterGroupUnpack(lessonSymbols))
+
+                // words for letters
+                else if (letters(lessonSymbols).isNotEmpty())
+                    it.containsAny(letters(lessonSymbols))
+
+                // words for e.g. punctuation marks
+                else true
+        }
+}
+
 
 /*
  Lesson builder
@@ -72,6 +71,8 @@ fun unconditionalPunctuation(s: String): String =
 fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newCharacters: String = "", init: L.() -> L): Lesson =
     L(title = title, newCharacters = newCharacters, lineLength = lineLength, symbolsPerLesson = symbolsPerLesson).init().build()
 
+typealias TextGenerator = (numberOfSymbols: Int) -> String
+
 class L(
     private val id: String = UUID.randomUUID().toString(),
     private val title: String = "",
@@ -79,6 +80,8 @@ class L(
     private val lineLength: Int = 0,
     private val symbolsPerLesson: Int = 0,
 ) {
+    private val buildSteps = mutableListOf<TextGenerator>()
+
     internal fun build(): Lesson {
         if (buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
             return Lesson(id = id, title = title, newCharacters = newCharacters, text = "")
@@ -127,8 +130,6 @@ class L(
 
         return Lesson(id = id, title = title, newCharacters = newCharacters, text = text)
     }
-
-    private val buildSteps = mutableListOf<(numberOfSymbols: Int) -> String>()
 
     fun shuffledSymbols(symbols: String, segmentLength: Int): L {
         buildSteps.add { numberOfSymbols ->
