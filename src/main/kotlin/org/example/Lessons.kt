@@ -141,7 +141,7 @@ class L(
 
     fun alternatingSymbols(symbols: String, segmentLength: Int): L {
         buildSteps.add { numberOfSymbols ->
-            val stretched = symbols.map { "$it".repeat(segmentLength) }.joinToString("")
+            val stretched = symbols.map { "$it".repeat(max(segmentLength, 0)) }.joinToString("")
             segment(repeat(stretched, numberOfSymbols), segmentLength)
         }
         return this
