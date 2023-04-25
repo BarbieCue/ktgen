@@ -20,16 +20,13 @@ fun hands(keyboardLayout: KeyboardLayout): Pair<Hand, Hand>? {
         null
     }
     else {
-        val byFinger = keyboardLayout.keys.keys.groupBy { it.fingerIndex }.mapValues { it.value.sortedWith(LevelComparator()) }
-        val byLevel = byFinger.map { entry -> entry.value.groupBy { it.top } }.map {
-            var idx = 0
-            it.mapKeys { idx++ }
-        }
-        val sorted = byLevel.mapIndexed { fingerIndex, entry ->
-            entry.mapValues {
+        val byFinger = keyboardLayout.keys.keys.groupBy { it.fingerIndex }.mapValues { it.value.sortedWith(LevelComparator()) }.values
+        val byLevel = byFinger.map { entry -> entry.groupBy { it.top }.values }
+        val sorted = byLevel.mapIndexed { fingerIndex, level ->
+            level.map { keys ->
                 when (fingerIndex) {
-                    0, 1, 2, 4 -> it.value.sortedWith(RightToLeft())
-                    else -> it.value.sortedWith(LeftToRight())
+                    0, 1, 2, 4 -> keys.sortedWith(RightToLeft())
+                    else -> keys.sortedWith(LeftToRight())
                 }
             }
         }
@@ -43,8 +40,8 @@ fun hands(keyboardLayout: KeyboardLayout): Pair<Hand, Hand>? {
   Hand structure:
 
   Outer list: 8 fingers (0 .. 7; read from left to right)
-    Map: n levels per finger (keyboard rows) (0 .. n; read from top down)
-      Inner list: n keys per level and finger (0 .. n; read from left to right or right to left)
+    List: n levels (keyboard rows) per finger (0 .. n; usually four; read from top down)
+      Inner list: n keys per level (0 .. n; usually one, two or max three; read from left to right or right to left)
 
   Hand[finger][level][key]
 
@@ -57,7 +54,7 @@ fun hands(keyboardLayout: KeyboardLayout): Pair<Hand, Hand>? {
 
   See unit tests for more examples
 */
-typealias Hand = List<Map<Int, List<Key>>>
+typealias Hand = List<List<List<Key>>>
 
 data class KeyPair(val pair: Pair<Key?, Key?>, val finger: Int, val level: Int, val index: Int)
 
@@ -69,8 +66,8 @@ fun pairKeys(hands: Pair<Hand, Hand>?): List<KeyPair> {
 
     for (finger in (0 .. 3)) {
         for (level in (0 .. min(left[finger].size - 1, right[finger].size - 1))) {
-            val lKeys = left[finger][level]!!
-            val rKeys = right[finger][level]!!
+            val lKeys = left[finger][level]
+            val rKeys = right[finger][level]
             if (lKeys.size == rKeys.size) {
                 lKeys.forEachIndexed { index, key ->
                     result.add(KeyPair(key to rKeys[index], finger, level, index))

@@ -84,26 +84,26 @@ class KeyboardKtTest {
         // 4 fingers (finger index 0-3)
         left shouldHaveSize 4
 
-        left[0][0]!! shouldHaveSize 1 // little
-        left[0][0]!!.first().chars.single().text shouldBe "a"
-        left[1][0]!! shouldHaveSize 1 // ring
-        left[1][0]!!.first().chars.single().text shouldBe "s"
-        left[2][0]!! shouldHaveSize 1 // middle
-        left[2][0]!!.first().chars.single().text shouldBe "d"
-        left[3][0]!! shouldHaveSize 1 // index
-        left[3][0]!!.first().chars.single().text shouldBe "f"
+        left[0][0] shouldHaveSize 1 // little
+        left[0][0].first().chars.single().text shouldBe "a"
+        left[1][0] shouldHaveSize 1 // ring
+        left[1][0].first().chars.single().text shouldBe "s"
+        left[2][0] shouldHaveSize 1 // middle
+        left[2][0].first().chars.single().text shouldBe "d"
+        left[3][0] shouldHaveSize 1 // index
+        left[3][0].first().chars.single().text shouldBe "f"
 
         // 4 fingers (finger index 4-7)
         right shouldHaveSize 4
 
-        right[3][0]!! shouldHaveSize 1 // index
-        right[3][0]!!.first().chars.single().text shouldBe "j"
-        right[2][0]!! shouldHaveSize 1 // middle
-        right[2][0]!!.first().chars.single().text shouldBe "k"
-        right[1][0]!! shouldHaveSize 1 // ring
-        right[1][0]!!.first().chars.single().text shouldBe "l"
-        right[0][0]!! shouldHaveSize 1 // little
-        right[0][0]!!.first().chars.single().text shouldBe "ö"
+        right[3][0] shouldHaveSize 1 // index
+        right[3][0].first().chars.single().text shouldBe "j"
+        right[2][0] shouldHaveSize 1 // middle
+        right[2][0].first().chars.single().text shouldBe "k"
+        right[1][0] shouldHaveSize 1 // ring
+        right[1][0].first().chars.single().text shouldBe "l"
+        right[0][0] shouldHaveSize 1 // little
+        right[0][0].first().chars.single().text shouldBe "ö"
     }
 
     @Test
@@ -132,32 +132,32 @@ class KeyboardKtTest {
         val (left, right) = hands(keyboardLayout)!!
 
         // left hand's keys on the same level are ordered right to left, except index
-        left[0][0]!! shouldHaveSize 2 // little
-        left[0][0]!![0].chars.single().text shouldBe "a2"
-        left[0][0]!![1].chars.single().text shouldBe "a1"
-        left[1][0]!! shouldHaveSize 2 // ring
-        left[1][0]!![0].chars.single().text shouldBe "b2"
-        left[1][0]!![1].chars.single().text shouldBe "b1"
-        left[2][0]!! shouldHaveSize 2 // middle
-        left[2][0]!![0].chars.single().text shouldBe "c2"
-        left[2][0]!![1].chars.single().text shouldBe "c1"
-        left[3][0]!! shouldHaveSize 2 // index
-        left[3][0]!![0].chars.single().text shouldBe "d1"
-        left[3][0]!![1].chars.single().text shouldBe "d2"
+        left[0][0] shouldHaveSize 2 // little
+        left[0][0][0].chars.single().text shouldBe "a2"
+        left[0][0][1].chars.single().text shouldBe "a1"
+        left[1][0] shouldHaveSize 2 // ring
+        left[1][0][0].chars.single().text shouldBe "b2"
+        left[1][0][1].chars.single().text shouldBe "b1"
+        left[2][0] shouldHaveSize 2 // middle
+        left[2][0][0].chars.single().text shouldBe "c2"
+        left[2][0][1].chars.single().text shouldBe "c1"
+        left[3][0] shouldHaveSize 2 // index
+        left[3][0][0].chars.single().text shouldBe "d1"
+        left[3][0][1].chars.single().text shouldBe "d2"
 
         // right hand's keys on the same level are ordered left to right, except index
-        right[3][0]!! shouldHaveSize 2 // index
-        right[3][0]!![0].chars.single().text shouldBe "e2"
-        right[3][0]!![1].chars.single().text shouldBe "e1"
-        right[2][0]!! shouldHaveSize 2 // middle
-        right[2][0]!![0].chars.single().text shouldBe "f1"
-        right[2][0]!![1].chars.single().text shouldBe "f2"
-        right[1][0]!! shouldHaveSize 2 // ring
-        right[1][0]!![0].chars.single().text shouldBe "g1"
-        right[1][0]!![1].chars.single().text shouldBe "g2"
-        right[0][0]!! shouldHaveSize 2 // little
-        right[0][0]!![0].chars.single().text shouldBe "h1"
-        right[0][0]!![1].chars.single().text shouldBe "h2"
+        right[3][0] shouldHaveSize 2 // index
+        right[3][0][0].chars.single().text shouldBe "e2"
+        right[3][0][1].chars.single().text shouldBe "e1"
+        right[2][0] shouldHaveSize 2 // middle
+        right[2][0][0].chars.single().text shouldBe "f1"
+        right[2][0][1].chars.single().text shouldBe "f2"
+        right[1][0] shouldHaveSize 2 // ring
+        right[1][0][0].chars.single().text shouldBe "g1"
+        right[1][0][1].chars.single().text shouldBe "g2"
+        right[0][0] shouldHaveSize 2 // little
+        right[0][0][0].chars.single().text shouldBe "h1"
+        right[0][0][1].chars.single().text shouldBe "h2"
     }
 
     @Test
@@ -233,32 +233,32 @@ class KeyboardKtTest {
         // left hand's keys
 
         // little
-        left[0][0]!![0].chars.single().text shouldBe "a1"
-        left[0][1]!![0].chars.single().text shouldBe "a2"
+        left[0][0][0].chars.single().text shouldBe "a1"
+        left[0][1][0].chars.single().text shouldBe "a2"
         // ring
-        left[1][0]!![0].chars.single().text shouldBe "b1"
-        left[1][1]!![0].chars.single().text shouldBe "b2"
+        left[1][0][0].chars.single().text shouldBe "b1"
+        left[1][1][0].chars.single().text shouldBe "b2"
         // middle
-        left[2][0]!![0].chars.single().text shouldBe "c1"
-        left[2][1]!![0].chars.single().text shouldBe "c2"
+        left[2][0][0].chars.single().text shouldBe "c1"
+        left[2][1][0].chars.single().text shouldBe "c2"
         // index
-        left[3][0]!![0].chars.single().text shouldBe "d1"
-        left[3][1]!![0].chars.single().text shouldBe "d2"
+        left[3][0][0].chars.single().text shouldBe "d1"
+        left[3][1][0].chars.single().text shouldBe "d2"
 
         // right hand's keys
 
         // little
-        right[3][0]!![0].chars.single().text shouldBe "e1"
-        right[3][1]!![0].chars.single().text shouldBe "e2"
+        right[3][0][0].chars.single().text shouldBe "e1"
+        right[3][1][0].chars.single().text shouldBe "e2"
         // ring
-        right[2][0]!![0].chars.single().text shouldBe "f1"
-        right[2][1]!![0].chars.single().text shouldBe "f2"
+        right[2][0][0].chars.single().text shouldBe "f1"
+        right[2][1][0].chars.single().text shouldBe "f2"
         // middle
-        right[1][0]!![0].chars.single().text shouldBe "g1"
-        right[1][1]!![0].chars.single().text shouldBe "g2"
+        right[1][0][0].chars.single().text shouldBe "g1"
+        right[1][1][0].chars.single().text shouldBe "g2"
         // index
-        right[0][0]!![0].chars.single().text shouldBe "h1"
-        right[0][1]!![0].chars.single().text shouldBe "h2"
+        right[0][0][0].chars.single().text shouldBe "h1"
+        right[0][1][0].chars.single().text shouldBe "h2"
     }
 
     @Test
