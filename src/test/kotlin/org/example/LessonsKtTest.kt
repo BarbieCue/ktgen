@@ -1,9 +1,16 @@
 package org.example
 
+import io.kotest.data.forAll
+import io.kotest.data.headers
+import io.kotest.data.row
+import io.kotest.data.table
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.*
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.*
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.next
+import io.kotest.property.arbitrary.stringPattern
 import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -397,6 +404,200 @@ class LessonsKtTest {
         digits("(WW)") shouldBe ""
         digits("123(WW)") shouldBe "123"
         digits("123(WW)=;456") shouldBe "123456"
+    }
+
+    @Test
+    fun `symbolsPerGenerator table test`() {
+        table(
+            headers("symbols-per-lesson", "number-of-generators", "symbolsPerGenerator"),
+            row(-100, 100, 0),
+            row(-1, 100, 0),
+            row(0, 100, 0),
+            row(1, 100, 1),
+            row(100, 100, 1),
+
+            row(100, -100, 0),
+            row(100, -1, 0),
+            row(100, 0, 0),
+            row(100, 1, 100),
+
+            row(0, 0, 0),
+            row(-1, -1, 0),
+            row(-10, -10, 0),
+            row(-100, -100, 0),
+        ).forAll { a, b, result ->
+            symbolsPerGenerator(a, b) shouldBe result
+        }
+    }
+
+    @Test
+    fun `invokeConcatSingleLine returns concatenated generators results as single line, whitespace separated`() {
+        fun repeatA(n: Int) = "a".repeat(n)
+        fun repeatB(n: Int) = "b".repeat(n)
+        fun repeatC(n: Int) = "c".repeat(n)
+        val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+        val result = invokeConcatSingleLine(10, generators)
+        result shouldBe "aaa bbb ccc a"
+    }
+
+    @Test
+    fun `invokeConcatSingleLine on single generator return the generators result with length of symbols-per-lesson`() {
+        fun repeatA(n: Int) = "a".repeat(n)
+        val generators = listOf(::repeatA)
+        invokeConcatSingleLine(10, generators) shouldBe "aaaaaaaaaa"
+    }
+
+    @Test
+    fun `invokeConcatSingleLine on many generators return all generators results separated by whitespace`() {
+        fun repeatA(n: Int) = "a".repeat(n)
+        fun repeatB(n: Int) = "b".repeat(n)
+        val generators = listOf(::repeatA, ::repeatB)
+        invokeConcatSingleLine(10, generators) shouldBe "aaaaa bbbbb"
+    }
+
+    @Test
+    fun `invokeConcatSingleLine on many generators each generators result has length of symbols-per-lesson divided by number-of-generators`() {
+        fun repeatA(n: Int) = "a".repeat(n)
+        fun repeatB(n: Int) = "b".repeat(n)
+        fun repeatC(n: Int) = "c".repeat(n)
+        val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+        val lines = invokeConcatSingleLine(9, generators).split(" ")
+        lines[0] shouldHaveLength 3 // aaa
+        lines[1] shouldHaveLength 3 // bbb
+        lines[2] shouldHaveLength 3 // ccc
+    }
+
+    @Test
+    fun `invokeConcatSingleLine re-invoke generators if necessary to get as many symbols as symbols-per-lesson`() {
+        fun repeatA(n: Int) = "a".repeat(n)
+        fun repeatB(n: Int) = "b".repeat(n)
+        fun repeatC(n: Int) = "c".repeat(n)
+        val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+        val lines = invokeConcatSingleLine(10, generators).split(" ")
+
+        lines[0] shouldHaveLength 3
+        lines[1] shouldHaveLength 3
+        lines[2] shouldHaveLength 3
+        lines[3] shouldHaveLength 1
+
+        lines[0] shouldBe "aaa"
+        lines[1] shouldBe "bbb"
+        lines[2] shouldBe "ccc"
+        lines[3] shouldBe "a" // re-invoked first generator
+    }
+
+    @Test
+    fun `invokeConcatSingleLine return empty string when generators have empty output`() {
+        val generators = listOf{_: Int -> ""}
+        invokeConcatSingleLine(3, generators) shouldBe ""
+    }
+
+    @Test
+    fun `List of TextGenerator invokeConcat returns concatenated generators results as single line, whitespace separated`() {
+        fun repeatA(n: Int) = "a".repeat(n)
+        fun repeatB(n: Int) = "b".repeat(n)
+        fun repeatC(n: Int) = "c".repeat(n)
+        val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+        val result = generators.invokeConcat(3, 9)
+        result shouldBe "aaa bbb ccc"
+    }
+
+    @Test
+    fun `List of TextGenerator invokeConcat re-invoke generators if necessary to get the total number of symbols`() {
+        fun repeatA(n: Int) = "a".repeat(n)
+        fun repeatB(n: Int) = "b".repeat(n)
+        fun repeatC(n: Int) = "c".repeat(n)
+        val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+        val lines = generators.invokeConcat(3, 10).split(" ")
+
+        lines[0] shouldHaveLength 3
+        lines[1] shouldHaveLength 3
+        lines[2] shouldHaveLength 3
+        lines[3] shouldHaveLength 1
+
+        lines[0] shouldBe "aaa"
+        lines[1] shouldBe "bbb"
+        lines[2] shouldBe "ccc"
+        lines[3] shouldBe "a" // re-invoked first generator
+    }
+
+    @Test
+    fun `List of TextGenerator invokeConcat return empty string when generators have empty output`() {
+        val generators = listOf{_: Int -> ""}
+        generators.invokeConcat(3, 10) shouldBe ""
+    }
+
+    @Test
+    fun `StringBuilder symbolsCount counts non-whitespace characters`() {
+        StringBuilder(". a b c ] 1").symbolsCount() shouldBe 6
+    }
+
+    @Test
+    fun `String takeCountingSymbols takes until there are as many as total-symbols non-whitespace chars in the result`() {
+        ". a b c ] 1".takeCountingSymbols(3) shouldBe ". a b"
+    }
+
+    @Test
+    fun `String takeCountingSymbols return empty string when total-symbols is zero or negative`() {
+        ". a b c ] 1".takeCountingSymbols(0) shouldBe ""
+        ". a b c ] 1".takeCountingSymbols(-1) shouldBe ""
+    }
+
+    @Test
+    fun `String takeCountingSymbols return empty string when source string is empty`() {
+        "".takeCountingSymbols(0) shouldBe ""
+    }
+
+    @Test
+    fun `addLineBreaks breaks the input string into lines of max length line-length`() {
+        val result = addLineBreaks("abcdef abc abc abcdef abc", 20, 5)
+        result shouldBe """
+            abcde
+            f abc
+            abc a
+            bcdef
+            ab
+        """.trimIndent()
+        val lines = result.split("\n")
+        lines[0] shouldHaveMaxLength 5
+        lines[1] shouldHaveMaxLength 5
+        lines[2] shouldHaveMaxLength 5
+        lines[3] shouldHaveMaxLength 5
+        lines[4] shouldHaveMaxLength 5
+    }
+
+    @Test
+    fun `addLineBreaks property test`() {
+        val arbitraryBuilder = Arb.stringPattern("[A-Za-z0-9.,;\\[\\]{}\t]{30}")
+        repeat(20) {
+            val lines = addLineBreaks(arbitraryBuilder.next(), 20, 5).split("\n")
+            lines shouldHaveAtLeastSize 4
+            lines[0] shouldHaveMinLength 4
+            lines[0] shouldHaveMaxLength 5
+            lines[1] shouldHaveMinLength 4
+            lines[1] shouldHaveMaxLength 5
+            lines[2] shouldHaveMinLength 4
+            lines[2] shouldHaveMaxLength 5
+            lines[3] shouldHaveMinLength 4
+            lines[3] shouldHaveMaxLength 5
+        }
+    }
+
+    @Test
+    fun `addLineBreaks return empty string when input string is empty`() {
+        addLineBreaks("", 20, 5) shouldBe ""
+    }
+
+    @Test
+    fun `addLineBreaks return empty string when symbols-total is zero or negative`() {
+        addLineBreaks("abc abc abc", 0, 10) shouldBe ""
+        addLineBreaks("abc abc abc", -1, 10) shouldBe ""
+    }
+
+    @Test
+    fun `addLineBreaks return empty string when line-length is zero or negative`() {
+        addLineBreaks("abc abc abc", 10, 0) shouldBe ""
+        addLineBreaks("abc abc abc", 10, -1) shouldBe ""
     }
 
     @Test

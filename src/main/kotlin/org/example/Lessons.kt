@@ -68,68 +68,87 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
  Lesson builder
  */
 
-fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newCharacters: String = "", init: L.() -> L): Lesson =
-    L(title = title, newCharacters = newCharacters, lineLength = lineLength, symbolsPerLesson = symbolsPerLesson).init().build()
+fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newCharacters: String = "", init: L.() -> L): Lesson {
+    val l = L(title = title).init()
+    if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
+        return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = "")
+
+    val textAsSingleLine = invokeConcatSingleLine(symbolsPerLesson, l.buildSteps)
+    if (textAsSingleLine.isEmpty())
+        return Lesson(id = l.id, title = l.title, newCharacters = newCharacters, text = "")
+
+    val text = addLineBreaks(textAsSingleLine, symbolsPerLesson, lineLength)
+    return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = text)
+}
+
+internal fun symbolsPerGenerator(symbolsPerLesson: Int, numberOfGenerators: Int): Int {
+    return if (symbolsPerLesson <= 0 || numberOfGenerators <= 0) 0
+    else if (symbolsPerLesson < numberOfGenerators) symbolsPerLesson
+    else symbolsPerLesson / max(numberOfGenerators, 1)
+}
+
+internal fun invokeConcatSingleLine(symbolsPerLesson: Int, textGenerators: List<TextGenerator>): String {
+    if (symbolsPerLesson <= 0 || textGenerators.isEmpty()) return ""
+    val symbolsPerGenerator = symbolsPerGenerator(symbolsPerLesson, textGenerators.size)
+    return textGenerators.invokeConcat(symbolsPerGenerator, symbolsPerLesson)
+}
+
+internal fun List<TextGenerator>.invokeConcat(symbolsPerGenerator: Int, symbolsTotal: Int): String {
+    return buildString {
+        while (symbolsCount() < symbolsTotal) {
+            this@invokeConcat.forEach {
+                val generatorResult = it(symbolsPerGenerator)
+                for (c in generatorResult) {
+                    append(c)
+                    if (symbolsCount() >= symbolsTotal) return@buildString
+                }
+                append(" ")
+            }
+            if (symbolsCount() == 0) return ""
+        }
+    }.trim()
+}
+
+internal fun StringBuilder.symbolsCount(): Int = count { !it.isWhitespace() }
+
+internal fun String.takeCountingSymbols(totalSymbols: Int): String =
+    if (totalSymbols <= 0) ""
+    else buildString {
+        for (c in this@takeCountingSymbols) {
+            append(c)
+            if (symbolsCount() == totalSymbols) break
+        }
+    }
+
+fun addLineBreaks(str: String, symbolsTotal: Int, lineLength: Int): String {
+    if (str.isEmpty() || symbolsTotal <= 0 || lineLength <= 0) return ""
+    return if (lineLength > symbolsTotal)
+        buildString {
+            for (c in str) {
+                append(c)
+                if (symbolsCount() == symbolsTotal) break
+            }
+        }.trim()
+    else {
+        buildString {
+            var mutableStr = str
+            while (symbolsCount() < symbolsTotal) {
+                val line = mutableStr.take(lineLength)
+                appendLine(line.trim())
+                mutableStr = mutableStr.substringAfter(line).trim()
+            }
+            while (symbolsCount() > symbolsTotal) delete(length - 1, length)
+        }.trim()
+    }
+}
 
 typealias TextGenerator = (numberOfSymbols: Int) -> String
 
 class L(
-    private val id: String = UUID.randomUUID().toString(),
-    private val title: String = "",
-    private val newCharacters: String = "",
-    private val lineLength: Int = 0,
-    private val symbolsPerLesson: Int = 0,
+    val id: String = UUID.randomUUID().toString(),
+    val title: String = "",
 ) {
-    private val buildSteps = mutableListOf<TextGenerator>()
-
-    internal fun build(): Lesson {
-        if (buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
-            return Lesson(id = id, title = title, newCharacters = newCharacters, text = "")
-
-        val numberOfSymbols =
-            if (symbolsPerLesson < buildSteps.size) symbolsPerLesson
-            else symbolsPerLesson / max(buildSteps.size, 1)
-
-        val str = buildString {
-            var idx = 0
-            while (count { !it.isWhitespace() } < symbolsPerLesson) {
-                val str = buildSteps[idx](numberOfSymbols)
-                append(str)
-                append(" ")
-                idx++
-                if (idx == buildSteps.size && count { !it.isWhitespace() } == 0) return@buildString
-                if (idx == buildSteps.size) idx = 0
-            }
-        }.trim()
-
-        if (str.isEmpty())
-            return Lesson(id = id, title = title, newCharacters = newCharacters, text = "")
-
-        val text = buildString {
-            if (lineLength <= symbolsPerLesson) {
-                val sb = StringBuilder(str.trim())
-                while (count { !it.isWhitespace() } < symbolsPerLesson) {
-                    val line = sb.take(lineLength).trim()
-                    sb.delete(0, lineLength)
-                    while (sb.isNotEmpty() && sb.first().isWhitespace())
-                        sb.delete(0, 1)
-                    appendLine(line)
-                    while (count { !it.isWhitespace() } > symbolsPerLesson)
-                        delete(length - 1, length)
-                }
-            } else {
-                str.forEach { char ->
-                    append(char)
-                    val symbolsCnt = count { !it.isWhitespace() }
-                    if (symbolsCnt == symbolsPerLesson) {
-                        return@buildString
-                    }
-                }
-            }
-        }.trim()
-
-        return Lesson(id = id, title = title, newCharacters = newCharacters, text = text)
-    }
+    val buildSteps = mutableListOf<TextGenerator>()
 
     fun shuffledSymbols(symbols: String, segmentLength: Int): L {
         buildSteps.add { numberOfSymbols ->
