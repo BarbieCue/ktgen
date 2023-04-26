@@ -525,62 +525,71 @@ class KeyboardKtTest {
     }
 
     @Test
-    fun `customOrder empty input`() {
+    fun `customOrder return empty list on empty input`() {
         customOrder(emptyList()) shouldBe emptyList()
     }
 
     @Test
-    fun `filter keyboard layout english USA happy`() {
+    fun `filter keyboard layout english USA filters pairs where the keys match the filter pattern`() {
         val filename = UUID.randomUUID().toString()
         files.add(filename)
         File(filename).writeText(keyboardLayoutEnglishUSA)
         val keyboardLayout = KeyboardLayout.create(filename)
         val hands = hands(keyboardLayout!!)
         val pairs = pairKeys(hands)
-        filter(pairs, "[0-9]+".toRegex()).forAll { it shouldMatch "[0-9]+".toRegex() }
-        filter(pairs, "[A-Z]+".toRegex()).forAll { it shouldMatch "[A-Z]+".toRegex() }
-        filter(pairs, "[a-z]+".toRegex()).forAll { it shouldMatch "[a-z]+".toRegex() }
+
+        val letterPairs = filter(pairs, "[a-z]+".toRegex())
+        letterPairs shouldHaveSize 15
+        letterPairs.forAll { it shouldMatch "[a-z]+".toRegex() }
+
+        val digitPairs = filter(pairs, "[0-9]+".toRegex())
+        digitPairs shouldHaveSize 5
+        digitPairs.forAll { it shouldMatch "[0-9]+".toRegex() }
     }
 
     @Test
-    fun `filter empty input`() {
+    fun `filter return empty list on empty input`() {
         filter(emptyList(), ".*".toRegex()) shouldBe emptyList()
     }
 
     @Test
-    fun `upperLetters keyboard layout english USA happy`() {
+    fun `upperLetters keyboard layout english USA return upper letter pairs`() {
         val filename = UUID.randomUUID().toString()
         files.add(filename)
         File(filename).writeText(keyboardLayoutEnglishUSA)
         val keyboardLayout = KeyboardLayout.create(filename)
         val hands = hands(keyboardLayout!!)
         val pairs = pairKeys(hands)
-        upperLetters(pairs).forAll { it shouldMatch "[A-ZÜÄÖẞ]+".toRegex() }
+        val letterPairs = upperLetters(pairs)
+        letterPairs shouldHaveSize 15
+        letterPairs.forAll { it shouldMatch "[A-ZÜÄÖẞ]+".toRegex() }
     }
 
     @Test
-    fun `upperLetters empty input`() {
+    fun `upperLetters return empty list on empty input`() {
         upperLetters(emptyList()) shouldBe emptyList()
     }
 
     @Test
-    fun `lowerLetters keyboard layout english USA happy`() {
+    fun `lowerLetters keyboard layout english USA return lower letter pairs`() {
         val filename = UUID.randomUUID().toString()
         files.add(filename)
         File(filename).writeText(keyboardLayoutEnglishUSA)
         val keyboardLayout = KeyboardLayout.create(filename)
         val hands = hands(keyboardLayout!!)
         val pairs = pairKeys(hands)
-        lowerLetters(pairs).forAll { it shouldMatch "[a-züäöß]+".toRegex() }
+        val letterPairs = lowerLetters(pairs)
+        letterPairs shouldHaveSize 15
+        letterPairs.forAll { it shouldMatch "[a-züäöß]+".toRegex() }
     }
 
     @Test
-    fun `lowerLetters empty input`() {
+    fun `lowerLetters return empty list on empty input`() {
         lowerLetters(emptyList()) shouldBe emptyList()
     }
 
     @Test
-    fun `KeyboardLayout toCourseSymbols english USA happy`() {
+    fun `KeyboardLayout toCourseSymbols english USA return string list of paired symbols`() {
         val filename = UUID.randomUUID().toString()
         files.add(filename)
         File(filename).writeText(keyboardLayoutEnglishUSA)
@@ -594,12 +603,12 @@ class KeyboardKtTest {
     }
 
     @Test
-    fun `create keyboard layout from file, error no such file`() {
+    fun `create keyboard layout from file, error no such file, return null`() {
         KeyboardLayout.create("") shouldBe null
     }
 
     @Test
-    fun `create keyboard layout from file, error invalid xml`() {
+    fun `create keyboard layout from file, error invalid xml, return null`() {
         val filename = UUID.randomUUID().toString()
         files.add(filename)
         File(filename).writeText(
@@ -612,7 +621,7 @@ class KeyboardKtTest {
     }
 
     @Test
-    fun `create keyboard layout from file, error empty keyboard file`() {
+    fun `create keyboard layout from file, error empty keyboard file, return null`() {
         val filename = UUID.randomUUID().toString()
         files.add(filename)
         File(filename).writeText("")
