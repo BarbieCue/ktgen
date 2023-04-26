@@ -20,7 +20,10 @@ fun hands(keyboardLayout: KeyboardLayout): Pair<Hand, Hand>? {
         null
     }
     else {
-        val byFinger = keyboardLayout.keys.keys.groupBy { it.fingerIndex }.mapValues { it.value.sortedWith(LevelComparator()) }.values
+        val byFinger = keyboardLayout.keys.keys
+            .groupBy { it.fingerIndex }
+            .toSortedMap()
+            .mapValues { it.value.sortedWith(LevelComparator()) }.values
         val byLevel = byFinger.map { entry -> entry.groupBy { it.top }.values }
         val sorted = byLevel.mapIndexed { fingerIndex, level ->
             level.map { keys ->
