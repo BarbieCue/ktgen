@@ -386,8 +386,8 @@ class KeyboardKtTest {
     }
 
     @Test
-    fun `hands when keyboard layout has no keys`() {
-        val kb = KeyboardLayout("...", "keyless keyboard", "keyless keyboard", 1000, 1000, Keys(emptyList(), emptyList()))
+    fun `hands return null when keyboard layout has no keys`() {
+        val kb = KeyboardLayout(keys = Keys(emptyList()))
         hands(kb) shouldBe null
     }
 
