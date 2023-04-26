@@ -26,39 +26,42 @@ class KeyboardKtTest {
     }
 
     @Test
-    fun `Level Comparator test`() {
-        val first = mockk<Key> { every { top } returns 0 }
-        val second = mockk<Key> { every { top } returns 10 }
+    fun `Level Comparator lower top value comes before higher top value`() {
+        val first = Key(top = 0)
+        val second = Key(top = 10)
         LevelComparator().compare(first, second) shouldBe -10
         LevelComparator().compare(second, first) shouldBe 10
-
-        val eq1 = mockk<Key> { every { top } returns 0 }
-        val eq2 = mockk<Key> { every { top } returns 0 }
-        LevelComparator().compare(eq1, eq2) shouldBe 0
     }
 
     @Test
-    fun `LeftToRight Comparator test`() {
-        val first = mockk<Key> { every { left } returns 0 }
-        val second = mockk<Key> { every { left } returns 10 }
+    fun `Level Comparator equal when top values are equal`() {
+        LevelComparator().compare(Key(top = 20), Key(top = 20)) shouldBe 0
+    }
+
+    @Test
+    fun `LeftToRight Comparator lower left value comes before higher left value`() {
+        val first = Key(left = 0)
+        val second = Key(left = 10)
         LeftToRight().compare(first, second) shouldBe -10
         LeftToRight().compare(second, first) shouldBe 10
-
-        val eq1 = mockk<Key> { every { left } returns 0 }
-        val eq2 = mockk<Key> { every { left } returns 0 }
-        LeftToRight().compare(eq1, eq2) shouldBe 0
     }
 
     @Test
-    fun `RightToLeft Comparator test`() {
-        val first = mockk<Key> { every { left } returns 0 }
-        val second = mockk<Key> { every { left } returns 10 }
-        RightToLeft().compare(first, second) shouldBe 10
-        RightToLeft().compare(second, first) shouldBe -10
+    fun `LeftToRight Comparator equal when left values are equal`() {
+        LeftToRight().compare(Key(left = 20), Key(left = 20)) shouldBe 0
+    }
 
-        val eq1 = mockk<Key> { every { left } returns 0 }
-        val eq2 = mockk<Key> { every { left } returns 0 }
-        RightToLeft().compare(eq1, eq2) shouldBe 0
+    @Test
+    fun `RightToLeft Comparator higher left value comes before lower left value`() {
+        val first = Key(left = 10)
+        val second = Key(left = 0)
+        RightToLeft().compare(first, second) shouldBe -10
+        RightToLeft().compare(second, first) shouldBe 10
+    }
+
+    @Test
+    fun `RightToLeft Comparator equal when left values are equal`() {
+        RightToLeft().compare(Key(left = 20), Key(left = 20)) shouldBe 0
     }
 
     @Test
