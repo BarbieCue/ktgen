@@ -425,7 +425,7 @@ class LessonsKtTest {
     }
 
     @Test
-    fun `invokeConcatSingleLine returns concatenated generators results as single line, whitespace separated`() {
+    fun `invokeConcatSingleLine returns concatenated generators results as single line, single whitespace separated`() {
         fun repeatA(n: Int) = "a".repeat(n)
         fun repeatB(n: Int) = "b".repeat(n)
         fun repeatC(n: Int) = "c".repeat(n)
@@ -524,27 +524,41 @@ class LessonsKtTest {
     @Test
     fun `StringBuilder symbolsCount counts non-whitespace characters`() {
         StringBuilder(". a b c ] 1").symbolsCount() shouldBe 6
+        StringBuilder("  \t  \n ").symbolsCount() shouldBe 0
+        StringBuilder().symbolsCount() shouldBe 0
     }
 
     @Test
-    fun `String takeCountingSymbols takes until there are as many as total-symbols non-whitespace chars in the result`() {
-        ". a b c ] 1".takeCountingSymbols(3) shouldBe ". a b"
+    fun `String symbolsCount counts non-whitespace characters`() {
+        ". a b c ] 1".symbolsCount() shouldBe 6
+        "  \t  \n ".symbolsCount() shouldBe 0
+        "".symbolsCount() shouldBe 0
     }
 
     @Test
-    fun `String takeCountingSymbols return empty string when total-symbols is zero or negative`() {
-        ". a b c ] 1".takeCountingSymbols(0) shouldBe ""
-        ". a b c ] 1".takeCountingSymbols(-1) shouldBe ""
+    fun `String normalizeWhitespaces replaces two or more chained whitespaces with a single whitespace`() {
+        "a  \t \tb   \n c".normalizeWhitespaces() shouldBe "a b c"
     }
 
     @Test
-    fun `String takeCountingSymbols return empty string when source string is empty`() {
-        "".takeCountingSymbols(0) shouldBe ""
+    fun `String normalizeWhitespaces does nothing when the string does not contain any whitespaces`() {
+        "abc".normalizeWhitespaces() shouldBe "abc"
     }
 
     @Test
-    fun `addLineBreaks breaks the input string into lines of max length line-length`() {
-        val result = addLineBreaks("abcdef abc abc abcdef abc", 20, 5)
+    fun `String normalizeWhitespaces empty input leads to empty output`() {
+        "".normalizeWhitespaces() shouldBe ""
+    }
+
+    @Test
+    fun `toTextBlock breaks the input string into lines of max length line-length`() {
+        val result = toTextBlock("abcdef abc abc abcdef abc", 20, 5)
+        val lines = result.split("\n")
+        lines[0] shouldHaveLength 5
+        lines[1] shouldHaveLength 5
+        lines[2] shouldHaveLength 5
+        lines[3] shouldHaveLength 5
+        lines[4] shouldHaveLength 2
         result shouldBe """
             abcde
             f abc
@@ -552,19 +566,13 @@ class LessonsKtTest {
             bcdef
             ab
         """.trimIndent()
-        val lines = result.split("\n")
-        lines[0] shouldHaveMaxLength 5
-        lines[1] shouldHaveMaxLength 5
-        lines[2] shouldHaveMaxLength 5
-        lines[3] shouldHaveMaxLength 5
-        lines[4] shouldHaveMaxLength 5
     }
 
     @Test
-    fun `addLineBreaks property test`() {
+    fun `toTextBlock input string property test`() {
         val arbitraryBuilder = Arb.stringPattern("[A-Za-z0-9.,;\\[\\]{}\t]{30}")
-        repeat(20) {
-            val lines = addLineBreaks(arbitraryBuilder.next(), 20, 5).split("\n")
+        repeat(100) {
+            val lines = toTextBlock(arbitraryBuilder.next(), 20, 5).split("\n")
             lines shouldHaveAtLeastSize 4
             lines[0] shouldHaveMinLength 4
             lines[0] shouldHaveMaxLength 5
@@ -578,20 +586,48 @@ class LessonsKtTest {
     }
 
     @Test
-    fun `addLineBreaks return empty string when input string is empty`() {
-        addLineBreaks("", 20, 5) shouldBe ""
+    fun `toTextBlock normalizes multiple chained whitespace characters to a single one`() {
+        repeat(2000) {
+            toTextBlock("abc    abc  \t abc   abc abc abc    abc", 20, 5) shouldBe
+            """
+            abc a
+            bc ab
+            c abc
+            abc a
+            bc ab
+            """.trimIndent()
+        }
     }
 
     @Test
-    fun `addLineBreaks return empty string when symbols-total is zero or negative`() {
-        addLineBreaks("abc abc abc", 0, 10) shouldBe ""
-        addLineBreaks("abc abc abc", -1, 10) shouldBe ""
+    fun `toTextBlock input string length is smaller than symbols-total leads to result having input string length`() {
+        toTextBlock("abc def ghi", 20, 5) shouldBe """
+            abc d
+            ef gh
+            i
+        """.trimIndent()
     }
 
     @Test
-    fun `addLineBreaks return empty string when line-length is zero or negative`() {
-        addLineBreaks("abc abc abc", 10, 0) shouldBe ""
-        addLineBreaks("abc abc abc", 10, -1) shouldBe ""
+    fun `toTextBlock input string length is smaller than line-length leads to result having input string length`() {
+        toTextBlock("ac", 20, 5) shouldBe "ac"
+    }
+
+    @Test
+    fun `toTextBlock return empty string when input string is empty`() {
+        toTextBlock("", 20, 5) shouldBe ""
+    }
+
+    @Test
+    fun `toTextBlock return empty string when symbols-total is zero or negative`() {
+        toTextBlock("abc abc abc", 0, 10) shouldBe ""
+        toTextBlock("abc abc abc", -1, 10) shouldBe ""
+    }
+
+    @Test
+    fun `toTextBlock return empty string when line-length is zero or negative`() {
+        toTextBlock("abc abc abc", 10, 0) shouldBe ""
+        toTextBlock("abc abc abc", 10, -1) shouldBe ""
     }
 
     @Test

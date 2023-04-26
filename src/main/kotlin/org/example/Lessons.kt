@@ -2,6 +2,7 @@ package org.example
 
 import java.util.*
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.random.Random
 
 
@@ -77,7 +78,7 @@ fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newC
     if (textAsSingleLine.isEmpty())
         return Lesson(id = l.id, title = l.title, newCharacters = newCharacters, text = "")
 
-    val text = addLineBreaks(textAsSingleLine, symbolsPerLesson, lineLength)
+    val text = toTextBlock(textAsSingleLine, symbolsPerLesson, lineLength)
     return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = text)
 }
 
@@ -111,17 +112,13 @@ internal fun List<TextGenerator>.invokeConcat(symbolsPerGenerator: Int, symbolsT
 
 internal fun StringBuilder.symbolsCount(): Int = count { !it.isWhitespace() }
 
-internal fun String.takeCountingSymbols(totalSymbols: Int): String =
-    if (totalSymbols <= 0) ""
-    else buildString {
-        for (c in this@takeCountingSymbols) {
-            append(c)
-            if (symbolsCount() == totalSymbols) break
-        }
-    }
+internal fun String.symbolsCount(): Int = count { !it.isWhitespace() }
 
-fun addLineBreaks(str: String, symbolsTotal: Int, lineLength: Int): String {
+fun String.normalizeWhitespaces(): String = replace("\\s{2,}".toRegex(), " ")
+
+fun toTextBlock(str: String, symbolsTotal: Int, lineLength: Int): String {
     if (str.isEmpty() || symbolsTotal <= 0 || lineLength <= 0) return ""
+    if (str.length < lineLength) return str
     return if (lineLength > symbolsTotal)
         buildString {
             for (c in str) {
@@ -131,8 +128,9 @@ fun addLineBreaks(str: String, symbolsTotal: Int, lineLength: Int): String {
         }.trim()
     else {
         buildString {
-            var mutableStr = str
-            while (symbolsCount() < symbolsTotal) {
+            val bound = min(symbolsTotal, str.symbolsCount())
+            var mutableStr = str.normalizeWhitespaces()
+            while (symbolsCount() < bound) {
                 val line = mutableStr.take(lineLength)
                 appendLine(line.trim())
                 mutableStr = mutableStr.substringAfter(line).trim()
