@@ -27,8 +27,8 @@ import javax.xml.transform.stream.StreamResult
 @Serializable
 @XmlSerialName("char", "", "")
 data class Char (
-    val modifier: String?,
-    val position: String,
+    val modifier: String? = null,
+    val position: String = "",
     @XmlValue(true)
     val text: String = ""
 )
