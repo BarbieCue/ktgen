@@ -6,8 +6,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
-import io.mockk.every
-import io.mockk.mockk
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
@@ -392,25 +390,18 @@ class KeyboardKtTest {
     }
 
     @Test
-    fun `pairKeys happy`() {
-        val keyboardLayout = mockk<KeyboardLayout>()
-        val keyList = mockk<Keys> { every { keys } returns listOf(
+    fun `pairKeys mirrors right hand keys to left hand keys`() {
+        val hands = hands(KeyboardLayout(keys = Keys(keys = listOf(
+            Key(fingerIndex = 0, chars = listOf(Char(text = "a"))),
+            Key(fingerIndex = 1, chars = listOf(Char(text = "s"))),
+            Key(fingerIndex = 2, chars = listOf(Char(text = "d"))),
+            Key(fingerIndex = 3, chars = listOf(Char(text = "f"))),
+            Key(fingerIndex = 4, chars = listOf(Char(text = "j"))),
+            Key(fingerIndex = 5, chars = listOf(Char(text = "k"))),
+            Key(fingerIndex = 6, chars = listOf(Char(text = "l"))),
+            Key(fingerIndex = 7, chars = listOf(Char(text = ";"))),
+        ))))
 
-            // left
-            mockedKey("a", 0, 0), // little
-            mockedKey("s", 1, 1), // ring
-            mockedKey("d", 2, 2), // middle
-            mockedKey("f", 3, 3), // index
-
-            // right
-            mockedKey("j", 4, 4), // index
-            mockedKey("k", 5, 5), // middle
-            mockedKey("l", 6, 6), // ring
-            mockedKey(";", 7, 7), // little
-        ) }
-        every { keyboardLayout.keys } returns keyList
-
-        val hands = hands(keyboardLayout)
         val pairs = pairKeys(hands)
 
         pairs[0].pair.first!!.chars.first().text shouldBe "a"  // left little to
@@ -427,57 +418,67 @@ class KeyboardKtTest {
     }
 
     @Test
-    fun `pairKeys no opponents`() {
-        val keyboardLayout = mockk<KeyboardLayout>()
-        val keyList = mockk<Keys> { every { keys } returns listOf(
+    fun `pairKeys keys having no opponents are at the end of the result list`() {
+        val hands = hands(KeyboardLayout(keys = Keys(keys = listOf(
+            Key(fingerIndex = 0, chars = listOf(Char(text = "a"))),
+            Key(fingerIndex = 1, chars = listOf(Char(text = "s"))),
+            Key(fingerIndex = 2, chars = listOf(Char(text = "d"))),
+            Key(fingerIndex = 3, chars = listOf(Char(text = "f")), left = 0),
+            Key(fingerIndex = 3, chars = listOf(Char(text = "g")), left = 10), // has no opponent
 
-            // left
-            mockedKey("a", 0, 0), // little
-            mockedKey("s", 1, 1), // ring
-            mockedKey("d", 2, 2), // middle
-            mockedKey("f", 3, 3), // index
-
-            mockedKey("g", 3, 4), // index, has no opponent
-
-            // right
-            mockedKey("j", 4, 4), // index
-            mockedKey("k", 5, 5), // middle
-            mockedKey("l", 6, 6), // ring
-            mockedKey(";", 7, 7), // little
-        ) }
-        every { keyboardLayout.keys } returns keyList
-
-        val hands = hands(keyboardLayout)
+            Key(fingerIndex = 4, chars = listOf(Char(text = "j"))),
+            Key(fingerIndex = 5, chars = listOf(Char(text = "k"))),
+            Key(fingerIndex = 6, chars = listOf(Char(text = "l"))),
+            Key(fingerIndex = 7, chars = listOf(Char(text = ";"))),
+        ))))
         val pairs = pairKeys(hands)
 
-        pairs[0].pair.first!!.chars.first().text shouldBe "a"  // left little to
-        pairs[0].pair.second!!.chars.first().text shouldBe ";" // right little
-
-        pairs[1].pair.first!!.chars.first().text shouldBe "s"  // left ring to
-        pairs[1].pair.second!!.chars.first().text shouldBe "l" // right ring
-
-        pairs[2].pair.first!!.chars.first().text shouldBe "d"  // left middle to
-        pairs[2].pair.second!!.chars.first().text shouldBe "k" // right middle
-
-        pairs[3].pair.first!!.chars.first().text shouldBe "f"  // left index to
-        pairs[3].pair.second!!.chars.first().text shouldBe "j" // right index
-
-        pairs[4].pair.first!!.chars.first().text shouldBe "g" // no opponent
-        pairs[4].finger shouldBe -1
-        pairs[4].level shouldBe -1
-        pairs[4].index shouldBe -1
-        pairs[4].pair.second shouldBe null
-    }
-
-    private fun mockedKey(char: String, fingerindex: Int, positionLeft: Int) = mockk<Key> {
-        every { chars } returns listOf(mockk { every { text } returns char })
-        every { fingerIndex } returns fingerindex
-        every { top } returns 0
-        every { left } returns positionLeft
+        pairs.last().pair.first!!.chars.first().text shouldBe "g"
     }
 
     @Test
-    fun `pairKeys input is null`() {
+    fun `pairKeys keys having no opponents are in result pair first position, second is null`() {
+        val hands = hands(KeyboardLayout(keys = Keys(keys = listOf(
+            Key(fingerIndex = 0, chars = listOf(Char(text = "a"))),
+            Key(fingerIndex = 1, chars = listOf(Char(text = "s"))),
+            Key(fingerIndex = 2, chars = listOf(Char(text = "d"))),
+            Key(fingerIndex = 3, chars = listOf(Char(text = "f")), left = 0),
+            Key(fingerIndex = 3, chars = listOf(Char(text = "g")), left = 10), // has no opponent
+
+            Key(fingerIndex = 4, chars = listOf(Char(text = "j"))),
+            Key(fingerIndex = 5, chars = listOf(Char(text = "k"))),
+            Key(fingerIndex = 6, chars = listOf(Char(text = "l"))),
+            Key(fingerIndex = 7, chars = listOf(Char(text = ";"))),
+        ))))
+        val pairs = pairKeys(hands)
+
+        pairs.last().pair.first!!.chars.first().text shouldBe "g"
+        pairs.last().pair.second shouldBe null
+    }
+
+    @Test
+    fun `pairKeys properties finger, level and index of keys having no opponents are set to -1`() {
+        val hands = hands(KeyboardLayout(keys = Keys(keys = listOf(
+            Key(fingerIndex = 0, chars = listOf(Char(text = "a"))),
+            Key(fingerIndex = 1, chars = listOf(Char(text = "s"))),
+            Key(fingerIndex = 2, chars = listOf(Char(text = "d"))),
+            Key(fingerIndex = 3, chars = listOf(Char(text = "f")), left = 0),
+            Key(fingerIndex = 3, chars = listOf(Char(text = "g")), left = 10), // has no opponent
+
+            Key(fingerIndex = 4, chars = listOf(Char(text = "j"))),
+            Key(fingerIndex = 5, chars = listOf(Char(text = "k"))),
+            Key(fingerIndex = 6, chars = listOf(Char(text = "l"))),
+            Key(fingerIndex = 7, chars = listOf(Char(text = ";"))),
+        ))))
+        val pairs = pairKeys(hands)
+
+        pairs.last().finger shouldBe -1
+        pairs.last().level shouldBe -1
+        pairs.last().index shouldBe -1
+    }
+
+    @Test
+    fun `pairKeys return empty list when input is null`() {
         pairKeys(null) shouldBe emptyList()
     }
 
