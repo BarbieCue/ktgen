@@ -27,60 +27,60 @@ import javax.xml.transform.stream.StreamResult
 @Serializable
 @XmlSerialName("char", "", "")
 data class Char (
-    val modifier: String?,
-    val position: String,
+    val modifier: String? = null,
+    val position: String = "",
     @XmlValue(true)
-    val text: String
+    val text: String = ""
 )
 
 @Serializable
 @XmlSerialName("key", "", "")
 data class Key (
-    val chars: List<Char>,
-    val height: Int,
-    val fingerIndex: Int,
-    val top: Int,
-    val width: Int,
-    val left: Int,
-    val hasHapticMarker: Boolean?,
+    val chars: List<Char> = emptyList(),
+    val height: Int = 0,
+    val fingerIndex: Int = 0,
+    val top: Int = 0,
+    val width: Int = 0,
+    val left: Int = 0,
+    val hasHapticMarker: Boolean? = null,
 )
 
 @Serializable
 @XmlSerialName("specialKey", "", "")
 data class SpecialKey (
-    val height: Int,
-    val type: String,
-    val top: Int,
-    val width: Int,
-    val left: Int,
-    val modifierId: String?,
-    val label: String?
+    val height: Int = 0,
+    val type: String = "",
+    val top: Int = 0,
+    val width: Int = 0,
+    val left: Int = 0,
+    val modifierId: String? = null,
+    val label: String? = null
 )
 
 @Serializable
 @XmlSerialName("keys", "", "")
 data class Keys (
     @XmlElement(true)
-    val keys: List<Key>,
+    val keys: List<Key> = emptyList(),
     @XmlElement(true)
-    val specialKeys: List<SpecialKey>
+    val specialKeys: List<SpecialKey> = emptyList()
 )
 
 @Serializable
 @XmlSerialName("keyboardLayout", "", "")
 data class KeyboardLayout (
     @XmlElement(true)
-    val id: String,
+    val id: String = "",
     @XmlElement(true)
-    val title: String,
+    val title: String = "",
     @XmlElement(true)
-    val name: String,
+    val name: String = "",
     @XmlElement(true)
-    val width: Int,
+    val width: Int = 0,
     @XmlElement(true)
-    val height: Int,
+    val height: Int = 0,
     @XmlElement(true)
-    val keys: Keys
+    val keys: Keys = Keys()
 ) {
     companion object {
         fun create(path: String): KeyboardLayout? = try {
@@ -121,7 +121,7 @@ data class Course (
     @XmlElement(true)
     val keyboardLayout: String = "",
     @XmlChildrenName("lesson", "", "")
-    val lessons: List<Lesson>
+    val lessons: List<Lesson> = emptyList()
 )
 
 @Serializable
@@ -130,11 +130,11 @@ data class Lesson (
     @XmlElement(true)
     val id: String = UUID.randomUUID().toString(),
     @XmlElement(true)
-    val title: String,
+    val title: String = "",
     @XmlElement(true)
-    val newCharacters: String,
+    val newCharacters: String = "",
     @XmlElement(true)
-    val text: String,
+    val text: String = "",
 )
 
 fun prettyPrint(xmlString: String): String {

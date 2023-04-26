@@ -11,8 +11,6 @@ import io.kotest.matchers.string.*
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.stringPattern
-import io.mockk.mockkStatic
-import io.mockk.verify
 import org.junit.jupiter.api.Test
 
 class LessonsKtTest {
@@ -59,17 +57,13 @@ class LessonsKtTest {
     }
 
     @Test
-    fun `unpack calls wwUnpack`() {
-        mockkStatic(::wwUnpack)
-        unpack("{WW}")
-        verify { wwUnpack("{WW}") }
+    fun `unpack unpacks ww strings`() {
+        unpack("{WW}") shouldBe "{}"
     }
 
     @Test
-    fun `unpack calls letterGroupUnpack`() {
-        mockkStatic(::letterGroupUnpack)
-        unpack("[sch]")
-        verify { letterGroupUnpack("[sch]") }
+    fun `unpack unpacks letter groups`() {
+        unpack("[sch]") shouldBe "sch"
     }
 
     @Test
