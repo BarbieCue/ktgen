@@ -11,32 +11,13 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import java.nio.file.Path
 import java.util.UUID
 import kotlin.io.path.absolutePathString
-import kotlin.io.path.deleteIfExists
 import kotlin.io.path.writeText
-import kotlin.io.path.createTempFile as createTmpFile
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class DictionaryKtTest {
-
-    private val files = mutableListOf<Path>()
-
-    @AfterAll
-    fun deleteFiles() {
-        files.forEach { it.deleteIfExists() }
-    }
-
-    private fun createFileAndDeleteAfterTest(name: String): Path {
-        val file = createTmpFile(name)
-        files.add(file)
-        return file
-    }
-
+class DictionaryKtTest : FileTest() {
+    
     @Test
     fun `extractWords happy`() {
         val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
@@ -129,7 +110,7 @@ class DictionaryKtTest {
 
     @Test
     fun `textFromFile happy`() {
-        val file = createFileAndDeleteAfterTest(UUID.randomUUID().toString())
+        val file = tmpFile(UUID.randomUUID().toString())
         file.writeText("ctie uax xph eob")
         textFromFile(file.absolutePathString()) shouldBe "ctie uax xph eob"
     }
@@ -187,7 +168,7 @@ class DictionaryKtTest {
 
     @Test
     fun `buildDictionary happy`() {
-        val file = createFileAndDeleteAfterTest(UUID.randomUUID().toString())
+        val file = tmpFile(UUID.randomUUID().toString())
         file.writeText("apple pear grape")
         val port = ports.next()
         embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
@@ -202,7 +183,7 @@ class DictionaryKtTest {
 
     @Test
     fun `buildDictionary allow duplicates`() {
-        val file = createFileAndDeleteAfterTest(UUID.randomUUID().toString())
+        val file = tmpFile(UUID.randomUUID().toString())
         file.writeText("apple pear grape apple orange")
         val dict = buildDictionary(file.absolutePathString(), "", 0, 100, 5)
         dict shouldBe listOf("apple", "pear", "grape", "apple", "orange")
@@ -224,7 +205,7 @@ class DictionaryKtTest {
 
     @Test
     fun `buildDictionary empty url`() {
-        val file = createFileAndDeleteAfterTest(UUID.randomUUID().toString())
+        val file = tmpFile(UUID.randomUUID().toString())
         file.writeText("apple pear grape")
         val dict = buildDictionary(file.absolutePathString(), "", 0, 100, 1000)
         dict shouldContainAll setOf("pear", "apple", "grape")
@@ -232,7 +213,7 @@ class DictionaryKtTest {
 
     @Test
     fun `buildDictionary min word length`() {
-        val file = createFileAndDeleteAfterTest(UUID.randomUUID().toString())
+        val file = tmpFile(UUID.randomUUID().toString())
         file.writeText("apple pear grape")
         val port = ports.next()
         embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
@@ -254,7 +235,7 @@ class DictionaryKtTest {
 
     @Test
     fun `buildDictionary max word length`() {
-        val file = createFileAndDeleteAfterTest(UUID.randomUUID().toString())
+        val file = tmpFile(UUID.randomUUID().toString())
         file.writeText("apple pear grape")
         val port = ports.next()
         embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
@@ -271,14 +252,14 @@ class DictionaryKtTest {
 
     @Test
     fun `buildDictionary repeat words when dictionary-max-length is greater than the number of existing words`() {
-        val file = createFileAndDeleteAfterTest(UUID.randomUUID().toString())
+        val file = tmpFile(UUID.randomUUID().toString())
         file.writeText("apple pear grape")
         buildDictionary(file.absolutePathString(), "", 0, 100, 1000) shouldHaveSize 1000
     }
 
     @Test
     fun `buildDictionary dictionary-max-length range test`() {
-        val file = createFileAndDeleteAfterTest(UUID.randomUUID().toString())
+        val file = tmpFile(UUID.randomUUID().toString())
         file.writeText("apple pear grape")
         buildDictionary(file.absolutePathString(), "", 0, 100, -10) shouldHaveSize 0
         buildDictionary(file.absolutePathString(), "", 0, 100, -1) shouldHaveSize 0
