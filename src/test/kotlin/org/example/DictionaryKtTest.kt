@@ -16,97 +16,90 @@ import java.util.UUID
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.writeText
 
-class DictionaryKtTest : FileTest() {
-    
-    @Test
-    fun `extractWords happy`() {
-        val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
-        val words = extractWords(text, 1, 100)
-        words shouldBe listOf(
-            "They", "d", "lost", "their", "keys", "one", "each", "in", "the",
-            "so", "called", "Good", "Old", "Greens", "respectively", "äöü", "ÜÄÖ", "niße")
+class DictionaryKtTest : TempFileExpectSpec({
+
+    context("extractWords") {
+
+        expect("extract words from string, where words are separated by any whitespace characters or punctuation marks") {
+            val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
+            val words = extractWords(text, 1, 100)
+            words shouldBe listOf(
+                "They", "d", "lost", "their", "keys", "one", "each", "in", "the",
+                "so", "called", "Good", "Old", "Greens", "respectively", "äöü", "ÜÄÖ", "niße")
+        }
+
+        expect("return an empty list on empty input") {
+            val text = ""
+            val words = extractWords(text, 1, 100)
+            words shouldBe emptyList()
+        }
+
+        expect("return an empty list when input is null") {
+            val text = null
+            val words = extractWords(text, 1, 100)
+            words shouldBe emptyList()
+        }
+
+        expect("return an empty list when max-word-length is smaller than min-word-length") {
+            val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
+            val words = extractWords(text, 100, 1)
+            words shouldBe emptyList()
+        }
     }
 
-    @Test
-    fun `extractWords empty input`() {
-        val text = ""
-        val words = extractWords(text, 1, 100)
-        words shouldBe emptyList()
-    }
 
-    @Test
-    fun `extractWords input is null`() {
-        val text = null
-        val words = extractWords(text, 1, 100)
-        words shouldBe emptyList()
-    }
+    context("consistsOfAny") {
 
-    @Test
-    fun `extractWords max length smaller than min length`() {
-        val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
-        val words = extractWords(text, 100, 1)
-        words shouldBe emptyList()
-    }
+        expect("true when the target string consists of the symbols from the input string") {
+            "abc".consistsOfAny("abc") shouldBe true
+        }
 
-    @Test
-    fun `consistsOfAny order does not matter`() {
-        "abc".consistsOfAny("abc") shouldBe true
-        "abc".consistsOfAny("cba") shouldBe true
-        "abc".consistsOfAny("bca") shouldBe true
-    }
+        expect("the symbol order does not matter") {
+            "abc".consistsOfAny("bca") shouldBe true
+        }
 
-    @Test
-    fun `consistsOfAny there can be more symbols`() {
-        "abc".consistsOfAny("abcdef") shouldBe true
-        "abc".consistsOfAny("abcx")   shouldBe true
-        "abc".consistsOfAny("abc1")   shouldBe true
-        "abc".consistsOfAny("cba22")  shouldBe true
-    }
+        expect("false when the input string contains different symbols than the target string") {
+            "abc".containsAny("x") shouldBe false
+        }
 
-    @Test
-    fun `consistsOfAny duplicates are ignored`() {
-        "abc".consistsOfAny("aaabbaccc")  shouldBe true
-        "abc".consistsOfAny("xaaabbaccc") shouldBe true
-        "abbaaab".consistsOfAny("ab") shouldBe true
-        "abcabc".consistsOfAny("cba") shouldBe true
-        "abcabc".consistsOfAny("cbaxy") shouldBe true
-    }
+        expect("true when the input string contains more symbols than target string") {
+            "abc".consistsOfAny("abcdef") shouldBe true
+            "abc".consistsOfAny("abcx")   shouldBe true
+            "abc".consistsOfAny("abc1")   shouldBe true
+            "abc".consistsOfAny("cba22")  shouldBe true
+        }
 
-    @Test
-    fun `consistsOfAny only specified symbols are allowed`() {
-        "abc".consistsOfAny("ab")  shouldBe false
-        "abc".consistsOfAny("ac")  shouldBe false
-        "abc".consistsOfAny("bc")  shouldBe false
-        "abc".consistsOfAny("aaa") shouldBe false
-        "abc".consistsOfAny("a")   shouldBe false
-        "abc".consistsOfAny("b")   shouldBe false
-        "abc".consistsOfAny("c")   shouldBe false
-        "abc".consistsOfAny("ABC") shouldBe false
-        "abc".consistsOfAny("A")   shouldBe false
-        "abc".consistsOfAny("B")   shouldBe false
-        "abc".consistsOfAny("C")   shouldBe false
-    }
+        expect("false when not all symbols from the input string are contained in the target string") {
+            "abc".consistsOfAny("ab")  shouldBe false
+            "abc".consistsOfAny("ac")  shouldBe false
+            "abc".consistsOfAny("bc")  shouldBe false
+            "abc".consistsOfAny("aaa") shouldBe false
+            "abc".consistsOfAny("a")   shouldBe false
+            "abc".consistsOfAny("b")   shouldBe false
+            "abc".consistsOfAny("c")   shouldBe false
+            "abc".consistsOfAny("ABC") shouldBe false
+            "abc".consistsOfAny("A")   shouldBe false
+            "abc".consistsOfAny("B")   shouldBe false
+            "abc".consistsOfAny("C")   shouldBe false
+        }
 
-    @Test
-    fun `containsAny true`() {
-        "abc".containsAny("a")   shouldBe true
-        "abc".containsAny("b")   shouldBe true
-        "abc".containsAny("c")   shouldBe true
-        "abc".containsAny("cba") shouldBe true
-        "abc".containsAny("cb")  shouldBe true
-        "abc".containsAny("cbx") shouldBe true
-        "abc".containsAny("xbx") shouldBe true
-    }
+        expect("duplicates are ignored") {
+            "abc".consistsOfAny("aaabbaccc")  shouldBe true
+            "abc".consistsOfAny("xaaabbaccc") shouldBe true
+            "abbaaab".consistsOfAny("ab") shouldBe true
+            "abcabc".consistsOfAny("cba") shouldBe true
+            "abcabc".consistsOfAny("cbaxy") shouldBe true
+        }
 
-    @Test
-    fun `containsAny false`() {
-        "abc".containsAny("x") shouldBe false
+        expect("false when input string is empty") {
+            "abc".containsAny("") shouldBe false
+        }
     }
+})
 
-    @Test
-    fun `containsAny empty symbols`() {
-        "abc".containsAny("") shouldBe false
-    }
+
+
+class DictionaryKtTestcticticti : FileTest() {
 
     @Test
     fun `textFromFile happy`() {
