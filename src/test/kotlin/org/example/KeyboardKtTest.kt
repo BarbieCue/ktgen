@@ -7,13 +7,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.TestInstance
 import java.util.*
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.writeText
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KeyboardKtTest : FileTest() {
 
     @Test
