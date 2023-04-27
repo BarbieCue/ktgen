@@ -6,22 +6,12 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.TestInstance
-import java.io.File
 import java.util.*
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.writeText
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class KeyboardKtTest {
-
-    private val files = mutableListOf<String>()
-
-    @AfterAll
-    fun deleteFiles() {
-        files.forEach { File(it).delete() }
-    }
+class KeyboardKtTest : FileTest() {
 
     @Test
     fun `Level Comparator lower top value comes before higher top value`() {
@@ -484,10 +474,9 @@ class KeyboardKtTest {
 
     @Test
     fun `customOrder keyboard layout english USA happy`() {
-        val filename = UUID.randomUUID().toString()
-        files.add(filename)
-        File(filename).writeText(keyboardLayoutEnglishUSA)
-        val keyboardLayout = KeyboardLayout.create(filename)
+        val file = tmpFile(UUID.randomUUID().toString())
+        file.writeText(keyboardLayoutEnglishUSA)
+        val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
         val hands = hands(keyboardLayout!!)
         val pairs = pairKeys(hands)
 
@@ -531,10 +520,9 @@ class KeyboardKtTest {
 
     @Test
     fun `filter keyboard layout english USA filters pairs where the keys match the filter pattern`() {
-        val filename = UUID.randomUUID().toString()
-        files.add(filename)
-        File(filename).writeText(keyboardLayoutEnglishUSA)
-        val keyboardLayout = KeyboardLayout.create(filename)
+        val file = tmpFile(UUID.randomUUID().toString())
+        file.writeText(keyboardLayoutEnglishUSA)
+        val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
         val hands = hands(keyboardLayout!!)
         val pairs = pairKeys(hands)
 
@@ -554,10 +542,9 @@ class KeyboardKtTest {
 
     @Test
     fun `upperLetters keyboard layout english USA return upper letter pairs`() {
-        val filename = UUID.randomUUID().toString()
-        files.add(filename)
-        File(filename).writeText(keyboardLayoutEnglishUSA)
-        val keyboardLayout = KeyboardLayout.create(filename)
+        val file = tmpFile(UUID.randomUUID().toString())
+        file.writeText(keyboardLayoutEnglishUSA)
+        val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
         val hands = hands(keyboardLayout!!)
         val pairs = pairKeys(hands)
         val letterPairs = upperLetters(pairs)
@@ -572,10 +559,9 @@ class KeyboardKtTest {
 
     @Test
     fun `lowerLetters keyboard layout english USA return lower letter pairs`() {
-        val filename = UUID.randomUUID().toString()
-        files.add(filename)
-        File(filename).writeText(keyboardLayoutEnglishUSA)
-        val keyboardLayout = KeyboardLayout.create(filename)
+        val file = tmpFile(UUID.randomUUID().toString())
+        file.writeText(keyboardLayoutEnglishUSA)
+        val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
         val hands = hands(keyboardLayout!!)
         val pairs = pairKeys(hands)
         val letterPairs = lowerLetters(pairs)
@@ -590,10 +576,9 @@ class KeyboardKtTest {
 
     @Test
     fun `KeyboardLayout toCourseSymbols english USA return string list of paired symbols`() {
-        val filename = UUID.randomUUID().toString()
-        files.add(filename)
-        File(filename).writeText(keyboardLayoutEnglishUSA)
-        val keyboardLayout = KeyboardLayout.create(filename)
+        val file = tmpFile(UUID.randomUUID().toString())
+        file.writeText(keyboardLayoutEnglishUSA)
+        val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
         keyboardLayout!!.toCourseSymbols() shouldBe listOf(
             "fj", "dk", "sl", "a", "gh", "ty", "vm",
             "bn", "ru", "ei", "c", "wo", "x", "qp", "z",
@@ -609,31 +594,28 @@ class KeyboardKtTest {
 
     @Test
     fun `create keyboard layout from file, error invalid xml, return null`() {
-        val filename = UUID.randomUUID().toString()
-        files.add(filename)
-        File(filename).writeText(
+        val file = tmpFile(UUID.randomUUID().toString())
+        file.writeText(
             """
               <?xml version="1.0"?>
               <keyboa
             """.trimEnd()
         )
-        KeyboardLayout.create(filename) shouldBe null
+        KeyboardLayout.create(file.absolutePathString()) shouldBe null
     }
 
     @Test
     fun `create keyboard layout from file, error empty keyboard file, return null`() {
-        val filename = UUID.randomUUID().toString()
-        files.add(filename)
-        File(filename).writeText("")
-        KeyboardLayout.create(filename) shouldBe null
+        val file = tmpFile(UUID.randomUUID().toString())
+        file.writeText("")
+        KeyboardLayout.create(file.absolutePathString()) shouldBe null
     }
 
     @Test
     fun `create keyboard layout from file happy`() {
-        val filename = UUID.randomUUID().toString()
-        files.add(filename)
-        File(filename).writeText(keyboardLayoutEnglishUSA)
-        KeyboardLayout.create(filename) shouldNotBe null
+        val file = tmpFile(UUID.randomUUID().toString())
+        file.writeText(keyboardLayoutEnglishUSA)
+        KeyboardLayout.create(file.absolutePathString()) shouldNotBe null
     }
 
     private val keyboardLayoutEnglishUSA = """

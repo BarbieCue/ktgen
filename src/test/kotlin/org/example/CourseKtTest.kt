@@ -8,31 +8,20 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldHaveMaxLength
 import io.kotest.matchers.string.shouldHaveMinLength
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import java.io.File
-import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermissions
 import java.util.*
-import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
+import kotlin.io.path.writeText
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CourseKtTest {
-
-    private val files = mutableListOf<String>()
-
-    @AfterAll
-    fun deleteFiles() {
-        files.forEach { File(it).delete() }
-    }
+class CourseKtTest : FileTest() {
 
     @Test
     fun `readCourseSymbols happy`() {
-        val filename = "ktgen_course_definition_test${UUID.randomUUID()}"
-        files.add(filename)
-        File(filename).writeText("apple pear\ngrape     orange\n\n  peach")
-        readCourseSymbols(filename) shouldBe listOf("apple", "pear", "grape", "orange", "peach")
+        val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
+        file.writeText("apple pear\ngrape     orange\n\n  peach")
+        readCourseSymbols(file.absolutePathString()) shouldBe listOf("apple", "pear", "grape", "orange", "peach")
     }
 
     @Test
@@ -47,10 +36,9 @@ class CourseKtTest {
 
     @Test
     fun `readCourseSymbols file empty`() {
-        val filename = "ktgen_course_definition_test${UUID.randomUUID()}"
-        files.add(filename)
-        File(filename).writeText("")
-        readCourseSymbols(filename) shouldBe emptyList()
+        val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
+        file.writeText("")
+        readCourseSymbols(file.absolutePathString()) shouldBe emptyList()
     }
 
     @Test
@@ -60,25 +48,17 @@ class CourseKtTest {
 
     @Test
     fun `writeCourseFile relative path`() {
-        val filename = "my_test_course${UUID.randomUUID()}.xml"
-        files.add(filename)
-        writeCourseFile(filename, Course(lessons = emptyList())) shouldBe true
-        File(filename).exists() shouldBe true
+        val file = tmpFile("my_test_course${UUID.randomUUID()}.xml")
+        writeCourseFile(file.absolutePathString(), Course(lessons = emptyList())) shouldBe true
+        file.exists() shouldBe true
     }
 
     @Test
     fun `writeCourseFile cannot write file`() {
-        val readOnlyDir = "dir${UUID.randomUUID()}"
-        val filename = "my_test_course${UUID.randomUUID()}.xml"
-        files.add("$readOnlyDir/$filename")
-        files.add(readOnlyDir)
-
-        File(readOnlyDir).mkdir()
         val readOnly = PosixFilePermissions.fromString("r--r--r--")
-        Files.setPosixFilePermissions(Path(readOnlyDir), readOnly)
-
-        writeCourseFile("$readOnlyDir/$filename", Course(lessons = emptyList())) shouldBe false
-        File("$readOnlyDir/$filename").exists() shouldBe false
+        val fileAttributes = PosixFilePermissions.asFileAttribute(readOnly)
+        val file = tmpFile("my_test_course${UUID.randomUUID()}.xml", fileAttributes)
+        writeCourseFile("$file", Course(lessons = emptyList())) shouldBe false
     }
 
     @Test
