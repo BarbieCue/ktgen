@@ -94,30 +94,35 @@ class DictionaryKtTest : TempFileExpectSpec({
         expect("false when input string is empty") {
             "abc".containsAny("") shouldBe false
         }
+
+        context("textFromFile") {
+
+            expect("reads text content of a file") {
+                val file = tmpFile(UUID.randomUUID().toString())
+                file.writeText("ctie uax xph eob")
+                textFromFile(file.absolutePathString()) shouldBe "ctie uax xph eob"
+            }
+
+            expect("null when file does not exist") {
+                textFromFile("a_non_existing_file") shouldBe null
+            }
+
+            expect("null when file path is empty") {
+                textFromFile("") shouldBe null
+            }
+
+            expect("empty string when file is empty") {
+                val file = tmpFile(UUID.randomUUID().toString())
+                file.writeText("")
+                textFromFile(file.absolutePathString()) shouldBe ""
+            }
+        }
     }
 })
 
 
 
 class DictionaryKtTestcticticti : FileTest() {
-
-    @Test
-    fun `textFromFile happy`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("ctie uax xph eob")
-        textFromFile(file.absolutePathString()) shouldBe "ctie uax xph eob"
-    }
-
-    @Test
-    fun `textFromFile no file`() {
-        textFromFile("a_non_existing_file") shouldBe null
-    }
-
-    @Test
-    fun `textFromFile path empty`() {
-        textFromFile("") shouldBe null
-    }
-
 
     private val ports = generateSequence(30116) { it + 1 }.iterator()
 
