@@ -47,7 +47,7 @@ fun unpack(symbols: String): String {
 fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String): List<String> {
     if (isEmpty()) return emptyList()
     val list = toList()
-    val rand = Random.nextInt(0, size / 2)
+    val rand = Random.nextInt(0, max(size / 2, 1))
     return list.subList(rand, size).plus(list.subList(0, rand))
         .filter { it.consistsOfAny(letters(charsHistory)) &&
 
