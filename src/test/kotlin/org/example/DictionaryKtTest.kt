@@ -117,52 +117,49 @@ class DictionaryKtTest : TempFileExpectSpec({
                 textFromFile(file.absolutePathString()) shouldBe ""
             }
         }
+
+        val ports = generateSequence(30116) { it + 1 }.iterator()
+
+        context("textFromWebsite") {
+
+            expect("reads text content from a string containing html, where words are separated by any whitespace characters") {
+                val port = ports.next()
+                embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
+                textFromWebsite("http://localhost:$port/") shouldBe "Example Domain Example Domain This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission. More information..."
+            }
+
+            expect("empty string when the html source string is empty") {
+                val port = ports.next()
+                embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
+                textFromWebsite("http://localhost:$port/empty") shouldBe ""
+            }
+
+            expect("empty string on error response code (non 2xx)") {
+                val port = ports.next()
+                embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
+                textFromWebsite("http://localhost:$port/no-such-path") shouldBe ""
+            }
+
+            expect("empty string when protocol is missing") {
+                val port = ports.next()
+                embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
+                textFromWebsite("localhost:$port/") shouldBe ""
+            }
+
+            expect("empty string on unknown host") {
+                textFromWebsite("http://cgtsirenbml8hcduygesrtiyelschtibyesr") shouldBe ""
+            }
+
+            expect("empty string when url is empty") {
+                textFromWebsite("") shouldBe ""
+            }
+        }
     }
 })
 
 
 
 class DictionaryKtTestcticticti : FileTest() {
-
-    private val ports = generateSequence(30116) { it + 1 }.iterator()
-
-    @Test
-    fun `textFromWebsite 200 content`() {
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        textFromWebsite("http://localhost:$port/") shouldBe "Example Domain Example Domain This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission. More information..."
-    }
-
-    @Test
-    fun `textFromWebsite 200 empty`() {
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        textFromWebsite("http://localhost:$port/empty") shouldBe ""
-    }
-
-    @Test
-    fun `textFromWebsite 404 not found`() {
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        textFromWebsite("http://localhost:$port/no-such-path") shouldBe ""
-    }
-
-    @Test
-    fun `textFromWebsite protocol missing`() {
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        textFromWebsite("localhost:$port/") shouldBe ""
-    }
-
-    @Test
-    fun `textFromWebsite unknown host`() {
-        textFromWebsite("http://cgtsirenbml8hcduygesrtiyelschtibyesr") shouldBe ""
-    }
-
-    @Test
-    fun `textFromWebsite empty url`() {
-        textFromWebsite("") shouldBe ""
-    }
 
     @Test
     fun `buildDictionary happy`() {
