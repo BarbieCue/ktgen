@@ -32,7 +32,7 @@ abstract class FileTest {
 }
 
 
-abstract class TempFileExpectSpec(body: TempFileExpectSpec.() -> Unit = {}) : ExpectSpec() {
+abstract class IOExpectSpec(body: IOExpectSpec.() -> Unit = {}) : ExpectSpec() {
     init {
         body()
         afterEach { files.forEach { it.deleteIfExists() } }
