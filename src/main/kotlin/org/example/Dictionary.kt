@@ -5,6 +5,7 @@ import it.skrape.fetcher.BrowserFetcher
 import it.skrape.fetcher.response
 import it.skrape.fetcher.skrape
 import java.io.File
+import kotlin.math.max
 
 
 fun textFromWebsite(url: String): String = try {
@@ -30,9 +31,9 @@ fun textFromFile(path: String): String? = try {
 }
 
 fun extractWords(text: String?, minWordLength: Int, maxWordLength: Int): List<String> =
-    if (text.isNullOrEmpty()) emptyList() else
-        text.split("\\s+|\\p{Punct}+".toRegex())
-            .filter { it.matches(lettersRegex) && it.length in (minWordLength..maxWordLength) }
+    if (text.isNullOrEmpty() || minWordLength > maxWordLength || maxWordLength <= 0) emptyList()
+    else text.split("\\s+|\\p{Punct}+".toRegex())
+        .filter { it.matches(lettersRegex) && it.length in (max(minWordLength, 0)..maxWordLength) }
 
 fun String.consistsOfAny(symbols: String): Boolean {
     val chars = toCharArray().distinct()
