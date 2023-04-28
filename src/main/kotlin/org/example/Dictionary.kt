@@ -47,13 +47,13 @@ fun String.containsAny(symbols: String): Boolean {
 fun buildDictionary(
     dictionaryPath: String,
     scrapeUrl: String,
-    minWordMaxLength: Int,
+    minWordLength: Int,
     maxWordLength: Int,
     dictionarySize: Int
 ): Collection<String> {
     if (dictionarySize <= 0) return emptyList()
     val file = if (dictionaryPath.isEmpty()) "" else textFromFile(dictionaryPath)
     val web = if (scrapeUrl.isEmpty()) "" else textFromWebsite(scrapeUrl)
-    val dict = extractWords(file?.plus(" ").plus(web), minWordMaxLength, maxWordLength)
+    val dict = extractWords(file?.plus(" ").plus(web), minWordLength, maxWordLength)
     return dict.asSequence().repeatInfinite().take(dictionarySize).toList()
 }
