@@ -11,46 +11,56 @@ import java.util.*
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.writeText
 
-class KeyboardKtTest : FileTest() {
+class KeyboardKtTest : IOExpectSpec({
 
-    @Test
-    fun `Level Comparator lower top value comes before higher top value`() {
-        val first = Key(top = 0)
-        val second = Key(top = 10)
-        LevelComparator().compare(first, second) shouldBe -10
-        LevelComparator().compare(second, first) shouldBe 10
+    context("LevelComparator") {
+
+        expect("lower top value comes before higher top value") {
+            val first = Key(top = 0)
+            val second = Key(top = 10)
+            LevelComparator().compare(first, second) shouldBe -10
+            LevelComparator().compare(second, first) shouldBe 10
+            setOf(second, first).sortedWith(LevelComparator()) shouldBe setOf(first, second)
+        }
+
+        expect("equal when top values are equal") {
+            LevelComparator().compare(Key(top = 20), Key(top = 20)) shouldBe 0
+        }
     }
 
-    @Test
-    fun `Level Comparator equal when top values are equal`() {
-        LevelComparator().compare(Key(top = 20), Key(top = 20)) shouldBe 0
+    context("LeftToRight Comparator") {
+
+        expect("lower left value comes before higher left value") {
+            val first = Key(left = 0)
+            val second = Key(left = 10)
+            LeftToRight().compare(first, second) shouldBe -10
+            LeftToRight().compare(second, first) shouldBe 10
+            setOf(second, first).sortedWith(LevelComparator()) shouldBe setOf(first, second)
+        }
+
+        expect("equal when left values are equal") {
+            LeftToRight().compare(Key(left = 20), Key(left = 20)) shouldBe 0
+        }
     }
 
-    @Test
-    fun `LeftToRight Comparator lower left value comes before higher left value`() {
-        val first = Key(left = 0)
-        val second = Key(left = 10)
-        LeftToRight().compare(first, second) shouldBe -10
-        LeftToRight().compare(second, first) shouldBe 10
-    }
+    context("RightToLeft Comparator") {
 
-    @Test
-    fun `LeftToRight Comparator equal when left values are equal`() {
-        LeftToRight().compare(Key(left = 20), Key(left = 20)) shouldBe 0
-    }
+        expect("higher left value comes before lower left value") {
+            val first = Key(left = 10)
+            val second = Key(left = 0)
+            RightToLeft().compare(first, second) shouldBe -10
+            RightToLeft().compare(second, first) shouldBe 10
+            setOf(second, first).sortedWith(LevelComparator()) shouldBe setOf(first, second)
+        }
 
-    @Test
-    fun `RightToLeft Comparator higher left value comes before lower left value`() {
-        val first = Key(left = 10)
-        val second = Key(left = 0)
-        RightToLeft().compare(first, second) shouldBe -10
-        RightToLeft().compare(second, first) shouldBe 10
+        expect("equal when left values are equal") {
+            RightToLeft().compare(Key(left = 20), Key(left = 20)) shouldBe 0
+        }
     }
+})
 
-    @Test
-    fun `RightToLeft Comparator equal when left values are equal`() {
-        RightToLeft().compare(Key(left = 20), Key(left = 20)) shouldBe 0
-    }
+
+class KeyboardKtOldDeleteMeAtTheEnd : FileTest() {
 
     @Test
     fun `hands expect 8 fingers, indicated by having 8 different finger indices`() {
