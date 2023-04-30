@@ -57,223 +57,217 @@ class KeyboardKtTest : IOExpectSpec({
             RightToLeft().compare(Key(left = 20), Key(left = 20)) shouldBe 0
         }
     }
+
+    context("hands") {
+
+        expect("expect 8 fingers, indicated by having 8 different finger indices") {
+            val kb = KeyboardLayout(keys = Keys(keys = listOf(
+                Key(fingerIndex = 0),
+                Key(fingerIndex = 1),
+                Key(fingerIndex = 2),
+                Key(fingerIndex = 3),
+                Key(fingerIndex = 4),
+                Key(fingerIndex = 5),
+                Key(fingerIndex = 6),
+                Key(fingerIndex = 7),
+            )))
+            hands(kb) shouldNotBe null
+        }
+
+        expect("return null when there are not exactly 8 fingers (indicated by finger indices)") {
+            val kbSevenFingers = KeyboardLayout(keys = Keys(keys = listOf(
+                Key(fingerIndex = 0),
+                Key(fingerIndex = 1),
+                Key(fingerIndex = 2),
+                Key(fingerIndex = 3),
+                Key(fingerIndex = 4),
+                Key(fingerIndex = 5),
+                Key(fingerIndex = 6),
+            )))
+            hands(kbSevenFingers) shouldBe null
+
+            val kbNineFingers = KeyboardLayout(keys = Keys(keys = listOf(
+                Key(fingerIndex = 0),
+                Key(fingerIndex = 1),
+                Key(fingerIndex = 2),
+                Key(fingerIndex = 3),
+                Key(fingerIndex = 4),
+                Key(fingerIndex = 5),
+                Key(fingerIndex = 6),
+                Key(fingerIndex = 7),
+                Key(fingerIndex = 8),
+            )))
+            hands(kbNineFingers) shouldBe null
+        }
+
+        expect("read left and right hand") {
+            val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
+                Key(fingerIndex = 0, chars = listOf(Char(text = "a"))),
+                Key(fingerIndex = 1, chars = listOf(Char(text = "s"))),
+                Key(fingerIndex = 2, chars = listOf(Char(text = "d"))),
+                Key(fingerIndex = 3, chars = listOf(Char(text = "f"))),
+                Key(fingerIndex = 4, chars = listOf(Char(text = "j"))),
+                Key(fingerIndex = 5, chars = listOf(Char(text = "k"))),
+                Key(fingerIndex = 6, chars = listOf(Char(text = "l"))),
+                Key(fingerIndex = 7, chars = listOf(Char(text = "ö"))),
+            )))
+
+            val (left, right) = hands(keyboardLayout)!!
+
+            // The algorithm reads fingers for both hands from little finger to index finger:
+            // 0 little, 1 ring, 2 middle, 3 index
+
+            left shouldHaveSize 4 // 4 fingers
+            left[0][0] shouldHaveSize 1 // little
+            left[0][0].first().chars.single().text shouldBe "a"
+            left[1][0] shouldHaveSize 1 // ring
+            left[1][0].first().chars.single().text shouldBe "s"
+            left[2][0] shouldHaveSize 1 // middle
+            left[2][0].first().chars.single().text shouldBe "d"
+            left[3][0] shouldHaveSize 1 // index
+            left[3][0].first().chars.single().text shouldBe "f"
+
+            right shouldHaveSize 4 // 4 fingers
+            right[3][0] shouldHaveSize 1 // index
+            right[3][0].first().chars.single().text shouldBe "j"
+            right[2][0] shouldHaveSize 1 // middle
+            right[2][0].first().chars.single().text shouldBe "k"
+            right[1][0] shouldHaveSize 1 // ring
+            right[1][0].first().chars.single().text shouldBe "l"
+            right[0][0] shouldHaveSize 1 // little
+            right[0][0].first().chars.single().text shouldBe "ö"
+        }
+
+        expect("order by finger-index, 0-3 is left hand, 4-7 is right hand") {
+            val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
+                Key(fingerIndex = 0, chars = listOf(Char(text = "leftLittle"))),
+                Key(fingerIndex = 1, chars = listOf(Char(text = "leftRing"))),
+                Key(fingerIndex = 2, chars = listOf(Char(text = "leftMiddle"))),
+                Key(fingerIndex = 3, chars = listOf(Char(text = "leftIndex"))),
+                Key(fingerIndex = 4, chars = listOf(Char(text = "rightIndex"))),
+                Key(fingerIndex = 5, chars = listOf(Char(text = "rightMiddle"))),
+                Key(fingerIndex = 6, chars = listOf(Char(text = "rightRing"))),
+                Key(fingerIndex = 7, chars = listOf(Char(text = "rightLittle"))),
+            )))
+
+            val (left, right) = hands(keyboardLayout)!!
+
+            left[0][0][0].chars.single().text shouldBe "leftLittle"
+            left[1][0][0].chars.single().text shouldBe "leftRing"
+            left[2][0][0].chars.single().text shouldBe "leftMiddle"
+            left[3][0][0].chars.single().text shouldBe "leftIndex"
+
+            right[0][0][0].chars.single().text shouldBe "rightLittle"
+            right[1][0][0].chars.single().text shouldBe "rightRing"
+            right[2][0][0].chars.single().text shouldBe "rightMiddle"
+            right[3][0][0].chars.single().text shouldBe "rightIndex"
+        }
+
+        expect("the order of the keys in the source key list does not matter (only finger-index matters)") {
+            val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
+                Key(fingerIndex = 1, chars = listOf(Char(text = "leftRing"))),
+                Key(fingerIndex = 3, chars = listOf(Char(text = "leftIndex"))),
+                Key(fingerIndex = 7, chars = listOf(Char(text = "rightLittle"))),
+                Key(fingerIndex = 2, chars = listOf(Char(text = "leftMiddle"))),
+                Key(fingerIndex = 0, chars = listOf(Char(text = "leftLittle"))),
+                Key(fingerIndex = 4, chars = listOf(Char(text = "rightIndex"))),
+                Key(fingerIndex = 6, chars = listOf(Char(text = "rightRing"))),
+                Key(fingerIndex = 5, chars = listOf(Char(text = "rightMiddle"))),
+            )))
+
+            val (left, right) = hands(keyboardLayout)!!
+
+            left[0][0][0].chars.single().text shouldBe "leftLittle"
+            left[1][0][0].chars.single().text shouldBe "leftRing"
+            left[2][0][0].chars.single().text shouldBe "leftMiddle"
+            left[3][0][0].chars.single().text shouldBe "leftIndex"
+
+            right[0][0][0].chars.single().text shouldBe "rightLittle"
+            right[1][0][0].chars.single().text shouldBe "rightRing"
+            right[2][0][0].chars.single().text shouldBe "rightMiddle"
+            right[3][0][0].chars.single().text shouldBe "rightIndex"
+        }
+
+        expect("separate levels via the top value of the keys (left hand test)") {
+            val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
+                Key(fingerIndex = 0, chars = listOf(Char(text = "2")), top = 0),
+                Key(fingerIndex = 0, chars = listOf(Char(text = "w")), top = 1),
+                Key(fingerIndex = 0, chars = listOf(Char(text = "s")), top = 2),
+                Key(fingerIndex = 0, chars = listOf(Char(text = "x")), top = 3),
+
+                Key(fingerIndex = 1), Key(fingerIndex = 2), Key(fingerIndex = 3),
+                Key(fingerIndex = 4), Key(fingerIndex = 5), Key(fingerIndex = 6),
+                Key(fingerIndex = 7),
+            )))
+
+            val (left, _) = hands(keyboardLayout)!!
+
+            val littleFinger = left[0]
+            littleFinger[0][0].chars.single().text shouldBe "2" // level 0
+            littleFinger[1][0].chars.single().text shouldBe "w" // level 1
+            littleFinger[2][0].chars.single().text shouldBe "s" // level 2
+            littleFinger[3][0].chars.single().text shouldBe "x" // level 3
+        }
+
+        expect("separate levels via the top value of the keys (right hand test)") {
+            val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
+                Key(fingerIndex = 0), Key(fingerIndex = 1), Key(fingerIndex = 2),
+                Key(fingerIndex = 3), Key(fingerIndex = 4), Key(fingerIndex = 5),
+                Key(fingerIndex = 6),
+
+                Key(fingerIndex = 7, chars = listOf(Char(text = "0")), top = 0),
+                Key(fingerIndex = 7, chars = listOf(Char(text = "o")), top = 1),
+                Key(fingerIndex = 7, chars = listOf(Char(text = "l")), top = 2),
+                Key(fingerIndex = 7, chars = listOf(Char(text = ".")), top = 3),
+            )))
+
+            val (_, right) = hands(keyboardLayout)!!
+
+            val littleFinger = right[0]
+            littleFinger[0][0].chars.single().text shouldBe "0" // level 0
+            littleFinger[1][0].chars.single().text shouldBe "o" // level 1
+            littleFinger[2][0].chars.single().text shouldBe "l" // level 2
+            littleFinger[3][0].chars.single().text shouldBe "." // level 3
+        }
+
+        expect("sort keys per level of left little finger right to left") {
+            val first = Key(fingerIndex = 0, chars = listOf(Char(text = "1")), top = 0, left = 10)
+            val second = Key(fingerIndex = 0, chars = listOf(Char(text = "2")), top = 0, left = 0)
+            val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
+                first, second,
+                Key(fingerIndex = 1), Key(fingerIndex = 2), Key(fingerIndex = 3),
+                Key(fingerIndex = 4), Key(fingerIndex = 5), Key(fingerIndex = 6),
+                Key(fingerIndex = 7),
+            )))
+
+            val (left, _) = hands(keyboardLayout)!!
+
+            val littleFinger = left[0]
+            littleFinger[0][0].chars.single().text shouldBe "1"
+            littleFinger[0][1].chars.single().text shouldBe "2"
+        }
+
+        expect("sort keys per level of left ring finger right to left") {
+            val first = Key(fingerIndex = 1, chars = listOf(Char(text = "1")), top = 0, left = 10)
+            val second = Key(fingerIndex = 1, chars = listOf(Char(text = "2")), top = 0, left = 0)
+            val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
+                first, second,
+                Key(fingerIndex = 0), Key(fingerIndex = 2), Key(fingerIndex = 3),
+                Key(fingerIndex = 4), Key(fingerIndex = 5), Key(fingerIndex = 6),
+                Key(fingerIndex = 7),
+            )))
+
+            val (left, _) = hands(keyboardLayout)!!
+
+            val ringFinger = left[1]
+            ringFinger[0][0].chars.single().text shouldBe "1"
+            ringFinger[0][1].chars.single().text shouldBe "2"
+        }
+    }
 })
 
 
 class KeyboardKtOldDeleteMeAtTheEnd : FileTest() {
-
-    @Test
-    fun `hands expect 8 fingers, indicated by having 8 different finger indices`() {
-        val kb = KeyboardLayout(keys = Keys(keys = listOf(
-            Key(fingerIndex = 0),
-            Key(fingerIndex = 1),
-            Key(fingerIndex = 2),
-            Key(fingerIndex = 3),
-            Key(fingerIndex = 4),
-            Key(fingerIndex = 5),
-            Key(fingerIndex = 6),
-            Key(fingerIndex = 7),
-        )))
-        hands(kb) shouldNotBe null
-    }
-
-    @Test
-    fun `hands return null when there are not exactly 8 fingers (indicated by finger indices)`() {
-        val kbSevenFingers = KeyboardLayout(keys = Keys(keys = listOf(
-            Key(fingerIndex = 0),
-            Key(fingerIndex = 1),
-            Key(fingerIndex = 2),
-            Key(fingerIndex = 3),
-            Key(fingerIndex = 4),
-            Key(fingerIndex = 5),
-            Key(fingerIndex = 6),
-        )))
-        hands(kbSevenFingers) shouldBe null
-
-        val kbNineFingers = KeyboardLayout(keys = Keys(keys = listOf(
-            Key(fingerIndex = 0),
-            Key(fingerIndex = 1),
-            Key(fingerIndex = 2),
-            Key(fingerIndex = 3),
-            Key(fingerIndex = 4),
-            Key(fingerIndex = 5),
-            Key(fingerIndex = 6),
-            Key(fingerIndex = 7),
-            Key(fingerIndex = 8),
-        )))
-        hands(kbNineFingers) shouldBe null
-    }
-
-    @Test
-    fun `hands read left and right hand`() {
-        val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
-            Key(fingerIndex = 0, chars = listOf(Char(text = "a"))),
-            Key(fingerIndex = 1, chars = listOf(Char(text = "s"))),
-            Key(fingerIndex = 2, chars = listOf(Char(text = "d"))),
-            Key(fingerIndex = 3, chars = listOf(Char(text = "f"))),
-            Key(fingerIndex = 4, chars = listOf(Char(text = "j"))),
-            Key(fingerIndex = 5, chars = listOf(Char(text = "k"))),
-            Key(fingerIndex = 6, chars = listOf(Char(text = "l"))),
-            Key(fingerIndex = 7, chars = listOf(Char(text = "ö"))),
-        )))
-
-        val (left, right) = hands(keyboardLayout)!!
-
-        // The algorithm reads fingers for both hands from little finger to index finger:
-        // 0 little, 1 ring, 2 middle, 3 index
-
-        left shouldHaveSize 4 // 4 fingers
-        left[0][0] shouldHaveSize 1 // little
-        left[0][0].first().chars.single().text shouldBe "a"
-        left[1][0] shouldHaveSize 1 // ring
-        left[1][0].first().chars.single().text shouldBe "s"
-        left[2][0] shouldHaveSize 1 // middle
-        left[2][0].first().chars.single().text shouldBe "d"
-        left[3][0] shouldHaveSize 1 // index
-        left[3][0].first().chars.single().text shouldBe "f"
-
-        right shouldHaveSize 4 // 4 fingers
-        right[3][0] shouldHaveSize 1 // index
-        right[3][0].first().chars.single().text shouldBe "j"
-        right[2][0] shouldHaveSize 1 // middle
-        right[2][0].first().chars.single().text shouldBe "k"
-        right[1][0] shouldHaveSize 1 // ring
-        right[1][0].first().chars.single().text shouldBe "l"
-        right[0][0] shouldHaveSize 1 // little
-        right[0][0].first().chars.single().text shouldBe "ö"
-    }
-
-    @Test
-    fun `hands order by finger-index, 0-3 is left hand, 4-7 is right hand`() {
-        val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
-            Key(fingerIndex = 0, chars = listOf(Char(text = "leftLittle"))),
-            Key(fingerIndex = 1, chars = listOf(Char(text = "leftRing"))),
-            Key(fingerIndex = 2, chars = listOf(Char(text = "leftMiddle"))),
-            Key(fingerIndex = 3, chars = listOf(Char(text = "leftIndex"))),
-            Key(fingerIndex = 4, chars = listOf(Char(text = "rightIndex"))),
-            Key(fingerIndex = 5, chars = listOf(Char(text = "rightMiddle"))),
-            Key(fingerIndex = 6, chars = listOf(Char(text = "rightRing"))),
-            Key(fingerIndex = 7, chars = listOf(Char(text = "rightLittle"))),
-        )))
-
-        val (left, right) = hands(keyboardLayout)!!
-
-        left[0][0][0].chars.single().text shouldBe "leftLittle"
-        left[1][0][0].chars.single().text shouldBe "leftRing"
-        left[2][0][0].chars.single().text shouldBe "leftMiddle"
-        left[3][0][0].chars.single().text shouldBe "leftIndex"
-
-        right[0][0][0].chars.single().text shouldBe "rightLittle"
-        right[1][0][0].chars.single().text shouldBe "rightRing"
-        right[2][0][0].chars.single().text shouldBe "rightMiddle"
-        right[3][0][0].chars.single().text shouldBe "rightIndex"
-    }
-
-    @Test
-    fun `hands the order of the keys in the source key list does not matter (only finger-index matters)`() {
-        val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
-            Key(fingerIndex = 1, chars = listOf(Char(text = "leftRing"))),
-            Key(fingerIndex = 3, chars = listOf(Char(text = "leftIndex"))),
-            Key(fingerIndex = 7, chars = listOf(Char(text = "rightLittle"))),
-            Key(fingerIndex = 2, chars = listOf(Char(text = "leftMiddle"))),
-            Key(fingerIndex = 0, chars = listOf(Char(text = "leftLittle"))),
-            Key(fingerIndex = 4, chars = listOf(Char(text = "rightIndex"))),
-            Key(fingerIndex = 6, chars = listOf(Char(text = "rightRing"))),
-            Key(fingerIndex = 5, chars = listOf(Char(text = "rightMiddle"))),
-        )))
-
-        val (left, right) = hands(keyboardLayout)!!
-
-        left[0][0][0].chars.single().text shouldBe "leftLittle"
-        left[1][0][0].chars.single().text shouldBe "leftRing"
-        left[2][0][0].chars.single().text shouldBe "leftMiddle"
-        left[3][0][0].chars.single().text shouldBe "leftIndex"
-
-        right[0][0][0].chars.single().text shouldBe "rightLittle"
-        right[1][0][0].chars.single().text shouldBe "rightRing"
-        right[2][0][0].chars.single().text shouldBe "rightMiddle"
-        right[3][0][0].chars.single().text shouldBe "rightIndex"
-    }
-
-    @Test
-    fun `hands separate levels via the top value of the keys (left hand test)`() {
-        val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
-            Key(fingerIndex = 0, chars = listOf(Char(text = "2")), top = 0),
-            Key(fingerIndex = 0, chars = listOf(Char(text = "w")), top = 1),
-            Key(fingerIndex = 0, chars = listOf(Char(text = "s")), top = 2),
-            Key(fingerIndex = 0, chars = listOf(Char(text = "x")), top = 3),
-
-            Key(fingerIndex = 1), Key(fingerIndex = 2), Key(fingerIndex = 3),
-            Key(fingerIndex = 4), Key(fingerIndex = 5), Key(fingerIndex = 6),
-            Key(fingerIndex = 7),
-        )))
-
-        val (left, _) = hands(keyboardLayout)!!
-
-        val littleFinger = left[0]
-        littleFinger[0][0].chars.single().text shouldBe "2" // level 0
-        littleFinger[1][0].chars.single().text shouldBe "w" // level 1
-        littleFinger[2][0].chars.single().text shouldBe "s" // level 2
-        littleFinger[3][0].chars.single().text shouldBe "x" // level 3
-    }
-
-    @Test
-    fun `hands separate levels via the top value of the keys (right hand test)`() {
-        val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
-            Key(fingerIndex = 0), Key(fingerIndex = 1), Key(fingerIndex = 2),
-            Key(fingerIndex = 3), Key(fingerIndex = 4), Key(fingerIndex = 5),
-            Key(fingerIndex = 6),
-
-            Key(fingerIndex = 7, chars = listOf(Char(text = "0")), top = 0),
-            Key(fingerIndex = 7, chars = listOf(Char(text = "o")), top = 1),
-            Key(fingerIndex = 7, chars = listOf(Char(text = "l")), top = 2),
-            Key(fingerIndex = 7, chars = listOf(Char(text = ".")), top = 3),
-        )))
-
-        val (_, right) = hands(keyboardLayout)!!
-
-        val littleFinger = right[0]
-        littleFinger[0][0].chars.single().text shouldBe "0" // level 0
-        littleFinger[1][0].chars.single().text shouldBe "o" // level 1
-        littleFinger[2][0].chars.single().text shouldBe "l" // level 2
-        littleFinger[3][0].chars.single().text shouldBe "." // level 3
-    }
-
-    @Test
-    fun `hands sort keys per level of left little finger right to left`() {
-        val first = Key(fingerIndex = 0, chars = listOf(Char(text = "1")), top = 0, left = 10)
-        val second = Key(fingerIndex = 0, chars = listOf(Char(text = "2")), top = 0, left = 0)
-        val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
-            first, second,
-            Key(fingerIndex = 1), Key(fingerIndex = 2), Key(fingerIndex = 3),
-            Key(fingerIndex = 4), Key(fingerIndex = 5), Key(fingerIndex = 6),
-            Key(fingerIndex = 7),
-        )))
-
-        val (left, _) = hands(keyboardLayout)!!
-
-        val littleFinger = left[0]
-        littleFinger[0][0].chars.single().text shouldBe "1"
-        littleFinger[0][1].chars.single().text shouldBe "2"
-    }
-
-    @Test
-    fun `hands sort keys per level of left ring finger right to left`() {
-        val first = Key(fingerIndex = 1, chars = listOf(Char(text = "1")), top = 0, left = 10)
-        val second = Key(fingerIndex = 1, chars = listOf(Char(text = "2")), top = 0, left = 0)
-        val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
-            first, second,
-            Key(fingerIndex = 0), Key(fingerIndex = 2), Key(fingerIndex = 3),
-            Key(fingerIndex = 4), Key(fingerIndex = 5), Key(fingerIndex = 6),
-            Key(fingerIndex = 7),
-        )))
-
-        val (left, _) = hands(keyboardLayout)!!
-
-        val ringFinger = left[1]
-        ringFinger[0][0].chars.single().text shouldBe "1"
-        ringFinger[0][1].chars.single().text shouldBe "2"
-    }
 
     @Test
     fun `hands sort keys per level of left middle finger right to left`() {
