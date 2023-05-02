@@ -331,53 +331,50 @@ class KeyboardKtTest : IOExpectSpec({
             ringFinger[0][0].chars.single().text shouldBe "1"
             ringFinger[0][1].chars.single().text shouldBe "2"
         }
+
+        expect("hands, right middle finger, sort keys per level left to right") {
+            val first = Key(fingerIndex = 5, chars = listOf(Char(text = "1")), top = 0, left = 0)
+            val second = Key(fingerIndex = 5, chars = listOf(Char(text = "2")), top = 0, left = 10)
+            val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
+                first, second,
+                Key(fingerIndex = 1), Key(fingerIndex = 2), Key(fingerIndex = 3),
+                Key(fingerIndex = 4), Key(fingerIndex = 0), Key(fingerIndex = 6),
+                Key(fingerIndex = 7),
+            )))
+
+            val (_, right) = hands(keyboardLayout)!!
+
+            val middleFinger = right[2]
+            middleFinger[0][0].chars.single().text shouldBe "1"
+            middleFinger[0][1].chars.single().text shouldBe "2"
+        }
+
+        expect("hands, right index finger, sort keys per level right to left") {
+            val first = Key(fingerIndex = 4, chars = listOf(Char(text = "1")), top = 0, left = 10)
+            val second = Key(fingerIndex = 4, chars = listOf(Char(text = "2")), top = 0, left = 0)
+            val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
+                first, second,
+                Key(fingerIndex = 1), Key(fingerIndex = 2), Key(fingerIndex = 3),
+                Key(fingerIndex = 0), Key(fingerIndex = 5), Key(fingerIndex = 6),
+                Key(fingerIndex = 7),
+            )))
+
+            val (_, right) = hands(keyboardLayout)!!
+
+            val indexFinger = right[3]
+            indexFinger[0][0].chars.single().text shouldBe "1"
+            indexFinger[0][1].chars.single().text shouldBe "2"
+        }
+
+        expect("hands return null when keyboard layout has no keys") {
+            val kb = KeyboardLayout(keys = Keys(emptyList()))
+            hands(kb) shouldBe null
+        }
     }
 })
 
 
 class KeyboardKtOldDeleteMeAtTheEnd : FileTest() {
-
-    @Test
-    fun `hands sort keys per level of right middle finger left to right`() {
-        val first = Key(fingerIndex = 5, chars = listOf(Char(text = "1")), top = 0, left = 0)
-        val second = Key(fingerIndex = 5, chars = listOf(Char(text = "2")), top = 0, left = 10)
-        val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
-            first, second,
-            Key(fingerIndex = 1), Key(fingerIndex = 2), Key(fingerIndex = 3),
-            Key(fingerIndex = 4), Key(fingerIndex = 0), Key(fingerIndex = 6),
-            Key(fingerIndex = 7),
-        )))
-
-        val (_, right) = hands(keyboardLayout)!!
-
-        val middleFinger = right[2]
-        middleFinger[0][0].chars.single().text shouldBe "1"
-        middleFinger[0][1].chars.single().text shouldBe "2"
-    }
-
-    @Test
-    fun `hands sort keys per level of right index finger right to left`() {
-        val first = Key(fingerIndex = 4, chars = listOf(Char(text = "1")), top = 0, left = 10)
-        val second = Key(fingerIndex = 4, chars = listOf(Char(text = "2")), top = 0, left = 0)
-        val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
-            first, second,
-            Key(fingerIndex = 1), Key(fingerIndex = 2), Key(fingerIndex = 3),
-            Key(fingerIndex = 0), Key(fingerIndex = 5), Key(fingerIndex = 6),
-            Key(fingerIndex = 7),
-        )))
-
-        val (_, right) = hands(keyboardLayout)!!
-
-        val indexFinger = right[3]
-        indexFinger[0][0].chars.single().text shouldBe "1"
-        indexFinger[0][1].chars.single().text shouldBe "2"
-    }
-
-    @Test
-    fun `hands return null when keyboard layout has no keys`() {
-        val kb = KeyboardLayout(keys = Keys(emptyList()))
-        hands(kb) shouldBe null
-    }
 
     @Test
     fun `pairKeys mirrors right hand keys to left hand keys`() {
