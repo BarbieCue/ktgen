@@ -162,7 +162,7 @@ class KeyboardKtTest : IOExpectSpec({
             right[3][0][0].chars.single().text shouldBe "rightIndex"
         }
 
-        expect("the order of the keys in the source key list does not matter (only finger-index matters)") {
+        expect("the order of the keys in the source key list does not matter (only finger index matters)") {
             val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
                 Key(fingerIndex = 1, chars = listOf(Char(text = "leftRing"))),
                 Key(fingerIndex = 3, chars = listOf(Char(text = "leftIndex"))),
