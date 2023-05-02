@@ -13,68 +13,60 @@ import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.stringPattern
 import org.junit.jupiter.api.Test
 
-class LessonsKtTest {
+class LessonsKtTest : IOExpectSpec({
 
-    @Test
-    fun `StringBuilder newCharacters empty result when input chars are already contained`() {
-        val history = "abcd"
-        val sb = StringBuilder(history)
-        sb.newCharacters("a") shouldBe ""
-        sb.newCharacters("ab") shouldBe ""
-        sb.newCharacters("cd") shouldBe ""
-        sb.newCharacters("abcd") shouldBe ""
-        sb.newCharacters("dcab") shouldBe ""
+    context("StringBuilder") {
+
+        context("newCharacters") {
+
+            expect("empty result when input chars are already contained") {
+                val history = "abcd"
+                val sb = StringBuilder(history)
+                sb.newCharacters("a") shouldBe ""
+                sb.newCharacters("ab") shouldBe ""
+                sb.newCharacters("cd") shouldBe ""
+                sb.newCharacters("abcd") shouldBe ""
+                sb.newCharacters("dcab") shouldBe ""
+            }
+
+            expect("new symbols will be added and returned") {
+                val sbEmpty = StringBuilder("")
+                sbEmpty.newCharacters("x") shouldBe "x"
+                sbEmpty.toString() shouldContain "x"
+                val sbWithHistory = StringBuilder("abcd")
+                sbWithHistory.newCharacters("x") shouldBe "x"
+                sbWithHistory.toString() shouldContain "abcdx"
+            }
+
+            expect("empty input leads to empty output") {
+                val history = "abcd"
+                val sb = StringBuilder(history)
+                sb.newCharacters("") shouldBe ""
+            }
+        }
     }
 
-    @Test
-    fun `StringBuilder newCharacters new symbols will be added and returned`() {
-        val sbEmpty = StringBuilder("")
-        sbEmpty.newCharacters("x") shouldBe "x"
-        sbEmpty.toString() shouldContain "x"
+    context("unpack") {
 
-        val sbWithHistory = StringBuilder("abcd")
-        sbWithHistory.newCharacters("x") shouldBe "x"
-        sbWithHistory.toString() shouldContain "abcdx"
-    }
+        expect("unpack WW strings") {
+            unpack("{WW}") shouldBe "{}"
+        }
 
-    @Test
-    fun `StringBuilder newCharacters empty input empty output`() {
-        val history = "abcd"
-        val sb = StringBuilder(history)
-        sb.newCharacters("") shouldBe ""
-    }
+        expect("unpack letter groups") {
+            unpack("[sch]") shouldBe "sch"
+        }
 
-    @Test
-    fun `unpack happy`() {
-        unpack("{WW}") shouldBe "{}"
-        unpack("[sch]") shouldBe "sch"
-        unpack("apple") shouldBe "apple"
-    }
+        expect("return original input, if it is not packed") {
+            unpack("apple pear") shouldBe "apple pear"
+        }
 
-    @Test
-    fun `unpack returns original input, if it is not packed`() {
-        unpack("apple") shouldBe "apple"
+        expect("empty input leads to empty output") {
+            unpack("") shouldBe ""
+        }
     }
+})
 
-    @Test
-    fun `unpack unpacks ww strings`() {
-        unpack("{WW}") shouldBe "{}"
-    }
-
-    @Test
-    fun `unpack unpacks letter groups`() {
-        unpack("[sch]") shouldBe "sch"
-    }
-
-    @Test
-    fun `unpack empty input`() {
-        unpack("") shouldBe ""
-    }
-
-    @Test
-    fun `unpack input contains whitespaces`() {
-        unpack("a b c ") shouldBe "a b c "
-    }
+class LessonsKtTestOldDeleteMe {
 
     @Test
     fun `lessonWords example first lesson (ab)`() {
