@@ -6,7 +6,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
-import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.writeText
@@ -35,7 +34,7 @@ class KeyboardKtTest : IOExpectSpec({
             val second = Key(left = 10)
             LeftToRight().compare(first, second) shouldBe -10
             LeftToRight().compare(second, first) shouldBe 10
-            setOf(second, first).sortedWith(LevelComparator()) shouldBe setOf(first, second)
+            setOf(second, first).sortedWith(LeftToRight()) shouldBe setOf(first, second)
         }
 
         expect("equal when left values are equal") {
@@ -50,7 +49,7 @@ class KeyboardKtTest : IOExpectSpec({
             val second = Key(left = 0)
             RightToLeft().compare(first, second) shouldBe -10
             RightToLeft().compare(second, first) shouldBe 10
-            setOf(second, first).sortedWith(LevelComparator()) shouldBe setOf(first, second)
+            setOf(second, first).sortedWith(RightToLeft()) shouldBe setOf(first, second)
         }
 
         expect("equal when left values are equal") {
@@ -138,7 +137,7 @@ class KeyboardKtTest : IOExpectSpec({
             right[0][0].first().chars.single().text shouldBe "ö"
         }
 
-        expect("order by finger-index, 0-3 is left hand, 4-7 is right hand") {
+        expect("order by finger index, 0-3 is left hand, 4-7 is right hand") {
             val keyboardLayout = KeyboardLayout(keys = Keys(keys = listOf(
                 Key(fingerIndex = 0, chars = listOf(Char(text = "leftLittle"))),
                 Key(fingerIndex = 1, chars = listOf(Char(text = "leftRing"))),
@@ -463,8 +462,163 @@ class KeyboardKtTest : IOExpectSpec({
         }
     }
 
+    context("customerOrder") {
 
-    val keyboardLayoutEnglishUSA = """
+        expect("keyboard layout english USA expected result") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText(ktouchKeyboardLayoutEnglishUSA)
+            val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
+            val hands = hands(keyboardLayout!!)
+            val pairs = pairKeys(hands)
+
+            val customOrder = customOrder(pairs)
+            customOrder[0].pair.first!!.chars.map { it.text } shouldContain "f"
+            customOrder[0].pair.second!!.chars.map { it.text } shouldContain "j"
+            customOrder[1].pair.first!!.chars.map { it.text } shouldContain "d"
+            customOrder[1].pair.second!!.chars.map { it.text } shouldContain "k"
+            customOrder[2].pair.first!!.chars.map { it.text } shouldContain "s"
+            customOrder[2].pair.second!!.chars.map { it.text } shouldContain "l"
+            customOrder[3].pair.first!!.chars.map { it.text } shouldContain "a"
+            customOrder[3].pair.second!!.chars.map { it.text } shouldContain ";"
+            customOrder[4].pair.first!!.chars.map { it.text } shouldContain "g"
+            customOrder[4].pair.second!!.chars.map { it.text } shouldContain "h"
+            customOrder[5].pair.first!!.chars.map { it.text } shouldContain "t"
+            customOrder[5].pair.second!!.chars.map { it.text } shouldContain "y"
+            customOrder[6].pair.first!!.chars.map { it.text } shouldContain "v"
+            customOrder[6].pair.second!!.chars.map { it.text } shouldContain "m"
+            customOrder[7].pair.first!!.chars.map { it.text } shouldContain "b"
+            customOrder[7].pair.second!!.chars.map { it.text } shouldContain "n"
+            customOrder[8].pair.first!!.chars.map { it.text } shouldContain "r"
+            customOrder[8].pair.second!!.chars.map { it.text } shouldContain "u"
+            customOrder[9].pair.first!!.chars.map { it.text } shouldContain "e"
+            customOrder[9].pair.second!!.chars.map { it.text } shouldContain "i"
+            customOrder[10].pair.first!!.chars.map { it.text } shouldContain "c"
+            customOrder[10].pair.second!!.chars.map { it.text } shouldContain ","
+            customOrder[11].pair.first!!.chars.map { it.text } shouldContain "w"
+            customOrder[11].pair.second!!.chars.map { it.text } shouldContain "o"
+            customOrder[12].pair.first!!.chars.map { it.text } shouldContain "x"
+            customOrder[12].pair.second!!.chars.map { it.text } shouldContain "."
+            customOrder[13].pair.first!!.chars.map { it.text } shouldContain "q"
+            customOrder[13].pair.second!!.chars.map { it.text } shouldContain "p"
+            customOrder[14].pair.first!!.chars.map { it.text } shouldContain "z"
+            customOrder[14].pair.second!!.chars.map { it.text } shouldContain "/"
+        }
+
+        expect("return empty list on empty input") {
+            customOrder(emptyList()) shouldBe emptyList()
+        }
+    }
+
+    context("filter") {
+
+        expect("keyboard layout english USA filters pairs where the keys match the filter pattern") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText(ktouchKeyboardLayoutEnglishUSA)
+            val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
+            val hands = hands(keyboardLayout!!)
+            val pairs = pairKeys(hands)
+
+            val letterPairs = filter(pairs, "[a-z]+".toRegex())
+            letterPairs shouldHaveSize 15
+            letterPairs.forAll { it shouldMatch "[a-z]+".toRegex() }
+
+            val digitPairs = filter(pairs, "[0-9]+".toRegex())
+            digitPairs shouldHaveSize 5
+            digitPairs.forAll { it shouldMatch "[0-9]+".toRegex() }
+        }
+
+        expect("return empty list on empty input") {
+            filter(emptyList(), ".*".toRegex()) shouldBe emptyList()
+        }
+    }
+
+    context("upperLetters") {
+
+        expect("keyboard layout english USA return upper letter pairs") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText(ktouchKeyboardLayoutEnglishUSA)
+            val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
+            val hands = hands(keyboardLayout!!)
+            val pairs = pairKeys(hands)
+            val letterPairs = upperLetters(pairs)
+            letterPairs shouldHaveSize 15
+            letterPairs.forAll { it shouldMatch "[A-ZÜÄÖẞ]+".toRegex() }
+        }
+
+        expect("return empty list on empty input") {
+            upperLetters(emptyList()) shouldBe emptyList()
+        }
+    }
+
+    context("lowerLetters") {
+
+        expect("keyboard layout english USA return lower letter pairs") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText(ktouchKeyboardLayoutEnglishUSA)
+            val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
+            val hands = hands(keyboardLayout!!)
+            val pairs = pairKeys(hands)
+            val letterPairs = lowerLetters(pairs)
+            letterPairs shouldHaveSize 15
+            letterPairs.forAll { it shouldMatch "[a-züäöß]+".toRegex() }
+        }
+
+        expect("return empty list on empty input") {
+            lowerLetters(emptyList()) shouldBe emptyList()
+        }
+    }
+
+    context("KeyboardLayout") {
+
+        context("toCourseSymbols") {
+
+            expect("english USA return string list of paired symbols") {
+                val file = tmpFile(UUID.randomUUID().toString())
+                file.writeText(ktouchKeyboardLayoutEnglishUSA)
+                val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
+                keyboardLayout!!.toCourseSymbols() shouldBe listOf(
+                    "fj", "dk", "sl", "a", "gh", "ty", "vm",
+                    "bn", "ru", "ei", "c", "wo", "x", "qp", "z",
+                    "FJ", "DK", "SL", "A", "GH", "TY", "VM",
+                    "BN", "RU", "EI", "C", "WO", "X", "QP", "Z"
+                )
+            }
+        }
+
+        context("create") {
+
+            expect("error no such file, return null") {
+                KeyboardLayout.create("") shouldBe null
+            }
+
+            expect("error invalid xml, return null") {
+                val file = tmpFile(UUID.randomUUID().toString())
+                file.writeText(
+                    """
+                      <?xml version="1.0"?>
+                      <keyboa
+                    """.trimEnd()
+                )
+                KeyboardLayout.create(file.absolutePathString()) shouldBe null
+            }
+
+            expect("error empty keyboard file, return null") {
+                val file = tmpFile(UUID.randomUUID().toString())
+                file.writeText("")
+                KeyboardLayout.create(file.absolutePathString()) shouldBe null
+            }
+
+            expect("successfully create keyboard layout with valid file content") {
+                val file = tmpFile(UUID.randomUUID().toString())
+                file.writeText(ktouchKeyboardLayoutEnglishUSA)
+                KeyboardLayout.create(file.absolutePathString()) shouldNotBe null
+            }
+        }
+    }
+})
+
+
+private val ktouchKeyboardLayoutEnglishUSA = """
             <?xml version="1.0"?>
             <keyboardLayout>
              <id>{6a1fed47-1713-437c-931e-2ebc3ba1f366}</id>
@@ -675,156 +829,3 @@ class KeyboardKtTest : IOExpectSpec({
              </keys>
             </keyboardLayout>
         """.trimIndent()
-
-    context("customerOrder") {
-
-        expect("keyboard layout english USA expected result") {
-            val file = tmpFile(UUID.randomUUID().toString())
-            file.writeText(keyboardLayoutEnglishUSA)
-            val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
-            val hands = hands(keyboardLayout!!)
-            val pairs = pairKeys(hands)
-
-            val customOrder = customOrder(pairs)
-            customOrder[0].pair.first!!.chars.map { it.text } shouldContain "f"
-            customOrder[0].pair.second!!.chars.map { it.text } shouldContain "j"
-            customOrder[1].pair.first!!.chars.map { it.text } shouldContain "d"
-            customOrder[1].pair.second!!.chars.map { it.text } shouldContain "k"
-            customOrder[2].pair.first!!.chars.map { it.text } shouldContain "s"
-            customOrder[2].pair.second!!.chars.map { it.text } shouldContain "l"
-            customOrder[3].pair.first!!.chars.map { it.text } shouldContain "a"
-            customOrder[3].pair.second!!.chars.map { it.text } shouldContain ";"
-            customOrder[4].pair.first!!.chars.map { it.text } shouldContain "g"
-            customOrder[4].pair.second!!.chars.map { it.text } shouldContain "h"
-            customOrder[5].pair.first!!.chars.map { it.text } shouldContain "t"
-            customOrder[5].pair.second!!.chars.map { it.text } shouldContain "y"
-            customOrder[6].pair.first!!.chars.map { it.text } shouldContain "v"
-            customOrder[6].pair.second!!.chars.map { it.text } shouldContain "m"
-            customOrder[7].pair.first!!.chars.map { it.text } shouldContain "b"
-            customOrder[7].pair.second!!.chars.map { it.text } shouldContain "n"
-            customOrder[8].pair.first!!.chars.map { it.text } shouldContain "r"
-            customOrder[8].pair.second!!.chars.map { it.text } shouldContain "u"
-            customOrder[9].pair.first!!.chars.map { it.text } shouldContain "e"
-            customOrder[9].pair.second!!.chars.map { it.text } shouldContain "i"
-            customOrder[10].pair.first!!.chars.map { it.text } shouldContain "c"
-            customOrder[10].pair.second!!.chars.map { it.text } shouldContain ","
-            customOrder[11].pair.first!!.chars.map { it.text } shouldContain "w"
-            customOrder[11].pair.second!!.chars.map { it.text } shouldContain "o"
-            customOrder[12].pair.first!!.chars.map { it.text } shouldContain "x"
-            customOrder[12].pair.second!!.chars.map { it.text } shouldContain "."
-            customOrder[13].pair.first!!.chars.map { it.text } shouldContain "q"
-            customOrder[13].pair.second!!.chars.map { it.text } shouldContain "p"
-            customOrder[14].pair.first!!.chars.map { it.text } shouldContain "z"
-            customOrder[14].pair.second!!.chars.map { it.text } shouldContain "/"
-        }
-
-        expect("return empty list on empty input") {
-            customOrder(emptyList()) shouldBe emptyList()
-        }
-    }
-
-    context("filter") {
-
-        expect("keyboard layout english USA filters pairs where the keys match the filter pattern") {
-            val file = tmpFile(UUID.randomUUID().toString())
-            file.writeText(keyboardLayoutEnglishUSA)
-            val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
-            val hands = hands(keyboardLayout!!)
-            val pairs = pairKeys(hands)
-
-            val letterPairs = filter(pairs, "[a-z]+".toRegex())
-            letterPairs shouldHaveSize 15
-            letterPairs.forAll { it shouldMatch "[a-z]+".toRegex() }
-
-            val digitPairs = filter(pairs, "[0-9]+".toRegex())
-            digitPairs shouldHaveSize 5
-            digitPairs.forAll { it shouldMatch "[0-9]+".toRegex() }
-        }
-
-        expect("return empty list on empty input") {
-            filter(emptyList(), ".*".toRegex()) shouldBe emptyList()
-        }
-    }
-    context("upperLetters") {
-
-        expect("keyboard layout english USA return upper letter pairs") {
-            val file = tmpFile(UUID.randomUUID().toString())
-            file.writeText(keyboardLayoutEnglishUSA)
-            val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
-            val hands = hands(keyboardLayout!!)
-            val pairs = pairKeys(hands)
-            val letterPairs = upperLetters(pairs)
-            letterPairs shouldHaveSize 15
-            letterPairs.forAll { it shouldMatch "[A-ZÜÄÖẞ]+".toRegex() }
-        }
-
-        expect("return empty list on empty input") {
-            upperLetters(emptyList()) shouldBe emptyList()
-        }
-    }
-})
-
-
-class KeyboardKtOldDeleteMeAtTheEnd : FileTest() {
-
-    @Test
-    fun `lowerLetters keyboard layout english USA return lower letter pairs`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText(keyboardLayoutEnglishUSA)
-        val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
-        val hands = hands(keyboardLayout!!)
-        val pairs = pairKeys(hands)
-        val letterPairs = lowerLetters(pairs)
-        letterPairs shouldHaveSize 15
-        letterPairs.forAll { it shouldMatch "[a-züäöß]+".toRegex() }
-    }
-
-    @Test
-    fun `lowerLetters return empty list on empty input`() {
-        lowerLetters(emptyList()) shouldBe emptyList()
-    }
-
-    @Test
-    fun `KeyboardLayout toCourseSymbols english USA return string list of paired symbols`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText(keyboardLayoutEnglishUSA)
-        val keyboardLayout = KeyboardLayout.create(file.absolutePathString())
-        keyboardLayout!!.toCourseSymbols() shouldBe listOf(
-            "fj", "dk", "sl", "a", "gh", "ty", "vm",
-            "bn", "ru", "ei", "c", "wo", "x", "qp", "z",
-            "FJ", "DK", "SL", "A", "GH", "TY", "VM",
-            "BN", "RU", "EI", "C", "WO", "X", "QP", "Z"
-        )
-    }
-
-    @Test
-    fun `create keyboard layout from file, error no such file, return null`() {
-        KeyboardLayout.create("") shouldBe null
-    }
-
-    @Test
-    fun `create keyboard layout from file, error invalid xml, return null`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText(
-            """
-              <?xml version="1.0"?>
-              <keyboa
-            """.trimEnd()
-        )
-        KeyboardLayout.create(file.absolutePathString()) shouldBe null
-    }
-
-    @Test
-    fun `create keyboard layout from file, error empty keyboard file, return null`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("")
-        KeyboardLayout.create(file.absolutePathString()) shouldBe null
-    }
-
-    @Test
-    fun `create keyboard layout from file happy`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText(keyboardLayoutEnglishUSA)
-        KeyboardLayout.create(file.absolutePathString()) shouldNotBe null
-    }
-}
