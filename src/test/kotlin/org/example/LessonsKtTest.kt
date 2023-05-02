@@ -64,89 +64,76 @@ class LessonsKtTest : IOExpectSpec({
             unpack("") shouldBe ""
         }
     }
+
+    context("lessonWords") {
+
+        expect("first lesson's words consist of the first lessons symbols only") {
+            val dict = setOf("ab", "abrc", "abrcel")
+            val charsHistory = "ab" // remember: the order matters
+            val lessonSymbols = "ab"
+            dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("ab")
+        }
+
+        expect("words from lessons 2..n can contain symbols from all last lesson, but definitely contain at least one of the current lesson's symbols") {
+            val dict = setOf("ab", "abrc", "abrcel")
+            val charsHistory = "abrc" // remember: the order matters
+            val lessonSymbols = "el"
+            dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("abrc", "abrcel")
+        }
+
+        expect("rotate the dict randomly but always preserve the word order") {
+            val dict = setOf("a", "b", "c", "d", "e")
+            val charsHistory = "abcde"
+            val lessonSymbols = "abcde"
+
+            val words = dict.lessonWords(charsHistory, lessonSymbols)
+            when(words.first()) {
+                "a"  -> words shouldBe listOf("a", "b", "c", "d", "e")
+                "b"  -> words shouldBe listOf("b", "c", "d", "e", "a")
+                "c"  -> words shouldBe listOf("c", "d", "e", "a", "b")
+                "d"  -> words shouldBe listOf("d", "e", "a", "b", "c")
+                "e"  -> words shouldBe listOf("e", "a", "b", "c", "d")
+                else -> throw Exception("ouch!")
+            }
+        }
+
+        expect("result is empty collection when input dict is empty") {
+            val charsHistory = "abrcel"
+            val lessonSymbols = "el"
+            emptySet<String>().lessonWords(charsHistory, lessonSymbols) shouldBe emptyList()
+        }
+
+        expect("result is empty collection when the history is empty") {
+            val dict = setOf("ab", "abrc", "abrcel")
+            val charsHistory = ""
+            val lessonSymbols = "el"
+            dict.lessonWords(charsHistory, lessonSymbols) shouldBe emptyList()
+        }
+
+        expect("if lesson symbols contains non-letters, ignore them and take words from history based on letters") {
+            val dict = setOf("ad", "b", "tt", "a", "cd", "bd", "xx", "d")
+            val charsHistory = "abc_[]d().;"
+            val lessonSymbols = "_[]d().;"
+            dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("ad", "cd", "bd", "d")
+        }
+
+        expect("if lesson symbols consists of non-letters, ignore them and take words from history") {
+            val dict = setOf("ab", "b", "tt", "a", "ba", "xx", "bab")
+            val charsHistory = "ab_[]().;"
+            val lessonSymbols = "_[]().;"
+            dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("ab", "b", "a", "ba", "bab")
+        }
+
+        expect("if lesson symbols is a letter group, take words from history which contain the group") {
+            val dict = setOf("apple", "letter", "lesson", "china", "brain")
+            val charsHistory = "ialetrsonch"
+            val lessonSymbols = "[tt]"
+            dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("letter")
+        }
+    }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `lessonWords example first lesson (ab)`() {
-        val dict = setOf("ab", "abrc", "abrcel")
-        val charsHistory = "ab" // remember: the order matters
-        val lessonSymbols = "ab"
-        dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("ab")
-    }
-
-    @Test
-    fun `lessonWords example second lesson (rc)`() {
-        val dict = setOf("ab", "abrc", "abrcel")
-        val charsHistory = "abrc" // remember: the order matters
-        val lessonSymbols = "rc"
-        dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("abrc")
-    }
-
-    @Test
-    fun `lessonWords example third lesson (el)`() {
-        val dict = setOf("ab", "abrc", "abrcel")
-        val charsHistory = "abrcel" // remember: the order matters
-        val lessonSymbols = "el"
-        dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("abrcel")
-    }
-
-    @Test
-    fun `lessonWords rotates the dict randomly but always preserves the word order`() {
-        val dict = setOf("a", "b", "c", "d", "e")
-        val charsHistory = "abcde"
-        val lessonSymbols = "abcde"
-
-        val words = dict.lessonWords(charsHistory, lessonSymbols)
-        when(words.first()) {
-            "a"  -> words shouldBe listOf("a", "b", "c", "d", "e")
-            "b"  -> words shouldBe listOf("b", "c", "d", "e", "a")
-            "c"  -> words shouldBe listOf("c", "d", "e", "a", "b")
-            "d"  -> words shouldBe listOf("d", "e", "a", "b", "c")
-            "e"  -> words shouldBe listOf("e", "a", "b", "c", "d")
-            else -> throw Exception("ouch!")
-        }
-    }
-
-    @Test
-    fun `lessonWords dict is empty`() {
-        val charsHistory = "abrcel"
-        val lessonSymbols = "el"
-        emptySet<String>().lessonWords(charsHistory, lessonSymbols) shouldBe emptyList()
-    }
-
-    @Test
-    fun `lessonWords empty history`() {
-        val dict = setOf("ab", "abrc", "abrcel")
-        val charsHistory = ""
-        val lessonSymbols = "el"
-        dict.lessonWords(charsHistory, lessonSymbols) shouldBe emptyList()
-    }
-
-    @Test
-    fun `lessonWords if lesson symbols contains non-letters, ignore them and take words from history based on letters`() {
-        val dict = setOf("ad", "b", "tt", "a", "cd", "bd", "xx", "d")
-        val charsHistory = "abc_[]d().;"
-        val lessonSymbols = "_[]d().;"
-        dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("ad", "cd", "bd", "d")
-    }
-
-    @Test
-    fun `lessonWords if lesson symbols consists of non-letters, ignore them and take words from history`() {
-        val dict = setOf("ab", "b", "tt", "a", "ba", "xx", "bab")
-        val charsHistory = "ab_[]().;"
-        val lessonSymbols = "_[]().;"
-        dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("ab", "b", "a", "ba", "bab")
-    }
-
-    @Test
-    fun `lessonWords if lesson symbols is a letter group, take words from history which contain the group`() {
-        val dict = setOf("apple", "letter", "lesson", "china", "brain")
-        val charsHistory = "ialetrsonch"
-        val lessonSymbols = "[tt]"
-        dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("letter")
-    }
 
     @Test
     fun `ww regex should match WW strings`() {
