@@ -402,95 +402,95 @@ class LessonsKtTest : IOExpectSpec({
             digits("") shouldBe ""
         }
     }
-})
 
-class LessonsKtTestOldDeleteMe {
+    context("symbolsPerGenerator") {
 
-    @Test
-    fun `symbolsPerGenerator table test`() {
-        table(
-            headers("symbols-per-lesson", "number-of-generators", "symbolsPerGenerator"),
-            row(-100, 100, 0),
-            row(-1, 100, 0),
-            row(0, 100, 0),
-            row(1, 100, 1),
-            row(100, 100, 1),
+        expect("table test") {
+            table(
+                headers("symbols-per-lesson", "number-of-generators", "symbolsPerGenerator"),
+                row(-100, 100, 0),
+                row(-1, 100, 0),
+                row(0, 100, 0),
+                row(1, 100, 1),
+                row(100, 100, 1),
 
-            row(100, -100, 0),
-            row(100, -1, 0),
-            row(100, 0, 0),
-            row(100, 1, 100),
+                row(100, -100, 0),
+                row(100, -1, 0),
+                row(100, 0, 0),
+                row(100, 1, 100),
 
-            row(0, 0, 0),
-            row(-1, -1, 0),
-            row(-10, -10, 0),
-            row(-100, -100, 0),
-        ).forAll { a, b, result ->
-            symbolsPerGenerator(a, b) shouldBe result
+                row(0, 0, 0),
+                row(-1, -1, 0),
+                row(-10, -10, 0),
+                row(-100, -100, 0),
+            ).forAll { a, b, result ->
+                symbolsPerGenerator(a, b) shouldBe result
+            }
         }
     }
 
-    @Test
-    fun `invokeConcatSingleLine returns concatenated generators results as single line, single whitespace separated`() {
-        fun repeatA(n: Int) = "a".repeat(n)
-        fun repeatB(n: Int) = "b".repeat(n)
-        fun repeatC(n: Int) = "c".repeat(n)
-        val generators = listOf(::repeatA, ::repeatB, ::repeatC)
-        val result = invokeConcatSingleLine(10, generators)
-        result shouldBe "aaa bbb ccc a"
+
+    context("invokeConcatSingleLine") {
+
+        expect("returns concatenated generators results as single line, single whitespace separated") {
+            fun repeatA(n: Int) = "a".repeat(n)
+            fun repeatB(n: Int) = "b".repeat(n)
+            fun repeatC(n: Int) = "c".repeat(n)
+            val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+            val result = invokeConcatSingleLine(10, generators)
+            result shouldBe "aaa bbb ccc a"
+        }
+
+        expect("on single generator return the generators result with length of symbols-per-lesson") {
+            fun repeatA(n: Int) = "a".repeat(n)
+            val generators = listOf(::repeatA)
+            invokeConcatSingleLine(10, generators) shouldBe "aaaaaaaaaa"
+        }
+
+        expect("on many generators return all generators results separated by whitespace") {
+            fun repeatA(n: Int) = "a".repeat(n)
+            fun repeatB(n: Int) = "b".repeat(n)
+            val generators = listOf(::repeatA, ::repeatB)
+            invokeConcatSingleLine(10, generators) shouldBe "aaaaa bbbbb"
+        }
+
+        expect("on many generators each generators result has length of symbols-per-lesson divided by number-of-generators") {
+            fun repeatA(n: Int) = "a".repeat(n)
+            fun repeatB(n: Int) = "b".repeat(n)
+            fun repeatC(n: Int) = "c".repeat(n)
+            val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+            val lines = invokeConcatSingleLine(9, generators).split(" ")
+            lines[0] shouldHaveLength 3 // aaa
+            lines[1] shouldHaveLength 3 // bbb
+            lines[2] shouldHaveLength 3 // ccc
+        }
+
+        expect("re-invoke generators if necessary to get as many symbols as symbols-per-lesson") {
+            fun repeatA(n: Int) = "a".repeat(n)
+            fun repeatB(n: Int) = "b".repeat(n)
+            fun repeatC(n: Int) = "c".repeat(n)
+            val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+            val lines = invokeConcatSingleLine(10, generators).split(" ")
+
+            lines[0] shouldHaveLength 3
+            lines[1] shouldHaveLength 3
+            lines[2] shouldHaveLength 3
+            lines[3] shouldHaveLength 1
+
+            lines[0] shouldBe "aaa"
+            lines[1] shouldBe "bbb"
+            lines[2] shouldBe "ccc"
+            lines[3] shouldBe "a" // re-invoked first generator
+        }
+
+        expect("return empty string when generators have empty output") {
+            val generators = listOf{_: Int -> ""}
+            invokeConcatSingleLine(3, generators) shouldBe ""
+        }
     }
+})
 
-    @Test
-    fun `invokeConcatSingleLine on single generator return the generators result with length of symbols-per-lesson`() {
-        fun repeatA(n: Int) = "a".repeat(n)
-        val generators = listOf(::repeatA)
-        invokeConcatSingleLine(10, generators) shouldBe "aaaaaaaaaa"
-    }
-
-    @Test
-    fun `invokeConcatSingleLine on many generators return all generators results separated by whitespace`() {
-        fun repeatA(n: Int) = "a".repeat(n)
-        fun repeatB(n: Int) = "b".repeat(n)
-        val generators = listOf(::repeatA, ::repeatB)
-        invokeConcatSingleLine(10, generators) shouldBe "aaaaa bbbbb"
-    }
-
-    @Test
-    fun `invokeConcatSingleLine on many generators each generators result has length of symbols-per-lesson divided by number-of-generators`() {
-        fun repeatA(n: Int) = "a".repeat(n)
-        fun repeatB(n: Int) = "b".repeat(n)
-        fun repeatC(n: Int) = "c".repeat(n)
-        val generators = listOf(::repeatA, ::repeatB, ::repeatC)
-        val lines = invokeConcatSingleLine(9, generators).split(" ")
-        lines[0] shouldHaveLength 3 // aaa
-        lines[1] shouldHaveLength 3 // bbb
-        lines[2] shouldHaveLength 3 // ccc
-    }
-
-    @Test
-    fun `invokeConcatSingleLine re-invoke generators if necessary to get as many symbols as symbols-per-lesson`() {
-        fun repeatA(n: Int) = "a".repeat(n)
-        fun repeatB(n: Int) = "b".repeat(n)
-        fun repeatC(n: Int) = "c".repeat(n)
-        val generators = listOf(::repeatA, ::repeatB, ::repeatC)
-        val lines = invokeConcatSingleLine(10, generators).split(" ")
-
-        lines[0] shouldHaveLength 3
-        lines[1] shouldHaveLength 3
-        lines[2] shouldHaveLength 3
-        lines[3] shouldHaveLength 1
-
-        lines[0] shouldBe "aaa"
-        lines[1] shouldBe "bbb"
-        lines[2] shouldBe "ccc"
-        lines[3] shouldBe "a" // re-invoked first generator
-    }
-
-    @Test
-    fun `invokeConcatSingleLine return empty string when generators have empty output`() {
-        val generators = listOf{_: Int -> ""}
-        invokeConcatSingleLine(3, generators) shouldBe ""
-    }
+class LessonsKtTestOldDeleteMe {
 
     @Test
     fun `List of TextGenerator invokeConcat returns concatenated generators results as single line, whitespace separated`() {
