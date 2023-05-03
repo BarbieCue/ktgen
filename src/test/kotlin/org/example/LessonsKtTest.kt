@@ -263,10 +263,34 @@ class LessonsKtTest : IOExpectSpec({
         }
     }
 
-    context("") {
+    context("letterGroupUnpack") {
 
-        expect("") {
+        expect("return the letters of the group") {
+            letterGroupUnpack("[sch]") shouldBe "sch"
+        }
 
+        expect("handle the first group only") {
+            letterGroupUnpack("[sch][ch][ss][tt]") shouldBe "sch"
+            letterGroupUnpack("[tt][ch][ss]") shouldBe "tt"
+        }
+
+        expect("return an empty string when the group is empty") {
+            letterGroupUnpack("[]") shouldBe ""
+        }
+
+        expect("return empty string when group consists of non-letters") {
+            letterGroupUnpack("[123]") shouldBe ""
+            letterGroupUnpack("[%';]") shouldBe ""
+        }
+
+        expect("ignore surrounding square brackets") {
+            letterGroupUnpack("[[sch]]") shouldBe "sch"
+            letterGroupUnpack("[[[sch]]]") shouldBe "sch"
+        }
+
+        expect("WW part can not be a letter group") {
+            letterGroupUnpack("[WW]") shouldBe ""
+            letterGroupUnpack("{[WW]}") shouldBe ""
         }
     }
 })
