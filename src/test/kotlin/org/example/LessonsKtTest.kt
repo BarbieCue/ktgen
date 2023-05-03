@@ -131,52 +131,64 @@ class LessonsKtTest : IOExpectSpec({
             dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("letter")
         }
     }
+
+    context("ww regex") {
+
+        expect("matches WW parts") {
+            "WW,." shouldMatch wwRegex
+            "+WW" shouldMatch wwRegex
+            "[WW]" shouldMatch wwRegex
+            "WW" shouldMatch wwRegex
+        }
+
+        expect("should not match anything else") {
+            "" shouldNotMatch letterGroupRegex.pattern
+            "W" shouldNotMatch letterGroupRegex.pattern
+            ",." shouldNotMatch letterGroupRegex.pattern
+            "abc" shouldNotMatch letterGroupRegex.pattern
+            "1" shouldNotMatch letterGroupRegex.pattern
+        }
+    }
+
+    context("ww") {
+
+        expect("return the WW part") {
+            ww("WW") shouldBe "WW"
+            ww("(WW)") shouldBe "(WW)"
+            ww("WW)=/\\") shouldBe "WW)=/\\"
+            ww("_}*?/{(WW") shouldBe "_}*?/{(WW"
+        }
+
+        expect("return empty string when there is no WW part") {
+            ww("W") shouldBe ""
+            ww("") shouldBe ""
+            ww("abc") shouldBe ""
+        }
+
+        expect("WW must be capital letters") {
+            ww("{WW}") shouldBe "{}"
+            ww("{ww}") shouldBe ""
+            ww("{Ww}") shouldBe ""
+            ww("{wW}") shouldBe ""
+        }
+
+        expect("return the first WW part only") {
+            ww("(WW)(WW)") shouldBe "(WW)("
+            ww("(WW)';[{(WW)}]") shouldBe "(WW)';[{("
+        }
+
+        expect("ignore everything else") {
+            ww("abcABC(WW)") shouldBe "(WW)"
+            ww("abcABC(WW)1abcABC") shouldBe "(WW)"
+            ww("abc:ABC(WW)1a,bc_ABC") shouldBe "(WW)"
+            ww("1WW1") shouldBe "WW"
+            ww("1abcWW") shouldBe "WW"
+            ww("()=abcWW") shouldBe "WW"
+        }
+    }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `ww regex should match WW strings`() {
-        "WW,." shouldMatch wwRegex
-        "+WW" shouldMatch wwRegex
-        "[WW]" shouldMatch wwRegex
-        "WW" shouldMatch wwRegex
-    }
-
-    @Test
-    fun `ww regex should not match anything else`() {
-        "" shouldNotMatch letterGroupRegex.pattern
-        "W" shouldNotMatch letterGroupRegex.pattern
-        ",." shouldNotMatch letterGroupRegex.pattern
-        "abc" shouldNotMatch letterGroupRegex.pattern
-        "1" shouldNotMatch letterGroupRegex.pattern
-    }
-
-    @Test
-    fun `ww should return the WW part`() {
-        ww("WW") shouldBe "WW"
-        ww("(WW)") shouldBe "(WW)"
-        ww("WW)=/\\") shouldBe "WW)=/\\"
-        ww("_}*?/{(WW") shouldBe "_}*?/{(WW"
-        ww("W") shouldBe ""
-        ww("") shouldBe ""
-    }
-
-    @Test
-    fun `ww should return the first WW part only`() {
-        ww("(WW)(WW)") shouldBe "(WW)("
-        ww("(WW)';[{(WW)}]") shouldBe "(WW)';[{("
-    }
-
-    @Test
-    fun `ww should ignore everything else`() {
-        ww("abcABC(WW)") shouldBe "(WW)"
-        ww("abcABC(WW)1abcABC") shouldBe "(WW)"
-        ww("abc:ABC(WW)1a,bc_ABC") shouldBe "(WW)"
-        ww("1WW1") shouldBe "WW"
-        ww("1abcWW") shouldBe "WW"
-        ww("()=abcWW") shouldBe "WW"
-    }
 
     @Test
     fun `wwUnpack should remove the WW in a WW string and return only the symbols`() {
