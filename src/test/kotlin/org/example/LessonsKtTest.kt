@@ -315,31 +315,46 @@ class LessonsKtTest : IOExpectSpec({
         }
     }
 
-    @Test
-    fun `letters regex test`() {
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".matches(lettersRegex) shouldBe true
-        "0123456789".matches(lettersRegex) shouldBe false
-        "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~".matches(lettersRegex) shouldBe false
+    context("letters regex") {
+
+        expect("match lowercase and uppercase letters") {
+            "abcdefghijklmnopqrstuvwxyzäöüßABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞ".matches(lettersRegex) shouldBe true
+        }
+
+        expect("not match digits") {
+            "0123456789".matches(lettersRegex) shouldBe false
+        }
+
+        expect("not match punctuation marks") {
+            "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~".matches(lettersRegex) shouldBe false
+        }
     }
 
-    @Test
-    fun `letters should return letters`() {
-        letters("W") shouldBe "W"
-        letters("üäöß") shouldBe "üäöß"
-        letters("abc") shouldBe "abc"
-        letters("a,bc()=;deXXf") shouldBe "abcdeXXf"
-        letters("abc123deXXf") shouldBe "abcdeXXf"
-        letters("123\"") shouldBe ""
-        letters("") shouldBe ""
-    }
+    context("letters") {
 
-    @Test
-    fun `letters should ignore WW part`() {
-        letters("WW") shouldBe ""
-        letters("(WW)") shouldBe ""
-        letters("abc(WW)abc(WW)';abc") shouldBe "abcabcabc"
-        letters("abc(WW)=;def") shouldBe "abcdef"
-    }
+        expect("return lowercase and uppercase letters") {
+            letters("W") shouldBe "W"
+            letters("üäöß") shouldBe "üäöß"
+            letters("abc") shouldBe "abc"
+            letters("a,bc()=;deXXf") shouldBe "abcdeXXf"
+            letters("abc123deXXf") shouldBe "abcdeXXf"
+            letters("") shouldBe ""
+        }
+
+        expect("ignore digits") {
+            letters("123\"") shouldBe ""
+        }
+
+        expect("ignore punctuation marks") {
+            letters(",.';%{}[]()") shouldBe ""
+        }
+
+        expect("ignore WW part") {
+            letters("WW") shouldBe ""
+            letters("(WW)") shouldBe ""
+            letters("abc(WW)abc(WW)';abc") shouldBe "abcabcabc"
+            letters("abc(WW)=;def") shouldBe "abcdef"
+        }
 
     @Test
     fun `letters should ignore letter groups`() {
