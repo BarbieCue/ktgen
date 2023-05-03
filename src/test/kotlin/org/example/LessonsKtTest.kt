@@ -44,6 +44,15 @@ class LessonsKtTest : IOExpectSpec({
                 sb.newCharacters("") shouldBe ""
             }
         }
+
+        context("symbolsCount") {
+
+            expect("counts non-whitespace characters") {
+                StringBuilder(". a b c ] 1").symbolsCount() shouldBe 6
+                StringBuilder("  \t  \n ").symbolsCount() shouldBe 0
+                StringBuilder().symbolsCount() shouldBe 0
+            }
+        }
     }
 
     context("unpack") {
@@ -486,6 +495,57 @@ class LessonsKtTest : IOExpectSpec({
         expect("return empty string when generators have empty output") {
             val generators = listOf{_: Int -> ""}
             invokeConcatSingleLine(3, generators) shouldBe ""
+        }
+    }
+
+
+    context("List<TextGenerator>") {
+
+        context("invokeConcat") {
+
+            expect("return concatenated generators results as single line, whitespace separated") {
+                fun repeatA(n: Int) = "a".repeat(n)
+                fun repeatB(n: Int) = "b".repeat(n)
+                fun repeatC(n: Int) = "c".repeat(n)
+                val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+                val result = generators.invokeConcat(3, 9)
+                result shouldBe "aaa bbb ccc"
+            }
+
+            expect("re-invoke generators if necessary to get the total number of symbols") {
+                fun repeatA(n: Int) = "a".repeat(n)
+                fun repeatB(n: Int) = "b".repeat(n)
+                fun repeatC(n: Int) = "c".repeat(n)
+                val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+                val lines = generators.invokeConcat(3, 10).split(" ")
+
+                lines[0] shouldHaveLength 3
+                lines[1] shouldHaveLength 3
+                lines[2] shouldHaveLength 3
+                lines[3] shouldHaveLength 1
+
+                lines[0] shouldBe "aaa"
+                lines[1] shouldBe "bbb"
+                lines[2] shouldBe "ccc"
+                lines[3] shouldBe "a" // re-invoked first generator
+            }
+
+            expect("return empty string when generators have empty output") {
+                val generators = listOf{_: Int -> ""}
+                generators.invokeConcat(3, 10) shouldBe ""
+            }
+        }
+    }
+
+    context("String") {
+
+        context("symbolsCount") {
+
+            expect("counts non-whitespace characters") {
+                ". a b c ] 1".symbolsCount() shouldBe 6
+                "  \t  \n ".symbolsCount() shouldBe 0
+                "".symbolsCount() shouldBe 0
+            }
         }
     }
 })
