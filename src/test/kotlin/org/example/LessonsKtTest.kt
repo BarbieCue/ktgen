@@ -356,36 +356,55 @@ class LessonsKtTest : IOExpectSpec({
             letters("abc(WW)=;def") shouldBe "abcdef"
         }
 
-    @Test
-    fun `letters should ignore letter groups`() {
-        letters("abc[sch]def") shouldBe "abcdef"
-        letters("abcdef[sch]") shouldBe "abcdef"
-        letters("[sch]abcdef") shouldBe "abcdef"
-        letters("[sch]abcdef[tt]") shouldBe "abcdef"
-        letters("abc[]def") shouldBe "abcdef"
-        letters("abcdef[]") shouldBe "abcdef"
-        letters("[]abcdef") shouldBe "abcdef"
+        expect("ignore letter groups") {
+            letters("abc[sch]def") shouldBe "abcdef"
+            letters("abcdef[sch]") shouldBe "abcdef"
+            letters("[sch]abcdef") shouldBe "abcdef"
+            letters("[sch]abcdef[tt]") shouldBe "abcdef"
+            letters("abc[]def") shouldBe "abcdef"
+            letters("abcdef[]") shouldBe "abcdef"
+            letters("[]abcdef") shouldBe "abcdef"
+        }
+
+        expect("return empty string on empty input") {
+            letters("") shouldBe ""
+        }
     }
 
-    @Test
-    fun `digits should return digits`() {
-        digits("0123456789") shouldBe "0123456789"
-        digits("1,2") shouldBe "12"
-        digits("abc") shouldBe ""
-        digits(",()=;") shouldBe ""
-        digits("abc123deXXf") shouldBe "123"
-        digits("abc123deXXf,)(456") shouldBe "123456"
-        digits("123\"") shouldBe "123"
-        digits("") shouldBe ""
-    }
+    context("digits") {
 
-    @Test
-    fun `digits should ignore WW part`() {
-        digits("WW") shouldBe ""
-        digits("(WW)") shouldBe ""
-        digits("123(WW)") shouldBe "123"
-        digits("123(WW)=;456") shouldBe "123456"
+        expect("return digits") {
+            digits("0123456789") shouldBe "0123456789"
+        }
+
+        expect("ignore letters") {
+            digits("abc") shouldBe ""
+            digits("abc123deXXf") shouldBe "123"
+            digits("abc123deXXf,)(456") shouldBe "123456"
+        }
+
+        expect("ignore punctuation marks") {
+            digits(",()=;") shouldBe ""
+        }
+
+        expect("ignore WW part") {
+            digits("WW") shouldBe ""
+            digits("(WW)") shouldBe ""
+            digits("123(WW)") shouldBe "123"
+            digits("123(WW)=;456") shouldBe "123456"
+        }
+
+        expect("ignore letter groups") {
+            digits("123[sch]456") shouldBe "123456"
+        }
+
+        expect("return empty string on empty input") {
+            digits("") shouldBe ""
+        }
     }
+})
+
+class LessonsKtTestOldDeleteMe {
 
     @Test
     fun `symbolsPerGenerator table test`() {
