@@ -132,7 +132,7 @@ class LessonsKtTest : IOExpectSpec({
         }
     }
 
-    context("ww regex") {
+    context("wwRegex") {
 
         expect("matches WW parts") {
             "WW,." shouldMatch wwRegex
@@ -142,11 +142,11 @@ class LessonsKtTest : IOExpectSpec({
         }
 
         expect("should not match anything else") {
-            "" shouldNotMatch letterGroupRegex.pattern
-            "W" shouldNotMatch letterGroupRegex.pattern
-            ",." shouldNotMatch letterGroupRegex.pattern
-            "abc" shouldNotMatch letterGroupRegex.pattern
-            "1" shouldNotMatch letterGroupRegex.pattern
+            "" shouldNotMatch wwRegex.pattern
+            "W" shouldNotMatch wwRegex.pattern
+            ",." shouldNotMatch wwRegex.pattern
+            "abc" shouldNotMatch wwRegex.pattern
+            "1" shouldNotMatch wwRegex.pattern
         }
     }
 
@@ -186,87 +186,92 @@ class LessonsKtTest : IOExpectSpec({
             ww("()=abcWW") shouldBe "WW"
         }
     }
+
+    context("wwUnpack") {
+
+        expect("remove the WW in a WW string and return only the symbols") {
+            wwUnpack("(WW)") shouldBe "()"
+            wwUnpack("WW)=/\\") shouldBe ")=/\\"
+            wwUnpack("_}*?/{(WW") shouldBe "_}*?/{("
+            wwUnpack("WW") shouldBe ""
+            wwUnpack("W") shouldBe ""
+            wwUnpack("") shouldBe ""
+        }
+
+        expect("ignore everything else") {
+            wwUnpack("abcABC(WW)") shouldBe "()"
+            wwUnpack("abcABC(WW)1abcABC") shouldBe "()"
+            wwUnpack("abc:ABC(WW)1a,bc_ABC") shouldBe "()"
+            wwUnpack("abcABCWW") shouldBe ""
+            wwUnpack("1WW1") shouldBe ""
+            wwUnpack("1abcWW") shouldBe ""
+            wwUnpack("()=abcWW") shouldBe ""
+        }
+    }
+
+    context("letterGroupRegex") {
+
+        expect("match letter groups") {
+            "[sch]" shouldMatch letterGroupRegex
+        }
+
+        expect("not match anything else") {
+            "[sch]a" shouldNotMatch letterGroupRegex.pattern
+            "a[sch]" shouldNotMatch letterGroupRegex.pattern
+            "[]" shouldNotMatch letterGroupRegex.pattern
+            "abc" shouldNotMatch letterGroupRegex.pattern
+            "1" shouldNotMatch letterGroupRegex.pattern
+            "" shouldNotMatch letterGroupRegex.pattern
+        }
+    }
+
+    context("letterGroup") {
+
+        expect("return group of letters inclusive square brackets") {
+            letterGroup("[sch]") shouldBe "[sch]"
+            letterGroup("[123]") shouldBe ""
+            letterGroup("[%';]") shouldBe ""
+        }
+
+        expect("return the first group only") {
+            letterGroup("[sch][ch][ss][tt]") shouldBe "[sch]"
+            letterGroup("[tt][ch][ss]") shouldBe "[tt]"
+        }
+
+        expect("return empty string on empty group") {
+            letterGroup("[]") shouldBe ""
+        }
+
+        expect("return empty string when group consists of non-letters") {
+            letterGroup("[123]") shouldBe ""
+            letterGroup("[%';]") shouldBe ""
+        }
+
+        expect("return empty string when group contains non-letters") {
+            letterGroup("[sch12]") shouldBe ""
+            letterGroup("[sch%';]") shouldBe ""
+        }
+
+        expect("ignore surrounding square brackets") {
+            letterGroup("[[sch]]") shouldBe "[sch]"
+            letterGroup("[[[sch]]]") shouldBe "[sch]"
+        }
+
+        expect("WW part can not be a letter group") {
+            letterGroup("[WW]") shouldBe ""
+            letterGroup("{[WW]}") shouldBe ""
+        }
+    }
+
+    context("") {
+
+        expect("") {
+
+        }
+    }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `wwUnpack should remove the WW in a WW string and return only the symbols`() {
-        wwUnpack("(WW)") shouldBe "()"
-        wwUnpack("WW)=/\\") shouldBe ")=/\\"
-        wwUnpack("_}*?/{(WW") shouldBe "_}*?/{("
-        wwUnpack("WW") shouldBe ""
-        wwUnpack("W") shouldBe ""
-        wwUnpack("") shouldBe ""
-    }
-
-    @Test
-    fun `wwUnpack ignore everything else`() {
-        wwUnpack("abcABC(WW)") shouldBe "()"
-        wwUnpack("abcABC(WW)1abcABC") shouldBe "()"
-        wwUnpack("abc:ABC(WW)1a,bc_ABC") shouldBe "()"
-        wwUnpack("abcABCWW") shouldBe ""
-        wwUnpack("1WW1") shouldBe ""
-        wwUnpack("1abcWW") shouldBe ""
-        wwUnpack("()=abcWW") shouldBe ""
-    }
-
-    @Test
-    fun `letterGroupRegex should match letter groups`() {
-        "[sch]" shouldMatch letterGroupRegex
-    }
-
-    @Test
-    fun `letterGroupRegex should not match anything else`() {
-        "[sch]a" shouldNotMatch letterGroupRegex.pattern
-        "a[sch]" shouldNotMatch letterGroupRegex.pattern
-        "[]" shouldNotMatch letterGroupRegex.pattern
-        "abc" shouldNotMatch letterGroupRegex.pattern
-        "1" shouldNotMatch letterGroupRegex.pattern
-        "" shouldNotMatch letterGroupRegex.pattern
-    }
-
-    @Test
-    fun `letterGroup should return groups of letters`() {
-        letterGroup("[sch]") shouldBe "[sch]"
-        letterGroup("[123]") shouldBe ""
-        letterGroup("[%';]") shouldBe ""
-    }
-
-    @Test
-    fun `letterGroup should return the first group`() {
-        letterGroup("[sch][ch][ss][tt]") shouldBe "[sch]"
-        letterGroup("[tt][ch][ss]") shouldBe "[tt]"
-    }
-
-    @Test
-    fun `letterGroup should not return empty an group`() {
-        letterGroup("[]") shouldBe ""
-    }
-
-    @Test
-    fun `letterGroup should not return groups of non-letters`() {
-        letterGroup("[123]") shouldBe ""
-        letterGroup("[%';]") shouldBe ""
-    }
-
-    @Test
-    fun `letterGroup should not return groups containing non-letters`() {
-        letterGroup("[sch12]") shouldBe ""
-        letterGroup("[sch%';]") shouldBe ""
-    }
-
-    @Test
-    fun `letterGroup should ignore surrounding square brackets`() {
-        letterGroup("[[sch]]") shouldBe "[sch]"
-        letterGroup("[[[sch]]]") shouldBe "[sch]"
-    }
-
-    @Test
-    fun `letterGroup WW part can not be a letter group`() {
-        letterGroup("[WW]") shouldBe ""
-        letterGroup("{[WW]}") shouldBe ""
-    }
 
 
     @Test
