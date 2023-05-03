@@ -293,74 +293,26 @@ class LessonsKtTest : IOExpectSpec({
             letterGroupUnpack("{[WW]}") shouldBe ""
         }
     }
-})
 
-class LessonsKtTestOldDeleteMe {
+    context("unconditionalPunctuation") {
 
+        expect("return punctuation marks which are not related to WW") {
+            unconditionalPunctuation("!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~") shouldBe "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            unconditionalPunctuation("abc") shouldBe ""
+            unconditionalPunctuation("abc:") shouldBe ":"
+            unconditionalPunctuation("123") shouldBe ""
+            unconditionalPunctuation("123:") shouldBe ":"
+            unconditionalPunctuation("1,2(WW)") shouldBe ","
+            unconditionalPunctuation("()=abc=(WW)=") shouldBe "()="
+            unconditionalPunctuation("()=abc[WW]") shouldBe "()="
+        }
 
-    @Test
-    fun `letterGroupUnpack should return the letters of the group`() {
-        letterGroupUnpack("[sch]") shouldBe "sch"
-    }
-
-    @Test
-    fun `letterGroupUnpack should return the first group`() {
-        letterGroupUnpack("[sch][ch][ss][tt]") shouldBe "sch"
-        letterGroupUnpack("[tt][ch][ss]") shouldBe "tt"
-    }
-
-    @Test
-    fun `letterGroupUnpack should not return empty an group`() {
-        letterGroupUnpack("[]") shouldBe ""
-    }
-
-    @Test
-    fun `letterGroupUnpack should not return groups of non-letters`() {
-        letterGroupUnpack("[123]") shouldBe ""
-        letterGroupUnpack("[%';]") shouldBe ""
-    }
-
-    @Test
-    fun `letterGroupUnpack should not return groups containing non-letters`() {
-        letterGroupUnpack("[sch12]") shouldBe ""
-        letterGroupUnpack("[sch%';]") shouldBe ""
-    }
-
-    @Test
-    fun `letterGroupUnpack should ignore surrounding square brackets`() {
-        letterGroupUnpack("[[sch]]") shouldBe "sch"
-        letterGroupUnpack("[[[sch]]]") shouldBe "sch"
-    }
-
-    @Test
-    fun `letterGroupUnpack WW part can not be a letter group`() {
-        letterGroupUnpack("[WW]") shouldBe ""
-        letterGroupUnpack("{[WW]}") shouldBe ""
-    }
-
-
-
-
-    @Test
-    fun `unconditionalPunctuation should return punctuation marks which are not related to WW`() {
-        unconditionalPunctuation("!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~") shouldBe "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
-        unconditionalPunctuation("abc") shouldBe ""
-        unconditionalPunctuation("abc:") shouldBe ":"
-        unconditionalPunctuation("123") shouldBe ""
-        unconditionalPunctuation("123:") shouldBe ":"
-        unconditionalPunctuation("1,2(WW)") shouldBe ","
-        unconditionalPunctuation("()=abc=(WW)=") shouldBe "()="
-        unconditionalPunctuation("()=abc[WW]") shouldBe "()="
-    }
-
-    @Test
-    fun `unconditionalPunctuation should ignore WW part`() {
-        unconditionalPunctuation("abcABC(WW)") shouldBe ""
-        unconditionalPunctuation("abcABCWW") shouldBe ""
-        unconditionalPunctuation("1WW1") shouldBe ""
-        unconditionalPunctuation("1abcWW") shouldBe ""
-        unconditionalPunctuation("()=abcWW") shouldBe "()="
-        unconditionalPunctuation("abcWWc()=") shouldBe "()="
+        expect("ignore WW part") {
+            unconditionalPunctuation("abcABC(WW)") shouldBe ""
+            unconditionalPunctuation("abcABCWW") shouldBe ""
+            unconditionalPunctuation("1WW1") shouldBe ""
+            unconditionalPunctuation("1abcWW") shouldBe ""
+        }
     }
 
     @Test
