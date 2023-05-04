@@ -907,91 +907,67 @@ class LessonsKtTest : IOExpectSpec({
                 }
             }
         }
+
+        context("randomLeftRightPunctuationMarks") {
+
+            expect("result contains punctuation marks randomly, but left/right condition is met") {
+                val text = buildLesson(lineLength = 2, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("[{WW}]", 2)
+                }.text
+                text.split("\n") shouldHaveSize 5
+                text.split("\n").forAll { it shouldBeIn setOf("[]", "{}") }
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("[{WW,", 10)
+                }.text shouldMatch "[\\[\\{,]{10}"
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("WW}]", 10)
+                }.text shouldMatch "[\\]\\}]{10}"
+            }
+
+            expect("empty input leads to empty output") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("", 10)
+                }.text shouldBe ""
+            }
+
+            expect("segment-length range test") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("[{WW}].,", -10)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("[{WW}].,", -1)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("[{WW}].,", 0)
+                }.text shouldHaveLength 0
+
+                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("[{WW}].,", 1)
+                }.text
+                text.split("\n") shouldHaveSize 2
+                text.split("\n").forAll { it shouldMatch "[\\{\\[\\]\\}., ]{9}" } // e.g. "{ } [ ] , " 10 -> trimmed to "{ } [ ] ," 9
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("[{WW}].,", 10)
+                }.text shouldHaveLength 10
+            }
+
+            expect("result is trimmed") {
+                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    randomLeftRightPunctuationMarks("[{WW}].,", 1)
+                }.text
+                text shouldNotStartWith "\\s"
+                text shouldNotEndWith "\\s"
+            }
+        }
     }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `buildLesson randomLeftRightPunctuationMarks happy`() {
-        val text = buildLesson(lineLength = 2, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}]", 2)
-        }.text
-        text.split("\n") shouldHaveSize 5
-        text.split("\n").forAll { it shouldBeIn setOf("[]", "{}") }
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW,", 10)
-        }.text shouldMatch "[\\[\\{,]{10}"
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("WW}]", 10)
-        }.text shouldMatch "[\\]\\}]{10}"
-    }
-
-    @Test
-    fun `buildLesson randomLeftRightPunctuationMarks empty input`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("", 10)
-        }.text shouldBe ""
-    }
-
-    @Test
-    fun `buildLesson randomLeftRightPunctuationMarks line length range test`() {
-        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 1, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", 10)
-        }.text.count { !it.isWhitespace() } shouldBe 10
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson randomLeftRightPunctuationMarks segment length range test`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", -10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", -1)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", 0)
-        }.text shouldHaveLength 0
-
-        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", 1)
-        }.text
-        text.split("\n") shouldHaveSize 2
-        text.split("\n").forAll { it shouldMatch "[\\{\\[\\]\\}., ]{9}" } // e.g. "{ } [ ] , " 10 -> trimmed to "{ } [ ] ," 9
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson randomLeftRightPunctuationMarks trimmed`() {
-        val lesson = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            randomLeftRightPunctuationMarks("[{WW}].,", 1)
-        }
-        lesson.text shouldNotStartWith "\\s"
-        lesson.text shouldNotEndWith "\\s"
-    }
 
     @Test
     fun `buildLesson wordsWithLeftRightPunctuationMarks happy`() {
