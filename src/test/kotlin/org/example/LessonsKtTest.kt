@@ -563,89 +563,82 @@ class LessonsKtTest : IOExpectSpec({
             }
         }
     }
-})
 
-class LessonsKtTestOldDeleteMe {
+    context("toTextBlock") {
 
-    @Test
-    fun `toTextBlock breaks the input string into lines of max length line-length`() {
-        val result = toTextBlock("abcdef abc abc abcdef abc", 20, 5)
-        val lines = result.split("\n")
-        lines[0] shouldHaveLength 5
-        lines[1] shouldHaveLength 5
-        lines[2] shouldHaveLength 5
-        lines[3] shouldHaveLength 5
-        lines[4] shouldHaveLength 2
-        result shouldBe """
+        expect("break the input string into lines of max length line-length") {
+            val result = toTextBlock("abcdef abc abc abcdef abc", 20, 5)
+            val lines = result.split("\n")
+            lines[0] shouldHaveLength 5
+            lines[1] shouldHaveLength 5
+            lines[2] shouldHaveLength 5
+            lines[3] shouldHaveLength 5
+            lines[4] shouldHaveLength 2
+            result shouldBe """
             abcde
             f abc
             abc a
             bcdef
             ab
         """.trimIndent()
-    }
-
-    @Test
-    fun `toTextBlock input string property test`() {
-        val arbitraryBuilder = Arb.stringPattern("[A-Za-z0-9.,;\\[\\]{}\t]{30}")
-        repeat(100) {
-            val lines = toTextBlock(arbitraryBuilder.next(), 20, 5).split("\n")
-            lines shouldHaveAtLeastSize 4
-            lines[0] shouldHaveMinLength 4
-            lines[0] shouldHaveMaxLength 5
-            lines[1] shouldHaveMinLength 4
-            lines[1] shouldHaveMaxLength 5
-            lines[2] shouldHaveMinLength 4
-            lines[2] shouldHaveMaxLength 5
-            lines[3] shouldHaveMinLength 4
-            lines[3] shouldHaveMaxLength 5
         }
-    }
 
-    @Test
-    fun `toTextBlock normalizes multiple chained whitespace characters to a single one`() {
-        repeat(2000) {
+        expect("input string property test") {
+            val arbitraryBuilder = Arb.stringPattern("[A-Za-z0-9.,;\\[\\]{}\t]{30}")
+            repeat(100) {
+                val lines = toTextBlock(arbitraryBuilder.next(), 20, 5).split("\n")
+                lines shouldHaveAtLeastSize 4
+                lines[0] shouldHaveMinLength 4
+                lines[0] shouldHaveMaxLength 5
+                lines[1] shouldHaveMinLength 4
+                lines[1] shouldHaveMaxLength 5
+                lines[2] shouldHaveMinLength 4
+                lines[2] shouldHaveMaxLength 5
+                lines[3] shouldHaveMinLength 4
+                lines[3] shouldHaveMaxLength 5
+            }
+        }
+
+        expect("normalize multiple chained whitespace characters to a single one") {
             toTextBlock("abc    abc  \t abc   abc abc abc    abc", 20, 5) shouldBe
-            """
-            abc a
-            bc ab
-            c abc
-            abc a
-            bc ab
-            """.trimIndent()
+                    """
+                    abc a
+                    bc ab
+                    c abc
+                    abc a
+                    bc ab
+                    """.trimIndent()
         }
-    }
 
-    @Test
-    fun `toTextBlock input string length is smaller than symbols-total leads to result having input string length`() {
-        toTextBlock("abc def ghi", 20, 5) shouldBe """
+        expect("input string length is smaller than symbols-total leads to result having input string length") {
+            toTextBlock("abc def ghi", 20, 5) shouldBe """
             abc d
             ef gh
             i
         """.trimIndent()
-    }
+        }
 
-    @Test
-    fun `toTextBlock input string length is smaller than line-length leads to result having input string length`() {
-        toTextBlock("ac", 20, 5) shouldBe "ac"
-    }
+        expect("input string length is smaller than line-length leads to result having input string length") {
+            toTextBlock("ac", 20, 5) shouldBe "ac"
+        }
 
-    @Test
-    fun `toTextBlock return empty string when input string is empty`() {
-        toTextBlock("", 20, 5) shouldBe ""
-    }
+        expect("return empty string when input string is empty") {
+            toTextBlock("", 20, 5) shouldBe ""
+        }
 
-    @Test
-    fun `toTextBlock return empty string when symbols-total is zero or negative`() {
-        toTextBlock("abc abc abc", 0, 10) shouldBe ""
-        toTextBlock("abc abc abc", -1, 10) shouldBe ""
-    }
+        expect("return empty string when symbols-total is zero or negative") {
+            toTextBlock("abc abc abc", 0, 10) shouldBe ""
+            toTextBlock("abc abc abc", -1, 10) shouldBe ""
+        }
 
-    @Test
-    fun `toTextBlock return empty string when line-length is zero or negative`() {
-        toTextBlock("abc abc abc", 10, 0) shouldBe ""
-        toTextBlock("abc abc abc", 10, -1) shouldBe ""
+        expect("return empty string when line-length is zero or negative") {
+            toTextBlock("abc abc abc", 10, 0) shouldBe ""
+            toTextBlock("abc abc abc", 10, -1) shouldBe ""
+        }
     }
+})
+
+class LessonsKtTestOldDeleteMe {
 
     @Test
     fun `buildLesson repeatSymbols happy`() {
