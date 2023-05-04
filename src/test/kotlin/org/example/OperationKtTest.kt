@@ -8,6 +8,9 @@ import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.*
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.int
+import io.kotest.property.forAll
 import org.junit.jupiter.api.Test
 
 class OperationKtTest : ExpectSpec({
@@ -91,63 +94,84 @@ class OperationKtTest : ExpectSpec({
             segment("abcdefghi", 100) shouldHaveLength 9 // abcdefghi
         }
     }
+
+    context("joinRepeat") {
+
+        expect("result is a single line") {
+            val words = setOf(
+                "building", "metrics", "perimeter",
+                "expensive", "a", "b", "c", "d")
+
+            forAll(20, Arb.int(10, 10000)) {
+                !joinRepeat(words, it).contains("\n")
+            }
+        }
+
+        expect("result consists of joined words, separated by whitespaces") {
+            val words = setOf(
+                "building", "metrics", "perimeter",
+                "expensive", "a", "b", "c", "d")
+
+            joinRepeat(words, 33) shouldBe "building metrics perimeter expensive"
+        }
+
+        expect("result contains the exact amount of non-whitespace symbols") {
+            val words = setOf(
+                "building", "metrics", "perimeter",
+                "expensive", "a", "b", "c", "d")
+
+            joinRepeat(words, 30).count { !it.isWhitespace() } shouldBe 30
+            joinRepeat(words, 60).count { !it.isWhitespace() } shouldBe 60
+        }
+
+        expect("empty input leads to empty output") {
+            joinRepeat(emptySet(), 20) shouldBe ""
+        }
+
+        expect("result is empty when there is no word having a length <= sum-non-whitespace-chars") {
+            joinRepeat(setOf("aaa", "bbb", "ccc"), 1) shouldBe ""
+            joinRepeat(setOf("a  "), 1) shouldBe ""
+        }
+
+        expect("ignore too long words") {
+            joinRepeat(setOf("too_long", "ok"), 2) shouldBe "ok"
+            joinRepeat(setOf("too_long", "ok"), 4) shouldBe "ok ok"
+        }
+
+        expect("find a word of necessary length out of order, if necessary and exists") {
+            joinRepeat(setOf("ab", "cde", "fgh"), 7) shouldBe "ab cde ab"
+            // "fgh" would exceed the length of 7, thus take "ab"
+        }
+
+        expect("cut last word if cannot find a word of necessary length") {
+            joinRepeat(setOf("abc", "def"), 5) shouldBe "abc de"
+            // "def" would exceed the length of 7 and no word of length 2 can be found, thus cut "def" to "de"
+        }
+
+        expect("result is trimmed") {
+            joinRepeat(setOf("aaa  ", "  bbb", "  ccc  "), 9) shouldNotStartWith "\\s"
+            joinRepeat(setOf("aaa  ", "  bbb", "  ccc  "), 9) shouldNotEndWith "\\s"
+        }
+
+        expect("each word is trimmed") {
+            joinRepeat(setOf("aaa  ", "  bbb", "  ccc  "), 9) shouldBe "aaa bbb ccc"
+        }
+
+        expect("sum-non-whitespace-chars range test") {
+            val words = setOf(
+            "building", "metrics", "perimeter", "expensive", "a", "b", "c",
+            "d", "engine", "of", "house", "train", "car", "bird", "door")
+
+            joinRepeat(words, -10) shouldHaveLength 0
+            joinRepeat(words, -1) shouldHaveLength 0
+            joinRepeat(words, 0) shouldHaveLength 0
+            joinRepeat(words, 1).count { !it.isWhitespace() } shouldBe 1
+            joinRepeat(words, 10).filter { !it.isWhitespace() } shouldHaveMaxLength 10
+        }
+    }
 })
 
 class OperationKtTestDeleteMe {
-    @Test
-    fun `joinRepeat happy`() {
-        val words = setOf(
-            "building", "metrics", "perimeter",
-            "expensive", "a", "b", "c", "d"
-        )
-
-        joinRepeat(words, 30)shouldBe
-                "building metrics perimeter expens"
-        joinRepeat(words, 30).count { !it.isWhitespace() } shouldBe 30
-
-        joinRepeat(words, 60) shouldBe
-                "building metrics perimeter expensive a b c d building metrics building"
-        joinRepeat(words, 60).count { !it.isWhitespace() } shouldBe 60
-    }
-
-    @Test
-    fun `joinRepeat empty input`() {
-        joinRepeat(emptySet(), 20) shouldBe ""
-    }
-
-    @Test
-    fun `joinRepeat all words are longer than line the length in non whitespace chars`() {
-        joinRepeat(setOf("aaa", "bbb", "ccc"), 1) shouldBe ""
-    }
-
-    @Test
-    fun `joinRepeat ignore too long words`() {
-        joinRepeat(setOf("too_long", "ok"), 2) shouldBe "ok"
-        joinRepeat(setOf("too_long", "ok"), 4) shouldBe "ok ok"
-    }
-
-    @Test
-    fun `joinRepeat should find a word of necessary length out of order if exists`() {
-        joinRepeat(setOf("ab", "cde", "fgh"), 7) shouldBe "ab cde ab"
-        // "fgh" would exceed the length of 7, thus take "ab"
-    }
-
-    @Test
-    fun `joinRepeat should cut last word if cannot find a word of necessary length`() {
-        joinRepeat(setOf("abc", "def"), 5) shouldBe "abc de"
-        // "def" would exceed the length of 7 and no word of length 2 can be found, thus cut "def" to "de"
-    }
-
-    @Test
-    fun `joinRepeat trimmed`() {
-        joinRepeat(setOf("aaa  ", "  bbb", "  ccc  "), 9) shouldNotStartWith "\\s"
-        joinRepeat(setOf("aaa  ", "  bbb", "  ccc  "), 9) shouldNotEndWith "\\s"
-    }
-
-    @Test
-    fun `joinRepeat each word trimmed`() {
-        joinRepeat(setOf("aaa  ", "  bbb", "  ccc  "), 9) shouldBe "aaa bbb ccc"
-    }
 
     @Test
     fun `joinRepeat length non whitespace chars range test`() {
