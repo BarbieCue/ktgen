@@ -5,13 +5,15 @@ import io.kotest.data.headers
 import io.kotest.data.row
 import io.kotest.data.table
 import io.kotest.inspectors.forAll
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.*
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.stringPattern
-import org.junit.jupiter.api.Test
 
 class LessonsKtTest : IOExpectSpec({
 
@@ -653,6 +655,22 @@ class LessonsKtTest : IOExpectSpec({
             lesson.text.length shouldBe 10
         }
 
+        expect("apply all build steps") {
+            val text = buildLesson(lineLength = 30, symbolsPerLesson = 400) {
+                repeatSymbols("123", 2)
+                shuffledSymbols("def", 10)
+                wordsWithUnconditionalPunctuationMarks(listOf("hi"), ";")
+                words(listOf("apple"))
+                repeatSymbols("{}", 3)
+            }.text
+            text.count { !it.isWhitespace() } shouldBe 400
+            text shouldContain "123"
+            text shouldContain "[def]{3,}".toRegex()
+            text shouldContain "{}"
+            text shouldContain ";*hi;*".toRegex()
+            text shouldContain "apple"
+        }
+
         expect("line-length range test") {
             buildLesson(lineLength = -10, symbolsPerLesson = 10) {
                 exampleBuildStep()
@@ -1072,18 +1090,3 @@ class LessonsKtTest : IOExpectSpec({
         }
     }
 })
-
-class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `buildLesson apply multiple build steps happy`() {
-        buildLesson(lineLength = 30, symbolsPerLesson = 300) {
-            repeatSymbols("abc", 2)
-            shuffledSymbols("def", 10)
-            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), ",.;")
-            words(listOf("hi", "are", "you", "ready"))
-            shuffledSymbols("yz", 2)
-            repeatSymbols("{}", 3)
-        }.text.count { !it.isWhitespace() } shouldBe 300
-    }
-}
