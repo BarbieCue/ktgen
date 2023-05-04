@@ -771,115 +771,64 @@ class LessonsKtTest : IOExpectSpec({
                 text shouldNotEndWith "\\s"
             }
         }
+
+        context("alternatingSymbols") {
+
+            expect("result consists of the input symbols in alternating fashion") {
+                buildLesson(lineLength = 14, symbolsPerLesson = 10) {
+                    alternatingSymbols("abc", 2)
+                }.text shouldBe "aa bb cc aa bb"
+            }
+
+            expect("segments have specified length") {
+                buildLesson(lineLength = 13, symbolsPerLesson = 10) {
+                    alternatingSymbols("ab", 3)
+                }.text shouldBe "aaa bbb aaa b"
+            }
+
+            expect("empty input leads to empty output") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    alternatingSymbols("", 10)
+                }.text.length shouldBe 0
+            }
+
+            expect("segment-length range test") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    alternatingSymbols("abc", -10)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    alternatingSymbols("abc", -1)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    alternatingSymbols("abc", 0)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    alternatingSymbols("abc", 1)
+                }.text shouldBe """
+                    a b c a b
+                    c a b c a
+                """.trimIndent()
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    alternatingSymbols("abc", 10)
+                }.text shouldHaveLength 10
+            }
+
+            expect("result is trimmed") {
+                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    alternatingSymbols("abc", 1)
+                }.text
+                text shouldNotStartWith "\\s"
+                text shouldNotEndWith "\\s"
+            }
+        }
     }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `buildLesson alternatingSymbols happy`() {
-        buildLesson(lineLength = 13, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 2)
-        }.text shouldBe "aa bb cc aa bb"
-    }
-
-    @Test
-    fun `buildLesson alternatingSymbols empty input`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            alternatingSymbols("", 10)
-        }.text.length shouldBe 0
-    }
-
-    @Test
-    fun `buildLesson alternatingSymbols line length range test`() {
-        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 1, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 10)
-        }.text.count { !it.isWhitespace() } shouldBe 10
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson alternatingSymbols segment length range test`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", -10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", -1)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 0)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 1)
-        }.text shouldBe """
-            a b c a b
-            c a b c a
-        """.trimIndent()
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson alternatingSymbols symbols per lesson range test`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = -100) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = -10) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = -1) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 0) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 1) {
-            alternatingSymbols("abc", 10)
-        }.text shouldHaveLength 1
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 10)
-        }.text.count { !it.isWhitespace() } shouldBe 10
-
-        val text100 = buildLesson(lineLength = 10, symbolsPerLesson = 100) {
-            alternatingSymbols("abc", 10)
-        }.text
-        text100.split("\n") shouldHaveSize 10
-        text100.count { !it.isWhitespace() } shouldBe 100
-    }
-
-    @Test
-    fun `buildLesson alternatingSymbols trimmed`() {
-        val lesson = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            alternatingSymbols("abc", 1)
-        }
-        lesson.text shouldNotStartWith "\\s"
-        lesson.text shouldNotEndWith "\\s"
-    }
 
     @Test
     fun `buildLesson properties assignment`() {
