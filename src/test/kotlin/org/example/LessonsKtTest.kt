@@ -869,71 +869,48 @@ class LessonsKtTest : IOExpectSpec({
                 text shouldNotEndWith "\\s"
             }
         }
+
+        context("words") {
+
+            expect("result consists of input words") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    words(listOf("hi", "are", "you", "ready"))
+                }.text shouldBe """
+                    hi are you
+                    hi
+                """.trimIndent()
+
+                buildLesson(lineLength = 4, symbolsPerLesson = 10) {
+                    words(listOf("hi", "are", "you", "ready"))
+                }.text shouldBe """
+                    hi a
+                    re y
+                    ou h
+                    i
+                """.trimIndent()
+            }
+
+            expect("empty input leads to empty output") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    words(emptyList())
+                }.text shouldBe ""
+            }
+
+            expect("result is trimmed") {
+                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    words(listOf("hi", "are", "you", "ready"))
+                }.text
+                text.split("\\s".toRegex()) shouldHaveSize 4
+                text.split("\\s".toRegex()).forAll { line ->
+                    line shouldNotStartWith "\\s"
+                    line shouldNotEndWith "\\s"
+                }
+            }
+        }
     }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `buildLesson words happy`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            words(listOf("hi", "are", "you", "ready"))
-        }.text shouldBe """
-            hi are you
-            hi
-        """.trimIndent()
-
-        buildLesson(lineLength = 4, symbolsPerLesson = 10) {
-            words(listOf("hi", "are", "you", "ready"))
-        }.text shouldBe """
-            hi a
-            re y
-            ou h
-            i
-        """.trimIndent()
-    }
-
-    @Test
-    fun `buildLesson words empty input`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            words(emptyList())
-        }.text shouldBe ""
-    }
-
-    @Test
-    fun `buildLesson words line length range test`() {
-        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
-            words(listOf("hi", "are", "you", "ready"))
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
-            words(listOf("c", "hi", "are", "you", "ready"))
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
-            words(listOf("c", "hi", "are", "you", "ready"))
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 1, symbolsPerLesson = 10) {
-            words(listOf("c", "hi", "are", "you", "ready"))
-        }.text.split('\n') shouldHaveSize 10
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            words(listOf("c", "hi", "are", "you", "ready"))
-        }.text.count { !it.isWhitespace() } shouldBe 10
-    }
-
-    @Test
-    fun `buildLesson words trimmed`() {
-        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            words(listOf("hi", "are", "you", "ready"))
-        }.text
-        text.split("\\s".toRegex()) shouldHaveSize 4
-        text.split("\\s".toRegex()).forAll { line ->
-            line shouldNotStartWith "\\s"
-            line shouldNotEndWith "\\s"
-        }
-    }
 
     @Test
     fun `buildLesson randomLeftRightPunctuationMarks happy`() {
