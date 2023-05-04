@@ -14,10 +14,14 @@ class OperationKtTest : ExpectSpec({
 
     context("shuffle") {
 
-        expect("shuffles the input symbols") {
+        expect("shuffle the input symbols") {
             shuffle("abcdefghijk") shouldHaveLength 11
             shuffle("abcdefghijk") shouldNotBe "abcdefghijk"
             shuffle("abcdefghijk") shouldMatch "[abcdefghijk]{11}".toRegex()
+        }
+
+        expect("also shuffle input whitespaces") {
+            shuffle("  abc  ") shouldMatch "[ abc]+".toRegex()
         }
 
         expect("empty input leads to empty output") {
@@ -29,63 +33,67 @@ class OperationKtTest : ExpectSpec({
             shuffle("  abc  ") shouldNotEndWith "\\s"
         }
     }
+
+    context("repeat") {
+
+        expect("repeat the input symbols") {
+            repeat("abc", 10) shouldBe "abcabcabca"
+        }
+
+        expect("also repeat input whitespaces") {
+            repeat("  abc  ", 10) shouldBe "abc    a"
+        }
+
+        expect("empty input leads to empty output") {
+            repeat("", 10) shouldBe ""
+        }
+
+        expect("result is trimmed") {
+            repeat("  a  ", 10) shouldNotStartWith "\\s"
+            repeat("  a  ", 10) shouldNotEndWith "\\s"
+        }
+
+        expect("length range test") {
+            repeat("abc", -100) shouldHaveLength 0
+            repeat("abc", -1) shouldHaveLength 0
+            repeat("abc", 0) shouldHaveLength 0
+            repeat("abc", 1) shouldHaveLength 1
+            repeat("abc", 100) shouldHaveLength 100
+        }
+    }
+
+    context("segment") {
+
+        expect("segment the input string") {
+            segment("abcdefghi", 2) shouldHaveLength 13
+            segment("abcdefghi", 2) shouldBe "ab cd ef gh i"
+        }
+
+        expect("also treat whitespaces as normal symbols") {
+            segment("a b c", 2) shouldBe "a  b  c"
+        }
+
+        expect("empty input leads to empty output") {
+            segment("", 2) shouldBe ""
+        }
+
+        expect("result is trimmed") {
+            segment("  abc  ", 10) shouldNotStartWith "\\s"
+            segment("  abc  ", 10) shouldNotEndWith "\\s"
+        }
+
+        expect("length range test") {
+            segment("abcdefghi", -100) shouldHaveLength 0
+            segment("abcdefghi", -1) shouldHaveLength 0
+            segment("abcdefghi", 0) shouldHaveLength 0
+            segment("abcdefghi", 1) shouldHaveLength 17  // a b c d e f g h i
+            segment("abcdefghi", 3) shouldHaveLength 11  // abc def ghi
+            segment("abcdefghi", 100) shouldHaveLength 9 // abcdefghi
+        }
+    }
 })
 
 class OperationKtTestDeleteMe {
-
-    @Test
-    fun `repeat happy`() {
-        repeat("abc", 10) shouldHaveLength 10
-        repeat("abc", 10) shouldBe "abcabcabca"
-    }
-
-    @Test
-    fun `repeat empty input`() {
-        repeat("", 10) shouldBe ""
-    }
-
-    @Test
-    fun `repeat trimmed`() {
-        repeat("  abc  ", 10) shouldNotEndWith "\\s"
-        repeat("  abc  ", 10) shouldNotStartWith "\\s"
-    }
-
-    @Test
-    fun `repeat length range test`() {
-        repeat("abc", -100) shouldHaveLength 0
-        repeat("abc", -1) shouldHaveLength 0
-        repeat("abc", 0) shouldHaveLength 0
-        repeat("abc", 1) shouldHaveLength 1
-        repeat("abc", 100) shouldHaveLength 100
-    }
-
-    @Test
-    fun `segment happy`() {
-        segment("abcdefghi", 2) shouldHaveLength 13 // 9 chars + 4 new whitespaces
-        segment("abcdefghi", 2) shouldBe "ab cd ef gh i"
-    }
-
-    @Test
-    fun `segment empty input`() {
-        segment("", 2) shouldBe ""
-    }
-
-    @Test
-    fun `segment trimmed`() {
-        segment("  abc  ", 10) shouldNotStartWith "\\s"
-        segment("  abc  ", 10) shouldNotEndWith "\\s"
-    }
-
-    @Test
-    fun `segment length range test`() {
-        segment("abcdefghi", -100) shouldHaveLength 0
-        segment("abcdefghi", -1) shouldHaveLength 0
-        segment("abcdefghi", 0) shouldHaveLength 0
-        segment("abcdefghi", 1) shouldHaveLength 17  // a b c d e f g h i
-        segment("abcdefghi", 3) shouldHaveLength 11  // abc def ghi
-        segment("abcdefghi", 100) shouldHaveLength 9 // abcdefghi
-    }
-
     @Test
     fun `joinRepeat happy`() {
         val words = setOf(
