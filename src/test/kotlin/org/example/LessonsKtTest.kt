@@ -636,118 +636,145 @@ class LessonsKtTest : IOExpectSpec({
             toTextBlock("abc abc abc", 10, -1) shouldBe ""
         }
     }
+
+    context("buildLesson") {
+
+        fun L.exampleBuildStep(): L {
+            buildSteps.add { _ -> Arb.stringPattern("[A-Za-z0-9.,;@:<>]{100}\t[A-Za-z0-9.,;@:<>]{100}").next() }
+            return this@exampleBuildStep
+        }
+
+        expect("line-length range test") {
+            buildLesson(lineLength = -10, symbolsPerLesson = 10) {
+                exampleBuildStep()
+            }.text shouldHaveLength 0
+
+            buildLesson(lineLength = -1, symbolsPerLesson = 10) {
+                exampleBuildStep()
+            }.text shouldHaveLength 0
+
+            buildLesson(lineLength = 0, symbolsPerLesson = 10) {
+                exampleBuildStep()
+            }.text shouldHaveLength 0
+
+            buildLesson(lineLength = 1, symbolsPerLesson = 10) {
+                exampleBuildStep()
+            }.text.count { !it.isWhitespace() } shouldBe 10
+
+            buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                exampleBuildStep()
+            }.text shouldHaveLength 10
+        }
+
+        expect("symbols-per-lesson range test") {
+            buildLesson(lineLength = 10, symbolsPerLesson = -100) {
+                exampleBuildStep()
+            }.text shouldHaveLength 0
+
+            buildLesson(lineLength = 10, symbolsPerLesson = -10) {
+                exampleBuildStep()
+            }.text shouldHaveLength 0
+
+            buildLesson(lineLength = 10, symbolsPerLesson = -1) {
+                exampleBuildStep()
+            }.text shouldHaveLength 0
+
+            buildLesson(lineLength = 10, symbolsPerLesson = 0) {
+                exampleBuildStep()
+            }.text shouldHaveLength 0
+
+            buildLesson(lineLength = 10, symbolsPerLesson = 1) {
+                exampleBuildStep()
+            }.text shouldHaveLength 1
+
+            buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                exampleBuildStep()
+            }.text.count { !it.isWhitespace() } shouldBe 10
+
+            val text100 = buildLesson(lineLength = 10, symbolsPerLesson = 100) {
+                exampleBuildStep()
+            }.text
+            text100.split("\n") shouldHaveAtLeastSize 10
+            text100.count { !it.isWhitespace() } shouldBe 100
+        }
+
+        context("symbols-per-lesson < line-length") {
+
+            expect("result contains symbols-per-lesson non-whitespace characters") {
+                buildLesson(lineLength = 20, symbolsPerLesson = 8) {
+                    exampleBuildStep()
+                }.text.count { !it.isWhitespace() } shouldBe 8
+            }
+        }
+
+        context("symbols-per-lesson > line-length") {
+
+            expect("result is multiline containing symbols-per-lesson non-whitespace characters") {
+                val text = buildLesson(lineLength = 8, symbolsPerLesson = 20) {
+                    exampleBuildStep()
+                }.text
+                text.split("\n") shouldHaveAtLeastSize 2
+                text.count { !it.isWhitespace() } shouldBe 20
+            }
+        }
+
+        context("repeatSymbols") {
+
+            expect("repeat symbols") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    repeatSymbols("ab", 10)
+                }.text shouldBe "ababababab"
+            }
+
+            expect("segments have specified length") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    repeatSymbols("ab", 3)
+                }.text shouldBe "aba bab aba b"
+            }
+
+            expect("segment-length range test") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    repeatSymbols("abc", -10)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    repeatSymbols("abc", -1)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    repeatSymbols("abc", 0)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    repeatSymbols("abc", 1)
+                }.text shouldBe """
+                    a b c a b
+                    c a b c a
+                """.trimIndent()
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    repeatSymbols("abc", 10)
+                }.text shouldHaveLength 10
+            }
+
+            expect("empty input leads to empty output") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    repeatSymbols("", 10)
+                }.text.length shouldBe 0
+            }
+
+            expect("result is trimmed") {
+                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    repeatSymbols("abc", 1)
+                }.text
+                text shouldNotStartWith "\\s"
+                text shouldNotEndWith "\\s"
+            }
+        }
+    }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `buildLesson repeatSymbols happy`() {
-        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
-            repeatSymbols("ab", 10)
-        }.text shouldBe "ababababab"
-
-        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
-            repeatSymbols("ab", 3)
-        }.text shouldBe "aba bab aba b"
-    }
-
-    @Test
-    fun `buildLesson repeatSymbols empty input`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("", 10)
-        }.text.length shouldBe 0
-    }
-
-    @Test
-    fun `buildLesson repeatSymbols line length range test`() {
-        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 1, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 10)
-        }.text.count { !it.isWhitespace() } shouldBe 10
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson repeatSymbols segment length range test`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("abc", -10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("abc", -1)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 0)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 1)
-        }.text shouldBe """
-            a b c a b
-            c a b c a
-        """.trimIndent()
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson repeatSymbols symbols per lesson range test`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = -100) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = -10) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = -1) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 0) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 1) {
-            repeatSymbols("abc", 10)
-        }.text shouldHaveLength 1
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 10)
-        }.text.count { !it.isWhitespace() } shouldBe 10
-
-        val text100 = buildLesson(lineLength = 10, symbolsPerLesson = 100) {
-            repeatSymbols("abc", 10)
-        }.text
-        text100.split("\n") shouldHaveSize 10
-        text100.count { !it.isWhitespace() } shouldBe 100
-    }
-
-    @Test
-    fun `buildLesson repeatSymbols trimmed`() {
-        val lesson = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("abc", 1)
-        }
-        lesson.text shouldNotStartWith "\\s"
-        lesson.text shouldNotEndWith "\\s"
-    }
 
     @Test
     fun `buildLesson alternatingSymbols happy`() {
