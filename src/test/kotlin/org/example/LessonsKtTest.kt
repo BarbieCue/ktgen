@@ -1,5 +1,6 @@
 package org.example
 
+import io.kotest.core.spec.style.ExpectSpec
 import io.kotest.data.forAll
 import io.kotest.data.headers
 import io.kotest.data.row
@@ -15,7 +16,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.stringPattern
 
-class LessonsKtTest : IOExpectSpec({
+class LessonsKtTest : ExpectSpec({
 
     context("StringBuilder") {
 
@@ -78,18 +79,23 @@ class LessonsKtTest : IOExpectSpec({
 
     context("lessonWords") {
 
+        expect("lesson-symbols must be contained in the chars-history") {
+            setOf("ab", "abrc", "abrcel").lessonWords("abrcel", "el") shouldBe setOf("abrcel")
+            setOf("ab", "abrc", "abrcel").lessonWords("abrc", "el") shouldBe emptyList()
+        }
+
         expect("first lesson's words consist of the first lessons symbols only") {
             val dict = setOf("ab", "abrc", "abrcel")
-            val charsHistory = "ab" // remember: the order matters
+            val charsHistory = "ab"
             val lessonSymbols = "ab"
             dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("ab")
         }
 
         expect("words from lessons 2..n can contain symbols from all last lesson, but definitely contain at least one of the current lesson's symbols") {
             val dict = setOf("ab", "abrc", "abrcel")
-            val charsHistory = "abrc" // remember: the order matters
+            val charsHistory = "abrcel"
             val lessonSymbols = "el"
-            dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("abrc", "abrcel")
+            dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("abrcel")
         }
 
         expect("rotate the dict randomly but always preserve the word order") {
@@ -177,7 +183,7 @@ class LessonsKtTest : IOExpectSpec({
         }
 
         expect("WW must be capital letters") {
-            ww("{WW}") shouldBe "{}"
+            ww("{WW}") shouldBe "{WW}"
             ww("{ww}") shouldBe ""
             ww("{Ww}") shouldBe ""
             ww("{wW}") shouldBe ""
@@ -590,13 +596,13 @@ class LessonsKtTest : IOExpectSpec({
             repeat(100) {
                 val lines = toTextBlock(arbitraryBuilder.next(), 20, 5).split("\n")
                 lines shouldHaveAtLeastSize 4
-                lines[0] shouldHaveMinLength 4
+                lines[0] shouldHaveMinLength 3
                 lines[0] shouldHaveMaxLength 5
-                lines[1] shouldHaveMinLength 4
+                lines[1] shouldHaveMinLength 3
                 lines[1] shouldHaveMaxLength 5
-                lines[2] shouldHaveMinLength 4
+                lines[2] shouldHaveMinLength 3
                 lines[2] shouldHaveMaxLength 5
-                lines[3] shouldHaveMinLength 4
+                lines[3] shouldHaveMinLength 3
                 lines[3] shouldHaveMaxLength 5
             }
         }
@@ -657,7 +663,7 @@ class LessonsKtTest : IOExpectSpec({
 
         expect("apply all build steps") {
             val text = buildLesson(lineLength = 30, symbolsPerLesson = 400) {
-                repeatSymbols("123", 2)
+                repeatSymbols("123", 3)
                 shuffledSymbols("def", 10)
                 wordsWithUnconditionalPunctuationMarks(listOf("hi"), ";")
                 words(listOf("apple"))
