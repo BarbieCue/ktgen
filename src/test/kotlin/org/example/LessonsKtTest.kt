@@ -964,149 +964,116 @@ class LessonsKtTest : IOExpectSpec({
                 text shouldNotEndWith "\\s"
             }
         }
+
+        context("wordsWithLeftRightPunctuationMarks") {
+
+            expect("result consists of input words with added left and right punctuation marks") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 50) {
+                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
+                }.text shouldBe """
+                    [hi] [are]
+                    [you] [rea
+                    dy] [hi] [
+                    are] [you]
+                    [ready] [h
+                    i] [hi]
+                """.trimIndent()
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "WW,")
+                }.text shouldBe """
+                    hi, are, h
+                    i,
+                """.trimIndent()
+            }
+
+            expect("do not add punctuation marks when WW string has no punctuation marks") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "WW")
+                }.text shouldBe """
+                    hi are you
+                    hi
+                """.trimIndent()
+            }
+
+            expect("empty word list leads to empty output") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    wordsWithLeftRightPunctuationMarks(emptyList(), "WW.,;")
+                }.text shouldHaveLength 0
+            }
+
+            expect("empty WW string leads to empty output") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "")
+                }.text shouldHaveLength 0
+            }
+
+            expect("result is trimmed") {
+                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[{WW}].,")
+                }.text
+                text.split("\\s".toRegex()) shouldHaveAtLeastSize 3
+                text.split("\\s".toRegex()).forAll { line ->
+                    line shouldNotStartWith "\\s"
+                    line shouldNotEndWith "\\s"
+                }
+            }
+        }
+
+        context("wordsWithUnconditionalPunctuationMarks") {
+
+            expect("result consists of input words with added punctuation marks") {
+                val text = buildLesson(lineLength = 20, symbolsPerLesson = 34) {
+                    wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), ".")
+                }.text
+                text.count { !it.isWhitespace() } shouldBe 34
+                text.split("\\s".toRegex()) shouldHaveAtLeastSize 1
+                text.split("\\s".toRegex())
+                    .forAll { it shouldBeIn setOf(
+                        "hi.", ".hi",
+                        "are.", ".are",
+                        "you.", ".you",
+                        "ready.", ".ready")
+                    }
+            }
+
+            expect("can build pairs when a WW string is passed") {
+                val text = buildLesson(lineLength = 20, symbolsPerLesson = 34) {
+                    wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
+                }.text
+                text.count { !it.isWhitespace() } shouldBe 34
+                text.replace("\n", "")
+                    .split("\\s".toRegex())
+                    .forAll { it shouldBeIn setOf("[hi]", "[are]", "[you]", "[ready]") }
+            }
+
+            expect("empty word list leads to empty output") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    wordsWithUnconditionalPunctuationMarks(emptyList(), ".,;")
+                }.text shouldHaveLength 0
+            }
+
+            expect("empty punctuation-marks leads to empty output") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "")
+                }.text shouldHaveLength 0
+            }
+
+            expect("result is trimmed") {
+                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "_.,")
+                }.text
+                text.split("\\s".toRegex()) shouldHaveAtLeastSize 3
+                text.split("\\s".toRegex()).forAll { line ->
+                    line shouldNotStartWith "\\s"
+                    line shouldNotEndWith "\\s"
+                }
+            }
+        }
     }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `buildLesson wordsWithLeftRightPunctuationMarks happy`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 50) {
-            wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
-        }.text shouldBe """
-            [hi] [are]
-            [you] [rea
-            dy] [hi] [
-            are] [you]
-            [ready] [h
-            i] [hi]
-        """.trimIndent()
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "WW,")
-        }.text shouldBe """
-            hi, are, h
-            i,
-        """.trimIndent()
-    }
-
-    @Test
-    fun `buildLesson wordsWithLeftRightPunctuationMarks empty input`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            wordsWithLeftRightPunctuationMarks(emptyList(), "")
-        }.text shouldBe ""
-    }
-
-    @Test
-    fun `buildLesson wordsWithLeftRightPunctuationMarks line length range test`() {
-        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
-            wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
-            wordsWithLeftRightPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), "[WW]")
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
-            wordsWithLeftRightPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), "[WW]")
-        }.text shouldHaveLength 0
-
-        val text = buildLesson(lineLength = 1, symbolsPerLesson = 10) {
-            wordsWithLeftRightPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), "[WW]")
-        }.text
-        text.split('\n') shouldHaveSize 10
-        text.split('\n').forAll { line -> line shouldHaveLength 1 }
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            wordsWithLeftRightPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), "[WW]")
-        }.text.count { !it.isWhitespace() } shouldBe 10
-    }
-
-    @Test
-    fun `buildLesson wordsWithLeftRightPunctuationMarks trimmed`() {
-        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[{WW}].,")
-        }.text
-        text.split("\\s".toRegex()) shouldHaveAtLeastSize 3
-        text.split("\\s".toRegex()).forAll { line ->
-            line shouldNotStartWith "\\s"
-            line shouldNotEndWith "\\s"
-        }
-    }
-
-    @Test
-    fun `buildLesson wordsWithUnconditionalPunctuationMarksMultiline happy`() {
-        val text = buildLesson(lineLength = 20, symbolsPerLesson = 34) {
-            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), ".")
-        }.text
-        text.count { !it.isWhitespace() } shouldBe 34
-        text.split("\\s".toRegex())
-            .forAll { it shouldBeIn setOf(
-                "hi.", ".hi",
-                "are.", ".are",
-                "you.", ".you",
-                "ready.", ".ready")
-            }
-
-        val text2 = buildLesson(lineLength = 20, symbolsPerLesson = 34) {
-            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
-        }.text
-        text2.count { !it.isWhitespace() } shouldBe 34
-        text2.replace("\n", "")
-            .split("\\s".toRegex())
-            .forAll { it shouldBeIn setOf("[hi]", "[are]", "[you]", "[ready]") }
-    }
-
-    @Test
-    fun `buildLesson wordsWithUnconditionalPunctuationMarks empty word list`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            wordsWithUnconditionalPunctuationMarks(emptyList(), ".,;")
-        }.text shouldHaveLength 0
-    }
-
-    @Test
-    fun `buildLesson wordsWithUnconditionalPunctuationMarks no punctuation marks`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "")
-        }.text shouldHaveLength 0
-    }
-
-    @Test
-    fun `buildLesson wordsWithUnconditionalPunctuationMarks line length range test`() {
-        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
-            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), ".")
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
-            wordsWithUnconditionalPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), ".")
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
-            wordsWithUnconditionalPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), ".")
-        }.text shouldHaveLength 0
-
-        val text = buildLesson(lineLength = 1, symbolsPerLesson = 10) {
-            wordsWithUnconditionalPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), ".")
-        }.text
-        text.split('\n') shouldHaveSize 10
-        text.split('\n').forAll { line -> line shouldHaveLength 1 }
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            wordsWithUnconditionalPunctuationMarks(listOf("c", "hi", "are", "you", "ready"), ".")
-        }.text.count { !it.isWhitespace() } shouldBe 10
-    }
-
-    @Test
-    fun `buildLesson wordsWithUnconditionalPunctuationMarks trimmed`() {
-        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "_.,")
-        }.text
-        text.split("\\s".toRegex()) shouldHaveAtLeastSize 3
-        text.split("\\s".toRegex()).forAll { line ->
-            line shouldNotStartWith "\\s"
-            line shouldNotEndWith "\\s"
-        }
-    }
 
     @Test
     fun `buildLesson apply multiple build steps happy`() {
