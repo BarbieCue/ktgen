@@ -1,5 +1,6 @@
 package org.example
 
+import io.kotest.core.spec.style.ExpectSpec
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldHaveSize
@@ -9,24 +10,28 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.*
 import org.junit.jupiter.api.Test
 
-class OperationKtTest {
+class OperationKtTest : ExpectSpec({
 
-    @Test
-    fun `shuffle happy`() {
-        shuffle("abcdefghijk") shouldHaveLength 11
-        shuffle("abcdefghijk") shouldNotBe "abcdefghijk"
-    }
+    context("shuffle") {
 
-    @Test
-    fun `shuffle empty input`() {
-        shuffle("") shouldBe ""
-    }
+        expect("shuffles the input symbols") {
+            shuffle("abcdefghijk") shouldHaveLength 11
+            shuffle("abcdefghijk") shouldNotBe "abcdefghijk"
+            shuffle("abcdefghijk") shouldMatch "[abcdefghijk]{11}".toRegex()
+        }
 
-    @Test
-    fun `shuffle trimmed`() {
-        shuffle("  abc  ") shouldNotStartWith "\\s"
-        shuffle("  abc  ") shouldNotEndWith "\\s"
+        expect("empty input leads to empty output") {
+            shuffle("") shouldBe ""
+        }
+
+        expect("result is trimmed") {
+            shuffle("  abc  ") shouldNotStartWith "\\s"
+            shuffle("  abc  ") shouldNotEndWith "\\s"
+        }
     }
+})
+
+class OperationKtTestDeleteMe {
 
     @Test
     fun `repeat happy`() {
