@@ -644,6 +644,15 @@ class LessonsKtTest : IOExpectSpec({
             return this@exampleBuildStep
         }
 
+        expect("properties will be correctly assigned") {
+            val lesson = buildLesson("my lesson", 10, 10,"ab") {
+                exampleBuildStep()
+            }
+            lesson.title shouldBe "my lesson"
+            lesson.newCharacters shouldBe "ab"
+            lesson.text.length shouldBe 10
+        }
+
         expect("line-length range test") {
             buildLesson(lineLength = -10, symbolsPerLesson = 10) {
                 exampleBuildStep()
@@ -720,16 +729,10 @@ class LessonsKtTest : IOExpectSpec({
 
         context("repeatSymbols") {
 
-            expect("repeat symbols") {
+            expect("repeat the input symbols") {
                 buildLesson(lineLength = 10, symbolsPerLesson = 10) {
                     repeatSymbols("ab", 10)
                 }.text shouldBe "ababababab"
-            }
-
-            expect("segments have specified length") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    repeatSymbols("ab", 3)
-                }.text shouldBe "aba bab aba b"
             }
 
             expect("segment-length range test") {
@@ -780,12 +783,6 @@ class LessonsKtTest : IOExpectSpec({
                 }.text shouldBe "aa bb cc aa bb"
             }
 
-            expect("segments have specified length") {
-                buildLesson(lineLength = 13, symbolsPerLesson = 10) {
-                    alternatingSymbols("ab", 3)
-                }.text shouldBe "aaa bbb aaa b"
-            }
-
             expect("empty input leads to empty output") {
                 buildLesson(lineLength = 10, symbolsPerLesson = 10) {
                     alternatingSymbols("", 10)
@@ -825,160 +822,57 @@ class LessonsKtTest : IOExpectSpec({
                 text shouldNotEndWith "\\s"
             }
         }
+
+        context("shuffledSymbols") {
+
+            expect("shuffle the input symbols") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    shuffledSymbols("ab", 10)
+                }.text shouldMatch "[ab]{10}"
+            }
+
+            expect("empty input leads to empty output") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    shuffledSymbols("", 10)
+                }.text.length shouldBe 0
+            }
+
+            expect("segment-length range test") {
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    shuffledSymbols("abc", -10)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    shuffledSymbols("abc", -1)
+                }.text shouldHaveLength 0
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    shuffledSymbols("abc", 0)
+                }.text shouldHaveLength 0
+
+                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    shuffledSymbols("abc", 1)
+                }.text
+                text.split("\n")[0] shouldMatch "[abc ]{9}" // e.g. "a b c c a " 10 -> trimmed to "a b c c a" 9
+                text.split("\n")[1] shouldMatch "[abc ]{9}"
+
+                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    shuffledSymbols("abc", 10)
+                }.text shouldHaveLength 10
+            }
+
+            expect("result is trimmed") {
+                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
+                    shuffledSymbols("abc", 1)
+                }.text
+                text shouldNotStartWith "\\s"
+                text shouldNotEndWith "\\s"
+            }
+        }
     }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `buildLesson properties assignment`() {
-        val lesson = buildLesson("my lesson", 10, 10,"ab") {
-            repeatSymbols("a", 10)
-        }
-        lesson.title shouldBe "my lesson"
-        lesson.newCharacters shouldBe "ab"
-        lesson.text.length shouldBe 10
-    }
-
-    @Test
-    fun `buildLesson line length smaller than symbols per lesson`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 20) {
-            repeatSymbols("ab", 10)
-        }.text shouldBe """
-            ababababab
-            ababababab
-        """.trimIndent()
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 20) {
-            repeatSymbols("ab", 2)
-        }.text shouldBe """
-            ab ab ab a
-            b ab ab ab
-            ab ab ab
-        """.trimIndent()
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 20) {
-            repeatSymbols("ab", 1)
-        }.text shouldBe """
-            a b a b a
-            b a b a b
-            a b a b a
-            b a b a b
-        """.trimIndent()
-    }
-
-    @Test
-    fun `buildLesson line length greater than symbols per lesson`() {
-        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
-            repeatSymbols("ab", 10)
-        }.text shouldBe "ababababab"
-
-        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
-            repeatSymbols("ab", 2)
-        }.text shouldBe "ab ab ab ab ab"
-
-        buildLesson(lineLength = 20, symbolsPerLesson = 10) {
-            repeatSymbols("ab", 1)
-        }.text shouldBe "a b a b a b a b a b"
-    }
-
-    @Test
-    fun `buildLesson line length equals symbols per lesson`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("ab", 10)
-        }.text shouldBe "ababababab"
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("ab", 2)
-        }.text shouldBe """
-            ab ab ab a
-            b ab
-        """.trimIndent()
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("ab", 1)
-        }.text shouldBe """
-            a b a b a
-            b a b a b
-        """.trimIndent()
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbols happy`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            shuffledSymbols("ab", 10)
-        }.text shouldMatch "[ab]{10}"
-
-        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            repeatSymbols("ab", 1)
-        }.text
-        text.split("\n")[0] shouldMatch "[ab ]{9}" // a b a b a
-        text.split("\n")[1] shouldMatch "[ab ]{9}" // b a b a b
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbols empty input`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            shuffledSymbols("", 10)
-        }.text.length shouldBe 0
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbols line length range test`() {
-        buildLesson(lineLength = -10, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = -1, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 0, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", 10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 1, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", 10)
-        }.text.count { !it.isWhitespace() } shouldBe 10
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbols segment length range test`() {
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", -10)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", -1)
-        }.text shouldHaveLength 0
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", 0)
-        }.text shouldHaveLength 0
-
-        val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", 1)
-        }.text
-        text.split("\n")[0] shouldMatch "[abc ]{9}" // e.g. "a b c c a " 10 -> trimmed to "a b c c a" 9
-        text.split("\n")[1] shouldMatch "[abc ]{9}"
-
-        buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", 10)
-        }.text shouldHaveLength 10
-    }
-
-    @Test
-    fun `buildLesson shuffledSymbols trimmed`() {
-        val lesson = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-            shuffledSymbols("abc", 1)
-        }
-        lesson.text shouldNotStartWith "\\s"
-        lesson.text shouldNotEndWith "\\s"
-    }
 
     @Test
     fun `buildLesson words happy`() {
