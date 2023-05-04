@@ -547,25 +547,25 @@ class LessonsKtTest : IOExpectSpec({
                 "".symbolsCount() shouldBe 0
             }
         }
+
+        context("normalizeWhitespaces") {
+
+            expect("replaces two or more chained whitespaces with a single whitespace") {
+                "a  \t \tb   \n c".normalizeWhitespaces() shouldBe "a b c"
+            }
+
+            expect("input is output when the input does not contain any whitespaces") {
+                "abc".normalizeWhitespaces() shouldBe "abc"
+            }
+
+            expect("empty input leads to empty output") {
+                "".normalizeWhitespaces() shouldBe ""
+            }
+        }
     }
 })
 
 class LessonsKtTestOldDeleteMe {
-
-    @Test
-    fun `String normalizeWhitespaces replaces two or more chained whitespaces with a single whitespace`() {
-        "a  \t \tb   \n c".normalizeWhitespaces() shouldBe "a b c"
-    }
-
-    @Test
-    fun `String normalizeWhitespaces does nothing when the string does not contain any whitespaces`() {
-        "abc".normalizeWhitespaces() shouldBe "abc"
-    }
-
-    @Test
-    fun `String normalizeWhitespaces empty input leads to empty output`() {
-        "".normalizeWhitespaces() shouldBe ""
-    }
 
     @Test
     fun `toTextBlock breaks the input string into lines of max length line-length`() {
