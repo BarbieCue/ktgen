@@ -4,270 +4,249 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldHaveMaxLength
-import io.kotest.matchers.string.shouldHaveMinLength
 import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.util.*
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.writeText
 
-class DictionaryKtTest : FileTest() {
-    
-    @Test
-    fun `extractWords happy`() {
-        val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
-        val words = extractWords(text, 1, 100)
-        words shouldBe listOf(
-            "They", "d", "lost", "their", "keys", "one", "each", "in", "the",
-            "so", "called", "Good", "Old", "Greens", "respectively", "äöü", "ÜÄÖ", "niße")
-    }
+class DictionaryKtTest : IOExpectSpec({
 
-    @Test
-    fun `extractWords empty input`() {
-        val text = ""
-        val words = extractWords(text, 1, 100)
-        words shouldBe emptyList()
-    }
+    context("extractWords") {
 
-    @Test
-    fun `extractWords input is null`() {
-        val text = null
-        val words = extractWords(text, 1, 100)
-        words shouldBe emptyList()
-    }
+        expect("extract words from string, where words are separated by any whitespace characters or punctuation marks") {
+            val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
+            val words = extractWords(text, 1, 100)
+            words shouldBe listOf(
+                "They", "d", "lost", "their", "keys", "one", "each", "in", "the",
+                "so", "called", "Good", "Old", "Greens", "respectively", "äöü", "ÜÄÖ", "niße")
+        }
 
-    @Test
-    fun `extractWords max length smaller than min length`() {
-        val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
-        val words = extractWords(text, 100, 1)
-        words shouldBe emptyList()
-    }
+        expect("empty result collection on empty input") {
+            val text = ""
+            val words = extractWords(text, 1, 100)
+            words shouldBe emptyList()
+        }
 
-    @Test
-    fun `consistsOfAny order does not matter`() {
-        "abc".consistsOfAny("abc") shouldBe true
-        "abc".consistsOfAny("cba") shouldBe true
-        "abc".consistsOfAny("bca") shouldBe true
-    }
+        expect("empty result collection when input is null") {
+            val text = null
+            val words = extractWords(text, 1, 100)
+            words shouldBe emptyList()
+        }
 
-    @Test
-    fun `consistsOfAny there can be more symbols`() {
-        "abc".consistsOfAny("abcdef") shouldBe true
-        "abc".consistsOfAny("abcx")   shouldBe true
-        "abc".consistsOfAny("abc1")   shouldBe true
-        "abc".consistsOfAny("cba22")  shouldBe true
-    }
+        expect("empty result collection when max-word-length is smaller than min-word-length") {
+            val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
+            val words = extractWords(text, 100, 1)
+            words shouldBe emptyList()
+        }
 
-    @Test
-    fun `consistsOfAny duplicates are ignored`() {
-        "abc".consistsOfAny("aaabbaccc")  shouldBe true
-        "abc".consistsOfAny("xaaabbaccc") shouldBe true
-        "abbaaab".consistsOfAny("ab") shouldBe true
-        "abcabc".consistsOfAny("cba") shouldBe true
-        "abcabc".consistsOfAny("cbaxy") shouldBe true
-    }
+        expect("empty result collection when max-word-length is zero or negative") {
+            val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
+            extractWords(text, 100, 0) shouldBe emptyList()
+            extractWords(text, 100, -1) shouldBe emptyList()
+        }
 
-    @Test
-    fun `consistsOfAny only specified symbols are allowed`() {
-        "abc".consistsOfAny("ab")  shouldBe false
-        "abc".consistsOfAny("ac")  shouldBe false
-        "abc".consistsOfAny("bc")  shouldBe false
-        "abc".consistsOfAny("aaa") shouldBe false
-        "abc".consistsOfAny("a")   shouldBe false
-        "abc".consistsOfAny("b")   shouldBe false
-        "abc".consistsOfAny("c")   shouldBe false
-        "abc".consistsOfAny("ABC") shouldBe false
-        "abc".consistsOfAny("A")   shouldBe false
-        "abc".consistsOfAny("B")   shouldBe false
-        "abc".consistsOfAny("C")   shouldBe false
-    }
-
-    @Test
-    fun `containsAny true`() {
-        "abc".containsAny("a")   shouldBe true
-        "abc".containsAny("b")   shouldBe true
-        "abc".containsAny("c")   shouldBe true
-        "abc".containsAny("cba") shouldBe true
-        "abc".containsAny("cb")  shouldBe true
-        "abc".containsAny("cbx") shouldBe true
-        "abc".containsAny("xbx") shouldBe true
-    }
-
-    @Test
-    fun `containsAny false`() {
-        "abc".containsAny("x") shouldBe false
-    }
-
-    @Test
-    fun `containsAny empty symbols`() {
-        "abc".containsAny("") shouldBe false
-    }
-
-    @Test
-    fun `textFromFile happy`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("ctie uax xph eob")
-        textFromFile(file.absolutePathString()) shouldBe "ctie uax xph eob"
-    }
-
-    @Test
-    fun `textFromFile no file`() {
-        textFromFile("a_non_existing_file") shouldBe null
-    }
-
-    @Test
-    fun `textFromFile path empty`() {
-        textFromFile("") shouldBe null
+        expect("when min-word-length is negative, default to 0") {
+            val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
+            extractWords(text, 0, 100) shouldBe
+                    listOf("They", "d", "lost", "their", "keys", "one", "each", "in", "the", "so",
+                        "called", "Good", "Old", "Greens", "respectively", "äöü", "ÜÄÖ", "niße")
+            extractWords(text, -1, 100) shouldBe
+                    listOf("They", "d", "lost", "their", "keys", "one", "each", "in", "the", "so",
+                        "called", "Good", "Old", "Greens", "respectively", "äöü", "ÜÄÖ", "niße")
+        }
     }
 
 
-    private val ports = generateSequence(30116) { it + 1 }.iterator()
+    context("consistsOfAny") {
 
-    @Test
-    fun `textFromWebsite 200 content`() {
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        textFromWebsite("http://localhost:$port/") shouldBe "Example Domain Example Domain This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission. More information..."
+        expect("true when the target string consists of the symbols from the input string") {
+            "abc".consistsOfAny("abc") shouldBe true
+        }
+
+        expect("the symbol order does not matter") {
+            "abc".consistsOfAny("bca") shouldBe true
+        }
+
+        expect("false when the input string contains different symbols than the target string") {
+            "abc".containsAny("x") shouldBe false
+        }
+
+        expect("true when the input string contains more symbols than target string") {
+            "abc".consistsOfAny("abcdef") shouldBe true
+            "abc".consistsOfAny("abcx") shouldBe true
+            "abc".consistsOfAny("abc1") shouldBe true
+            "abc".consistsOfAny("cba22") shouldBe true
+        }
+
+        expect("false when not all symbols from the input string are contained in the target string") {
+            "abc".consistsOfAny("ab") shouldBe false
+            "abc".consistsOfAny("ac") shouldBe false
+            "abc".consistsOfAny("bc") shouldBe false
+            "abc".consistsOfAny("aaa") shouldBe false
+            "abc".consistsOfAny("a") shouldBe false
+            "abc".consistsOfAny("b") shouldBe false
+            "abc".consistsOfAny("c") shouldBe false
+            "abc".consistsOfAny("ABC") shouldBe false
+            "abc".consistsOfAny("A") shouldBe false
+            "abc".consistsOfAny("B") shouldBe false
+            "abc".consistsOfAny("C") shouldBe false
+        }
+
+        expect("duplicates are ignored") {
+            "abc".consistsOfAny("aaabbaccc") shouldBe true
+            "abc".consistsOfAny("xaaabbaccc") shouldBe true
+            "abbaaab".consistsOfAny("ab") shouldBe true
+            "abcabc".consistsOfAny("cba") shouldBe true
+            "abcabc".consistsOfAny("cbaxy") shouldBe true
+        }
+
+        expect("false when input string is empty") {
+            "abc".containsAny("") shouldBe false
+        }
     }
 
-    @Test
-    fun `textFromWebsite 200 empty`() {
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        textFromWebsite("http://localhost:$port/empty") shouldBe ""
+    context("textFromFile") {
+
+        expect("reads text content of a file") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("ctie uax xph eob")
+            textFromFile(file.absolutePathString()) shouldBe "ctie uax xph eob"
+        }
+
+        expect("null when file does not exist") {
+            textFromFile("a_non_existing_file") shouldBe null
+        }
+
+        expect("null when file path is empty") {
+            textFromFile("") shouldBe null
+        }
+
+        expect("empty string when file is empty") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("")
+            textFromFile(file.absolutePathString()) shouldBe ""
+        }
     }
 
-    @Test
-    fun `textFromWebsite 404 not found`() {
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        textFromWebsite("http://localhost:$port/no-such-path") shouldBe ""
+    val port = 30121
+
+    context("textFromWebsite") {
+
+        expect("reads text content from a string containing html, where words are separated by any whitespace characters") {
+            startLocalhostWebServer(port, Application::exampleCom)
+            textFromWebsite("http://localhost:$port/") shouldBe "Example Domain Example Domain This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission. More information..."
+        }
+
+        expect("empty string when the html source string is empty") {
+            startLocalhostWebServer(port, Application::exampleCom)
+            textFromWebsite("http://localhost:$port/empty") shouldBe ""
+        }
+
+        expect("empty string on error response code (non 2xx)") {
+            startLocalhostWebServer(port, Application::exampleCom)
+            textFromWebsite("http://localhost:$port/no-such-path") shouldBe ""
+        }
+
+        expect("empty string when protocol is missing") {
+            startLocalhostWebServer(port, Application::exampleCom)
+            textFromWebsite("localhost:$port/") shouldBe ""
+        }
+
+        expect("empty string on unknown host") {
+            textFromWebsite("http://cgtsirenbml8hcduygesrtiyelschtibyesr") shouldBe ""
+        }
+
+        expect("empty string when url is empty") {
+            textFromWebsite("") shouldBe ""
+        }
     }
 
-    @Test
-    fun `textFromWebsite protocol missing`() {
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        textFromWebsite("localhost:$port/") shouldBe ""
+    context("buildDictionary") {
+
+        expect("build collection of words from website and text file") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("apple pear grape")
+            startLocalhostWebServer(port, Application::exampleCom)
+            val dict = buildDictionary(file.absolutePathString(), "http://localhost:$port/", 0, 100, 1000)
+            dict shouldContainAll setOf(
+                "Domain", "Example", "More", "This", "You", "asking",
+                "coordination", "documents", "domain", "examples", "for",
+                "Example", "illustrative", "in", "information", "is",
+                "literature", "may", "or", "permission", "prior",
+                "this", "use", "without", "pear", "apple", "grape")
+        }
+
+        expect("result collection can contain the same word many times") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("apple pear grape apple orange apple")
+            val dict = buildDictionary(file.absolutePathString(), "", 0, 100, 6)
+            dict shouldContainAll listOf("apple", "pear", "grape", "apple", "orange", "apple")
+            dict.count { it == "apple" } shouldBe 3
+        }
+
+        expect("result collection contains only words from website when text file path is empty") {
+            startLocalhostWebServer(port, Application::exampleCom)
+            val dict = buildDictionary("", "http://localhost:$port/", 0, 100, 1000)
+            dict shouldContainAll setOf(
+                "Domain", "Example", "More", "This", "You", "asking",
+                "coordination", "documents", "domain", "examples", "for",
+                "Example", "illustrative", "in", "information", "is",
+                "literature", "may", "or", "permission", "prior",
+                "this", "use", "without")
+        }
+
+        expect("result collection contains only words from dictionary when website url is empty") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("apple pear grape")
+            val dict = buildDictionary(file.absolutePathString(), "", 0, 100, 1000)
+            dict shouldContainAll setOf("pear", "apple", "grape")
+        }
+
+        expect("result collection is empty when text file path is empty and website url is empty") {
+            buildDictionary("", "", 0, 100, 1000) shouldBe emptyList()
+        }
+
+        expect("result collection contains only words having the specified minimal length") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("to be are see apple pear grape co")
+            val dict = buildDictionary(file.absolutePathString(), "", 4, 100, 1000)
+            dict shouldContainAll setOf("apple", "pear", "grape")
+        }
+
+        expect("when min-word-length is negative, default to 0") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("to be are see apple pear grape co")
+            val dict = buildDictionary(file.absolutePathString(), "", -1, 100, 1000)
+            dict shouldContainAll setOf("to", "be", "are", "see", "apple", "pear", "grape", "co")
+        }
+
+        expect("result collection contains only words having the specified maximal length") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("to be are see apple pear grape co")
+            val dict = buildDictionary(file.absolutePathString(), "", 0, 3, 1000)
+            dict shouldContainAll setOf("to", "be", "are", "see", "co")
+            dict.forAll { it.length <= 3 }
+        }
+
+        expect("result collection is empty when max-word-length is zero or negative") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("to be are see apple pear grape co")
+            buildDictionary(file.absolutePathString(), "", 0, 0, 1000) shouldBe emptyList()
+            buildDictionary(file.absolutePathString(), "", 0, -1, 1000) shouldBe emptyList()
+        }
+
+        expect("repeat words when dictionary-max-length is greater than the number of existing words") {
+            val file = tmpFile(UUID.randomUUID().toString())
+            file.writeText("apple pear")
+            val dict = buildDictionary(file.absolutePathString(), "", 0, 100, 1000)
+            dict shouldHaveSize 1000
+            dict.count { it == "apple" } shouldBe 500
+            dict.count { it == "pear" } shouldBe 500
+        }
     }
-
-    @Test
-    fun `textFromWebsite unknown host`() {
-        textFromWebsite("http://cgtsirenbml8hcduygesrtiyelschtibyesr") shouldBe ""
-    }
-
-    @Test
-    fun `textFromWebsite empty url`() {
-        textFromWebsite("") shouldBe ""
-    }
-
-    @Test
-    fun `buildDictionary happy`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("apple pear grape")
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        val dict = buildDictionary(file.absolutePathString(), "http://localhost:$port/", 0, 100, 1000)
-        dict shouldContainAll setOf(
-            "Domain", "Example", "More", "This", "You", "asking",
-            "coordination", "documents", "domain", "examples", "for",
-            "Example", "illustrative", "in", "information", "is",
-            "literature", "may", "or", "permission", "prior",
-            "this", "use", "without", "pear", "apple", "grape")
-    }
-
-    @Test
-    fun `buildDictionary allow duplicates`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("apple pear grape apple orange")
-        val dict = buildDictionary(file.absolutePathString(), "", 0, 100, 5)
-        dict shouldBe listOf("apple", "pear", "grape", "apple", "orange")
-        dict.count { it == "apple" } shouldBe 2
-    }
-
-    @Test
-    fun `buildDictionary empty dictionary path`() {
-        val port = ports.next()
-        embeddedServer(Netty, port = port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-        val dict = buildDictionary("", "http://localhost:$port/", 0, 100, 1000)
-        dict shouldContainAll setOf(
-            "Domain", "Example", "More", "This", "You", "asking",
-            "coordination", "documents", "domain", "examples", "for",
-            "Example", "illustrative", "in", "information", "is",
-            "literature", "may", "or", "permission", "prior",
-            "this", "use", "without")
-    }
-
-    @Test
-    fun `buildDictionary empty url`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("apple pear grape")
-        val dict = buildDictionary(file.absolutePathString(), "", 0, 100, 1000)
-        dict shouldContainAll setOf("pear", "apple", "grape")
-    }
-
-    @Test
-    fun `buildDictionary min word length`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("apple pear grape")
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-
-        val dict4 = buildDictionary(file.absolutePathString(), "http://localhost:$port/", 4, 100, 1000)
-        dict4.forAll { it shouldHaveMinLength 4 }
-
-        val dict100 = buildDictionary(file.absolutePathString(), "http://localhost:$port/", 100, 100, 1000)
-        dict100 shouldBe emptyList()
-
-        val dictNegative = buildDictionary(file.absolutePathString(), "http://localhost:$port/", -1, 100, 1000)
-        dictNegative shouldContainAll setOf(
-            "Domain", "Example", "More", "This", "You", "asking",
-            "coordination", "documents", "domain", "examples", "for",
-            "Example", "illustrative", "in", "information", "is",
-            "literature", "may", "or", "permission", "prior",
-            "this", "use", "without", "pear", "apple", "grape")
-    }
-
-    @Test
-    fun `buildDictionary max word length`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("apple pear grape")
-        val port = ports.next()
-        embeddedServer(Netty, port, host = "0.0.0.0", module = Application::exampleCom).start(wait = false)
-
-        val dict4 = buildDictionary(file.absolutePathString(), "http://localhost:$port/", 0, 4, 1000)
-        dict4.forAll { it shouldHaveMaxLength 4 }
-
-        val dict0 = buildDictionary(file.absolutePathString(), "http://localhost:$port/", 0, 0, 1000)
-        dict0 shouldBe emptyList()
-
-        val dictNegative = buildDictionary(file.absolutePathString(), "http://localhost:$port/", 0, -1, 1000)
-        dictNegative shouldBe emptyList()
-    }
-
-    @Test
-    fun `buildDictionary repeat words when dictionary-max-length is greater than the number of existing words`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("apple pear grape")
-        buildDictionary(file.absolutePathString(), "", 0, 100, 1000) shouldHaveSize 1000
-    }
-
-    @Test
-    fun `buildDictionary dictionary-max-length range test`() {
-        val file = tmpFile(UUID.randomUUID().toString())
-        file.writeText("apple pear grape")
-        buildDictionary(file.absolutePathString(), "", 0, 100, -10) shouldHaveSize 0
-        buildDictionary(file.absolutePathString(), "", 0, 100, -1) shouldHaveSize 0
-        buildDictionary(file.absolutePathString(), "", 0, 100, 0) shouldHaveSize 0
-        buildDictionary(file.absolutePathString(), "", 0, 100, 1) shouldHaveSize 1
-        buildDictionary(file.absolutePathString(), "", 0, 100, 10) shouldHaveSize 10
-    }
-}
+})
 
 private fun Application.exampleCom() {
     routing {

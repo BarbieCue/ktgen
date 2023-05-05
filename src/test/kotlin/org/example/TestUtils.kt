@@ -1,24 +1,48 @@
 package org.example
 
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.TestInstance
+import io.kotest.common.ExperimentalKotest
+import io.kotest.core.config.ProjectConfiguration
+import io.kotest.core.spec.style.ExpectSpec
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.nio.file.Path
 import java.nio.file.attribute.FileAttribute
 import kotlin.io.path.deleteIfExists
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class FileTest {
+@OptIn(ExperimentalKotest::class)
+abstract class ConcurrentExpectSpec(body: ConcurrentExpectSpec.() -> Unit = {}) : ExpectSpec() {
+    init {
+        concurrency = ProjectConfiguration.MaxConcurrency
+        body()
+    }
+}
+
+abstract class IOExpectSpec(body: IOExpectSpec.() -> Unit = {}) : ConcurrentExpectSpec() {
+
+    init {
+        afterEach { files.forEach { it.deleteIfExists() } }
+        afterEach { if (::server.isInitialized) server.stop() }
+        body()
+    }
 
     private val files = mutableListOf<Path>()
 
-    internal fun tmpFile(name: String, vararg attributes: FileAttribute<*>): Path {
+    fun tmpFile(name: String, vararg attributes: FileAttribute<*>): Path {
         val file = kotlin.io.path.createTempFile(prefix = name, attributes = attributes)
         files.add(file)
         return file
     }
 
-    @AfterAll
-    fun deleteFiles() {
-        files.forEach { it.deleteIfExists() }
+    private val mutex = Mutex()
+    private lateinit var server: ApplicationEngine
+
+    suspend fun startLocalhostWebServer(port: Int, module: Application.() -> Unit) {
+        mutex.withLock {
+            server = embeddedServer(Netty, port, host = "0.0.0.0", module = module)
+            server.start(false)
+        }
     }
 }

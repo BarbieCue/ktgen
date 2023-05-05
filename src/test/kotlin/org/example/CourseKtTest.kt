@@ -4,71 +4,73 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldHaveMaxLength
 import io.kotest.matchers.string.shouldHaveMinLength
-import org.junit.jupiter.api.Test
 import java.nio.file.attribute.PosixFilePermissions
 import java.util.*
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
 
-class CourseKtTest : FileTest() {
+class CourseKtTest : IOExpectSpec({
 
-    @Test
-    fun `readCourseSymbols happy`() {
-        val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
-        file.writeText("apple pear\ngrape     orange\n\n  peach")
-        readCourseSymbols(file.absolutePathString()) shouldBe listOf("apple", "pear", "grape", "orange", "peach")
+    context("readCourseSymbols") {
+
+        expect("read whitespace separated characters as course symbols from file") {
+            val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
+            file.writeText("ab cd\n{WW}     ,.\n\n  1234")
+            readCourseSymbols(file.absolutePathString()) shouldBe listOf("ab", "cd", "{WW}", ",.", "1234")
+        }
+
+        expect("empty collection when file is empty") {
+            val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
+            file.writeText("")
+            readCourseSymbols(file.absolutePathString()) shouldBe emptyList()
+        }
+
+        expect("empty collection when file not found") {
+            readCourseSymbols("a_non_existing_file") shouldBe emptyList()
+        }
+
+        expect("empty collection when path is empty") {
+            readCourseSymbols("") shouldBe emptyList()
+        }
     }
 
-    @Test
-    fun `readCourseSymbols file not exists`() {
-        readCourseSymbols("a_non_existing_file") shouldBe emptyList()
+    context("writeCourseFile") {
+
+        expect("false when writing failed") {
+            val readOnly = PosixFilePermissions.fromString("r--r--r--")
+            val fileAttributes = PosixFilePermissions.asFileAttribute(readOnly)
+            val file = tmpFile("my_test_course${UUID.randomUUID()}.xml", fileAttributes)
+            writeCourseFile("$file", Course(lessons = emptyList())) shouldBe false
+        }
+
+        expect("false when path is empty") {
+            writeCourseFile("", Course(lessons = emptyList())) shouldBe false
+        }
+
+        expect("file exists after write") {
+            val file = tmpFile("my_test_course${UUID.randomUUID()}.xml")
+            writeCourseFile(file.absolutePathString(), Course(lessons = emptyList()))
+            file.exists() shouldBe true
+        }
     }
 
-    @Test
-    fun `readCourseSymbols empty path`() {
-        readCourseSymbols("") shouldBe emptyList()
-    }
+    context("Course") {
 
-    @Test
-    fun `readCourseSymbols file empty`() {
-        val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
-        file.writeText("")
-        readCourseSymbols(file.absolutePathString()) shouldBe emptyList()
-    }
+        context("toXml") {
 
-    @Test
-    fun `writeCourseFile empty path`() {
-        writeCourseFile("", Course(lessons = emptyList())) shouldBe false
-    }
-
-    @Test
-    fun `writeCourseFile relative path`() {
-        val file = tmpFile("my_test_course${UUID.randomUUID()}.xml")
-        writeCourseFile(file.absolutePathString(), Course(lessons = emptyList())) shouldBe true
-        file.exists() shouldBe true
-    }
-
-    @Test
-    fun `writeCourseFile cannot write file`() {
-        val readOnly = PosixFilePermissions.fromString("r--r--r--")
-        val fileAttributes = PosixFilePermissions.asFileAttribute(readOnly)
-        val file = tmpFile("my_test_course${UUID.randomUUID()}.xml", fileAttributes)
-        writeCourseFile("$file", Course(lessons = emptyList())) shouldBe false
-    }
-
-    @Test
-    fun `Course toXml happy`() {
-        Course(id = "196dc484-8148-4c6d-9700-e34d06f06a40",
-            lessons = listOf(Lesson(
-                id = "342e8f50-d967-4f92-ab37-ea6ecd6c58cd",
-                title = "abc",
-                newCharacters = "cg",
-                text = "..."))).toXml() shouldBe """
+            expect("creates an xml representation of the course as string") {
+                Course(id = "196dc484-8148-4c6d-9700-e34d06f06a40",
+                    lessons = listOf(Lesson(
+                        id = "342e8f50-d967-4f92-ab37-ea6ecd6c58cd",
+                        title = "abc",
+                        newCharacters = "cg",
+                        text = "..."))).toXml() shouldBe """
             <?xml version="1.0" encoding="UTF-8"?><course>
               <id>196dc484-8148-4c6d-9700-e34d06f06a40</id>
               <title>Generated by ktgen</title>
@@ -84,87 +86,97 @@ class CourseKtTest : FileTest() {
               </lessons>
             </course>
         """.trimIndent()
+            }
+        }
     }
 
-    @Test
-    fun `createCourse meta data`() {
-        val course = createCourse(emptyList(), emptyList(), 0, 0)
-        course.keyboardLayout shouldBe ""
-        shouldNotThrow<Exception> { UUID.fromString(course.id) }
-        course.title shouldBe "Generated by ktgen"
-        course.description shouldBe "Visit ktgen on Github (https://github.com/BarbieCue/ktgen)"
+    context("createCourse") {
+
+        expect("have meta information set") {
+            val course = createCourse(emptyList(), emptyList(), 0, 0)
+            course.keyboardLayout shouldBe ""
+            shouldNotThrow<Exception> { UUID.fromString(course.id) }
+            course.title shouldBe "Generated by ktgen"
+            course.description shouldBe "Visit ktgen on Github (https://github.com/BarbieCue/ktgen)"
+        }
+
+        expect("course consists of lessons containing the specified symbols") {
+            val courseSymbols = listOf("ab", "cd")
+            val course = createCourse(courseSymbols, emptyList(), 20, 100)
+            course.lessons.joinToString("") { it.newCharacters } shouldBe "abcd"
+        }
+
+        expect("course has no lessons when there are no specified symbols") {
+            val courseSymbols = emptyList<String>()
+            val course = createCourse(courseSymbols, emptyList(), 20, 100)
+            course.lessons shouldBe emptyList()
+        }
+
+        expect("each lesson text contains exactly the specified amount of non-whitespace symbols (symbols-per-lesson)") {
+            val courseSymbols = listOf("ab", "cd")
+            val symbolsPerLesson = 100
+            val course = createCourse(courseSymbols, emptyList(), 20, symbolsPerLesson)
+            course.lessons shouldHaveAtLeastSize 2
+            course.lessons.forAll { it.text.symbolsCount() shouldBe 100 }
+        }
+
+        expect("each line of each lesson's text has a length of line-length or line-length-1, except the last line can be shorter") {
+            val courseSymbols = listOf("ab", "cd")
+            val lineLength = 20
+            val course = createCourse(courseSymbols, emptyList(), lineLength, 100)
+            course.lessons shouldHaveAtLeastSize 2
+            course.lessons.forAll { lesson ->
+                val lines = lesson.text.split('\n')
+                lines shouldHaveAtLeastSize 2
+                lines.dropLast(1).forAll { line ->
+                    line shouldHaveMinLength 19
+                    line shouldHaveMaxLength 20
+                }
+            }
+        }
+
+        expect("course contains word lessons when a non-empty dictionary is passed") {
+            val courseSymbols = listOf("ab", "cd", "ef", "gh")
+            val dictionary = listOf("gag")
+            val course = createCourse(courseSymbols, dictionary, 20, 100)
+            course.lessons shouldHaveAtLeastSize 1
+            course.lessons.count { it.text.contains("gag") } shouldBeGreaterThanOrEqual 1
+        }
+
+        expect("line-length range test") {
+            val courseSymbols = listOf("ab")
+            val symbolsPerLesson = 200
+            createCourse(courseSymbols, emptyList(), -100, symbolsPerLesson).lessons shouldHaveSize 0
+            createCourse(courseSymbols, emptyList(), -1, symbolsPerLesson).lessons shouldHaveSize 0
+            createCourse(courseSymbols, emptyList(), 0, symbolsPerLesson).lessons shouldHaveSize 0
+
+            createCourse(courseSymbols, emptyList(), 1, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(courseSymbols, emptyList(), 1, symbolsPerLesson).lessons.forAll {
+                it.text.split('\n') shouldHaveSize 200
+                it.text.split('\n').forAll { line -> line shouldHaveLength 1 }
+            }
+
+            createCourse(courseSymbols, emptyList(), 100, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(courseSymbols, emptyList(), 100, symbolsPerLesson).lessons.forAll {
+                it.text.split('\n') shouldHaveAtLeastSize 1
+                it.text.split('\n').dropLast(1) // last line can be shorter
+                    .forAll { line ->
+                        line shouldHaveMinLength 99
+                        line shouldHaveMaxLength 100 } }
+        }
+
+        expect("symbols-per-lesson range test") {
+            val courseSymbols = listOf("ab")
+            val lineLength = 100
+            createCourse(courseSymbols, emptyList(), lineLength, -100).lessons shouldHaveSize 0
+            createCourse(courseSymbols, emptyList(), lineLength, -1).lessons shouldHaveSize 0
+            createCourse(courseSymbols, emptyList(), lineLength, 0).lessons shouldHaveSize 0
+
+            createCourse(courseSymbols, emptyList(), lineLength, 1).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(courseSymbols, emptyList(), lineLength, 1).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  1 }
+
+            createCourse(courseSymbols, emptyList(), lineLength, 100).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(courseSymbols, emptyList(), lineLength, 100).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  100 }
+        }
     }
-
-    @Test
-    fun `createCourse happy`() {
-        val courseSymbols = listOf("ab", "cd")
-        val dictionary = listOf("apple", "pear", "grape", "cd", "in", "nice", "ai", "ab")
-        val lineLength = 20
-        val symbolsPerLesson = 100
-
-        val course = createCourse(courseSymbols, dictionary, lineLength, symbolsPerLesson)
-
-        course.lessons shouldHaveAtLeastSize 2
-
-        course.lessons[0].text.split('\n').forAll { it shouldHaveMaxLength 20 }
-        course.lessons[0].text.count { !it.isWhitespace() } shouldBe 100
-        course.lessons[1].text.split('\n').forAll { it shouldHaveMaxLength 20 }
-        course.lessons[1].text.count { !it.isWhitespace() } shouldBe 100
-    }
-
-    @Test
-    fun `createCourse empty course symbols`() {
-        val courseSymbols = emptyList<String>()
-        val dictionary = listOf("apple", "pear", "grape", "cd", "in", "nice", "ai", "ab")
-        val lineLength = 20
-        val wordsPerLesson = 10
-
-        val course = createCourse(courseSymbols, dictionary, lineLength, wordsPerLesson)
-        course.lessons shouldBe emptyList()
-    }
-
-    @Test
-    fun `createCourse empty dictionary`() {
-        val courseSymbols = listOf("ab", "cd")
-        val dictionary = emptyList<String>()
-        val lineLength = 20
-        val symbolsPerLesson = 40
-
-        val course = createCourse(courseSymbols, dictionary, lineLength, symbolsPerLesson)
-
-        // some lessons with random symbol permutations should be created
-        course.lessons shouldHaveAtLeastSize 2
-    }
-
-    @Test
-    fun `createCourse line length range test`() {
-        val courseSymbols = listOf("ab", "cd")
-        val dictionary = listOf("apple", "pear", "grape", "cd", "in", "nice", "ai", "ab")
-        val symbolsPerLesson = 200
-
-        createCourse(courseSymbols, dictionary, -100, symbolsPerLesson).lessons.forAll { it.text.split('\n').forAll { line -> line shouldHaveLength 0 } }
-        createCourse(courseSymbols, dictionary, -1, symbolsPerLesson).lessons.forAll { it.text.split('\n').forAll { line -> line shouldHaveLength 0 } }
-        createCourse(courseSymbols, dictionary, 0, symbolsPerLesson).lessons.forAll { it.text.split('\n').forAll { line -> line shouldHaveLength 0 } }
-        createCourse(courseSymbols, dictionary, 1, symbolsPerLesson).lessons.forAll { it.text.split('\n').forAll { line ->
-            line shouldHaveMinLength 0
-            line shouldHaveMaxLength 1 } }
-        createCourse(courseSymbols, dictionary, 100, symbolsPerLesson).lessons.forAll { it.text.split('\n')
-            .dropLast(1) // last line can be shorter
-            .forAll { line ->
-                line shouldHaveMinLength 99
-                line shouldHaveMaxLength 100 } }
-    }
-
-    @Test
-    fun `createCourse symbols per lesson range test`() {
-        val courseSymbols = listOf("ab")
-        val dictionary = emptyList<String>()
-        val lineLength = 100
-
-        createCourse(courseSymbols, dictionary, lineLength, -100).lessons shouldHaveSize 0
-        createCourse(courseSymbols, dictionary, lineLength, -1).lessons shouldHaveSize 0
-        createCourse(courseSymbols, dictionary, lineLength, 0).lessons shouldHaveSize 0
-        createCourse(courseSymbols, dictionary, lineLength, 1).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  1 }
-        createCourse(courseSymbols, dictionary, lineLength, 100).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  100 }
-    }
-}
+})
