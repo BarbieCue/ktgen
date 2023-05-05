@@ -281,6 +281,45 @@ class OperationKtTest : ExpectSpec({
             }
         }
     }
+
+    context("punctuationMarks") {
+
+        expect("result is a random permutation of the input symbols") {
+            repeat(10) {
+                punctuationMarks("!WW=", 3) shouldBeIn setOf(
+                    "!!!", "!!=", "!==", "===", "=!!", "==!", "!=!", "=!=")
+            }
+        }
+
+        expect("result is empty, when input does not contain any punctuation marks") {
+            repeat(10) {
+                punctuationMarks("abc", 3) shouldBe ""
+                punctuationMarks("123", 3) shouldBe ""
+            }
+        }
+
+        expect("empty input leads to empty output") {
+            repeat(10) {
+                punctuationMarks("", 3) shouldBe ""
+            }
+        }
+
+        expect("result is empty, when input contains an empty WW string") {
+            repeat(10) {
+                punctuationMarks("WW", 3) shouldBe ""
+            }
+        }
+
+        expect("result has the specified length") {
+            repeat(10) {
+                punctuationMarks("!WW=", -100) shouldHaveLength 0
+                punctuationMarks("!WW=", -1) shouldHaveLength 0
+                punctuationMarks("!WW=", 0) shouldHaveLength 0
+                punctuationMarks("!WW=", 1) shouldHaveLength 1
+                punctuationMarks("!WW=", 100) shouldHaveLength 100
+            }
+        }
+    }
 })
 
     @Test
