@@ -199,8 +199,8 @@ Generating keyboard layout lessons can be combined with
 your custom lesson generation.
 This happens automatically when the `course_definition.ktgen` file
 is not empty.
-Keyboard layout lessons are generated first,
-your custom lessons afterwards.
+Lessons with keyboard layout are generated first,
+then your custom lessons.
 
 ## Help
 
