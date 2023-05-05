@@ -1,8 +1,7 @@
 package org.example
 
 import io.kotest.core.spec.style.ExpectSpec
-import io.kotest.matchers.collections.shouldBeIn
-import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -286,15 +285,14 @@ class OperationKtTest : ExpectSpec({
 
         expect("result is a random permutation of the input symbols") {
             repeat(10) {
-                punctuationMarks("!WW=", 3) shouldBeIn setOf(
-                    "!!!", "!!=", "!==", "===", "=!!", "==!", "!=!", "=!=")
+                punctuationMarks("!WW=", 3) shouldMatch "[!=]{3}".toRegex()
             }
         }
 
-        expect("result is empty, when input does not contain any punctuation marks") {
+        expect("input is not limited to punctuation marks") {
             repeat(10) {
-                punctuationMarks("abc", 3) shouldBe ""
-                punctuationMarks("123", 3) shouldBe ""
+                punctuationMarks("abc", 3) shouldMatch "[abc]{3}".toRegex()
+                punctuationMarks("123", 3) shouldMatch "[123]{3}".toRegex()
             }
         }
 
@@ -320,105 +318,64 @@ class OperationKtTest : ExpectSpec({
             }
         }
     }
+
+    context("wordsWithPunctuationMarks") {
+
+        expect("randomly prefix or append randomly selected punctuation marks to the given words") {
+            repeat(10) {
+                wordsWithPunctuationMarks(setOf("grape", "apple", "pear"), "!;") shouldContainAnyOf setOf(
+                    "!grape", "!apple", "!pear",
+                    "grape!", "apple!", "pear!",
+                    ";grape", ";apple", ";pear",
+                    "grape;", "apple;", "pear;")
+            }
+        }
+
+        expect("with WW string, randomly prefix (left) or append (right) randomly selected punctuation marks to the given words") {
+            repeat(10) {
+                wordsWithPunctuationMarks(setOf("grape", "apple", "pear"), "!WW=") shouldContainAnyOf setOf(
+                    "grape=", "apple=", "pear=",
+                    "!grape", "!apple", "!pear")
+            }
+        }
+
+        expect("with WW string, always build pairs when symbols are pair-able") {
+            repeat(10) {
+                wordsWithPunctuationMarks(setOf("grape", "apple", "pear"), "{[WW]}") shouldContainAnyOf setOf(
+                    "{grape}", "{apple}", "{pear}",
+                    "[grape]", "[apple]", "[pear]")
+            }
+        }
+
+        expect("input words will be output words when an empty WW part is passed") {
+            repeat(10) {
+                wordsWithPunctuationMarks(setOf("grape", "apple", "pear"), "WW") shouldContainExactlyInAnyOrder
+                        setOf("grape", "apple", "pear")
+            }
+        }
+
+        expect("result is empty when punctuation marks are empty") {
+            repeat(10) {
+                wordsWithPunctuationMarks(setOf("grape", "apple", "pear"), "") shouldBe emptyList()
+            }
+        }
+
+        expect("result is empty when word list is empty") {
+            repeat(10) {
+                wordsWithPunctuationMarks(emptySet(), "!WW=") shouldBe emptyList()
+            }
+        }
+
+        expect("pair-able and non-pair-able punctuation marks can be mixed") {
+            val words = setOf("grape", "apple", "pear")
+            val punctuationMarks = "!?(WW)="
+            repeat(10) {
+                wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
+                    "!grape", "!apple", "!pear",
+                    "?grape", "?apple", "?pear",
+                    "grape=", "apple=", "pear=",
+                    "(grape)", "(apple)", "(pear)")
+            }
+        }
+    }
 })
-
-    @Test
-    fun `punctuationMarks no WW`() {
-        val punctuationMarks = "()"
-        repeat(10) {
-            punctuationMarks(punctuationMarks, 2) shouldBeIn setOf(
-                "((", "))", "()", ")("
-            )
-        }
-    }
-
-    @Test
-    fun `punctuationMarks length range test`() {
-        val punctuationMarks = "!WW="
-        repeat(10) {
-            punctuationMarks(punctuationMarks, -100) shouldHaveLength 0
-            punctuationMarks(punctuationMarks, -1) shouldHaveLength 0
-            punctuationMarks(punctuationMarks, 0) shouldHaveLength 0
-            punctuationMarks(punctuationMarks, 1) shouldHaveLength 1
-            punctuationMarks(punctuationMarks, 100) shouldHaveLength 100
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks no WW`() {
-        val words = setOf("grape", "apple", "pear")
-        val punctuationMarks = "!;"
-        repeat(10) {
-            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
-                "!grape", "!apple", "!pear",
-                "grape!", "apple!", "pear!",
-                ";grape", ";apple", ";pear",
-                "grape;", "apple;", "pear;")
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks WW with non-pair-able symbols`() {
-        val words = setOf("grape", "apple", "pear")
-        val punctuationMarks = "!WW="
-        repeat(10) {
-            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
-                "=grape", "=apple", "=pear",
-                "grape=", "apple=", "pear=",
-                "!grape", "!apple", "!pear",
-                "grape!", "apple!", "pear!")
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks WW with pair-able symbols`() {
-        val words = setOf("grape", "apple", "pear")
-        val punctuationMarks = "{[WW]}"
-        repeat(10) {
-            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
-                "{grape}", "{apple}", "{pear}",
-                "[grape]", "[apple]", "[pear]")
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks WW left and right empty`() {
-        val words = setOf("grape", "apple", "pear")
-        val punctuationMarks = "WW"
-        repeat(10) {
-            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
-                "grape", "apple", "pear")
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks empty punctuation marks`() {
-        val words = setOf("grape", "apple", "pear")
-        val punctuationMarks = ""
-        repeat(10) {
-            wordsWithPunctuationMarks(words, punctuationMarks) shouldBe emptyList()
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks empty word list`() {
-        val words = emptySet<String>()
-        val punctuationMarks = "!WW="
-        repeat(10) {
-            wordsWithPunctuationMarks(words, punctuationMarks) shouldBe emptyList()
-        }
-    }
-
-    @Test
-    fun `wordsWithPunctuationMarks mix pair-able and non-pair-able symbols`() {
-        val words = setOf("grape", "apple", "pear")
-        val punctuationMarks = "!?(WW)="
-        repeat(10) {
-            wordsWithPunctuationMarks(words, punctuationMarks) shouldContainAnyOf setOf(
-                "!grape", "!apple", "!pear",
-                "?grape", "?apple", "?pear",
-                "grape=", "apple=", "pear=",
-                "(grape)", "(apple)", "(pear)")
-        }
-    }
-}
