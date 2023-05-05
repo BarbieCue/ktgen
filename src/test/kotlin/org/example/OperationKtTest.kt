@@ -1,6 +1,7 @@
 package org.example
 
 import io.kotest.core.spec.style.ExpectSpec
+import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -211,9 +212,9 @@ class OperationKtTest : ExpectSpec({
         }
     }
 
-    context("pairing maps") {
+    context("pairing") {
 
-        expect("pairs should have exactly this content") {
+        expect("pairs-map should have exactly this content") {
             pairs shouldContainExactly hashMapOf(
             '(' to ')',
             '[' to ']',
@@ -224,7 +225,7 @@ class OperationKtTest : ExpectSpec({
             '`' to '`')
         }
 
-        expect("pairsRevers should have exactly this content") {
+        expect("pairsRevers-map should have exactly this content") {
             pairsRevers shouldContainExactly hashMapOf(
             ')'  to '(',
             ']'  to '[',
@@ -233,6 +234,51 @@ class OperationKtTest : ExpectSpec({
             '"'  to '"',
             '\'' to '\'',
             '`'  to '`')
+        }
+
+        context("randomPair") {
+
+            expect("map related symbols to each other") {
+                repeat(10) {
+                    randomPair("[", "]") shouldBe ("[" to "]")
+                    randomPair("[{", "}]") shouldBeIn listOf(("[" to "]"), ("{" to "}"))
+                    randomPair("\"", "\"") shouldBe ("\"" to "\"")
+                }
+            }
+
+            expect("left output will be empty when left input is empty") {
+                repeat(10) {
+                    randomPair("", "}") shouldBe ("" to "}")
+                    randomPair("", "T") shouldBe ("" to "T")
+                }
+            }
+
+            expect("right output will be empty when right input is empty") {
+                repeat(10) {
+                    randomPair("<", "") shouldBe ("<" to "")
+                    randomPair("X", "") shouldBe ("X" to "")
+                }
+            }
+
+            expect("output pair will be empty when input pair is empty") {
+                randomPair("", "") shouldBe ("" to "")
+            }
+
+            expect("one side (randomly) of the output pair will be empty, when both input symbols are not map-able") {
+                repeat(10) {
+                    randomPair("X", "T") shouldBeIn listOf(("X" to ""), ("" to "T"))
+                }
+            }
+
+            expect("one side (randomly) of the output pair will be empty, when one of the input symbols is not map-able") {
+                repeat(10) {
+                    randomPair("(", "T") shouldBeIn listOf(("(" to ""), ("" to "T"))
+                    randomPair("X", ")") shouldBeIn listOf(("X" to ""), ("" to ")"))
+                    randomPair("(X", "T") shouldBeIn listOf(("X" to ""), ("(" to ""), ("" to "T"))
+                    randomPair("X", "T)") shouldBeIn listOf(("X" to ""), ("" to "T"), ("" to ")"))
+                    randomPair("(X", "T)") shouldBeIn listOf(("X" to ""), ("" to "T"), ("(" to ""), ("" to ")"), ("(" to ")"))
+                }
+            }
         }
     }
 })
