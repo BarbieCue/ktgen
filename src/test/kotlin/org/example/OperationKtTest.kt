@@ -2,6 +2,7 @@ package org.example
 
 import io.kotest.core.spec.style.ExpectSpec
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.*
@@ -186,6 +187,52 @@ class OperationKtTest : ExpectSpec({
                 val looped = emptyList<String>().repeatInfinite().toList()
                 looped shouldHaveSize 0
             }
+        }
+    }
+
+    context("splitWWLeftRight") {
+
+        expect("splits the WW part into left and right") {
+            splitWWLeftRight("[{WW}]") shouldBe Pair("[{", "}]")
+            splitWWLeftRight("[{WW") shouldBe Pair("[{", "")
+            splitWWLeftRight("WW") shouldBe Pair("", "")
+        }
+
+        expect("empty input leads to empty output") {
+            splitWWLeftRight("") shouldBe Pair("", "")
+        }
+
+        expect("left and right will contain the original input, when WW is missing") {
+            splitWWLeftRight("XXX") shouldBe Pair("XXX", "XXX")
+            splitWWLeftRight("a") shouldBe Pair("a", "a")
+            splitWWLeftRight("aW") shouldBe Pair("aW", "aW")
+            splitWWLeftRight("[{}]") shouldBe Pair("[{}]", "[{}]")
+            splitWWLeftRight("[{") shouldBe Pair("[{", "[{")
+        }
+    }
+
+    context("pairing maps") {
+
+        expect("pairs should have exactly this content") {
+            pairs shouldContainExactly hashMapOf(
+            '(' to ')',
+            '[' to ']',
+            '{' to '}',
+            '<' to '>',
+            '"' to '"',
+            '\'' to '\'',
+            '`' to '`')
+        }
+
+        expect("pairsRevers should have exactly this content") {
+            pairsRevers shouldContainExactly hashMapOf(
+            ')'  to '(',
+            ']'  to '[',
+            '}'  to '{',
+            '>'  to '<',
+            '"'  to '"',
+            '\'' to '\'',
+            '`'  to '`')
         }
     }
 })
