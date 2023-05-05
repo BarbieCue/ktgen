@@ -1,6 +1,5 @@
 package org.example
 
-import io.kotest.core.spec.style.ExpectSpec
 import io.kotest.data.forAll
 import io.kotest.data.headers
 import io.kotest.data.row
@@ -16,7 +15,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.stringPattern
 
-class LessonsKtTest : ExpectSpec({
+class LessonsKtTest : ConcurrentExpectSpec({
 
     context("StringBuilder") {
 

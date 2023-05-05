@@ -1,7 +1,9 @@
 package org.example
 
-import io.kotest.core.spec.style.ExpectSpec
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.collections.shouldContainAnyOf
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -10,7 +12,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.int
 import io.kotest.property.checkAll
 
-class OperationKtTest : ExpectSpec({
+class OperationKtTest : ConcurrentExpectSpec({
 
     context("shuffle") {
 
