@@ -55,5 +55,5 @@ fun buildDictionary(
     val file = if (dictionaryPath.isEmpty()) "" else textFromFile(dictionaryPath)
     val web = if (scrapeUrl.isEmpty()) "" else textFromWebsite(scrapeUrl)
     val dict = extractWords(file?.plus(" ").plus(web), minWordLength, maxWordLength)
-    return dict.asSequence().repeatInfinite().take(dictionarySize).toList()
+    return dict.repeatInfinite().take(dictionarySize).toList()
 }

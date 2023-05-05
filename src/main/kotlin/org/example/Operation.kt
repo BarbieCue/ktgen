@@ -40,7 +40,7 @@ fun joinRepeat(words: Collection<String>, sumNonWhitespaceChars: Int): String =
     else {
         val wordLoop = words
             .filter { it.length <= sumNonWhitespaceChars }
-            .asSequence().repeatInfinite().iterator()
+            .repeatInfinite().iterator()
         buildString {
             var ctr = 0
             while (true) {
@@ -59,7 +59,7 @@ fun joinRepeat(words: Collection<String>, sumNonWhitespaceChars: Int): String =
         }.trim()
     }
 
-fun <T> Sequence<T>.repeatInfinite() = sequence {
+fun <T> Collection<T>.repeatInfinite() = sequence {
     if (any()) while (true) yieldAll(this@repeatInfinite)
 }
 

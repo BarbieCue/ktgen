@@ -1,17 +1,13 @@
 package org.example
 
 import io.kotest.core.spec.style.ExpectSpec
-import io.kotest.matchers.collections.shouldBeIn
-import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.*
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.int
-import io.kotest.property.forAll
-import org.junit.jupiter.api.Test
+import io.kotest.property.checkAll
 
 class OperationKtTest : ExpectSpec({
 
@@ -102,8 +98,8 @@ class OperationKtTest : ExpectSpec({
                 "building", "metrics", "perimeter",
                 "expensive", "a", "b", "c", "d")
 
-            forAll(20, Arb.int(10, 10000)) {
-                !joinRepeat(words, it).contains("\n")
+            checkAll(20, Arb.int(10, 10000)) {
+                joinRepeat(words, it) shouldNotContain "\n"
             }
         }
 
@@ -169,172 +165,30 @@ class OperationKtTest : ExpectSpec({
             joinRepeat(words, 10).filter { !it.isWhitespace() } shouldHaveMaxLength 10
         }
     }
+
+    context("Collection") {
+
+        context("repeatInfinite") {
+
+            expect("repeat the source collection in order") {
+                val repeated = setOf("a", "b", "c").repeatInfinite().take(7).toList()
+                repeated shouldHaveSize 7
+                repeated[0] shouldBe "a"
+                repeated[1] shouldBe "b"
+                repeated[2] shouldBe "c"
+                repeated[3] shouldBe "a"
+                repeated[4] shouldBe "b"
+                repeated[5] shouldBe "c"
+                repeated[6] shouldBe "a"
+            }
+
+            expect("empty source collection leads to empty result") {
+                val looped = emptyList<String>().repeatInfinite().toList()
+                looped shouldHaveSize 0
+            }
+        }
+    }
 })
-
-class OperationKtTestDeleteMe {
-
-    @Test
-    fun `joinRepeat length non whitespace chars range test`() {
-        val words = setOf(
-            "building", "metrics", "perimeter", "expensive", "a", "b", "c",
-            "d", "engine", "of", "house", "train", "car", "bird", "door"
-        )
-        joinRepeat(words, -10) shouldHaveLength 0
-        joinRepeat(words, -1) shouldHaveLength 0
-        joinRepeat(words, 0) shouldHaveLength 0
-        joinRepeat(words, 1).count { !it.isWhitespace() } shouldBe 1
-        joinRepeat(words, 10).filter { !it.isWhitespace() } shouldHaveMaxLength 10
-    }
-
-    @Test
-    fun `Sequence repeatInfinite happy`() {
-        val repeated = setOf("a", "b", "c").asSequence().repeatInfinite().take(7).toList()
-        repeated shouldHaveSize 7
-        repeated[0] shouldBe "a"
-        repeated[1] shouldBe "b"
-        repeated[2] shouldBe "c"
-        repeated[3] shouldBe "a"
-        repeated[4] shouldBe "b"
-        repeated[5] shouldBe "c"
-        repeated[6] shouldBe "a"
-    }
-
-    @Test
-    fun `Sequence repeatInfinite empty sequence`() {
-        val looped = emptyList<String>().asSequence().repeatInfinite().toList()
-        looped shouldHaveSize 0
-    }
-
-    @Test
-    fun `splitWWLeftRight happy`() {
-        splitWWLeftRight("[{WW}]") shouldBe Pair("[{", "}]")
-        splitWWLeftRight("[{WW") shouldBe Pair("[{", "")
-        splitWWLeftRight("WW") shouldBe Pair("", "")
-    }
-
-    @Test
-    fun `splitWWLeftRight empty`() {
-        splitWWLeftRight("") shouldBe Pair("", "")
-    }
-
-    @Test
-    fun `splitWWLeftRight wrong separator`() {
-        splitWWLeftRight("XXX") shouldBe Pair("XXX", "XXX")
-    }
-
-    @Test
-    fun `splitWWLeftRight no separator`() {
-        splitWWLeftRight("[{}]") shouldBe Pair("[{}]", "[{}]")
-        splitWWLeftRight("[{") shouldBe Pair("[{", "[{")
-    }
-
-    @Test
-    fun `pairs map contents`() {
-        pairs shouldContainExactly hashMapOf(
-            '(' to ')',
-            '[' to ']',
-            '{' to '}',
-            '<' to '>',
-            '"' to '"',
-            '\'' to '\'',
-            '`' to '`'
-        )
-    }
-
-    @Test
-    fun `pairsRevers map contents`() {
-        pairsRevers shouldContainExactly hashMapOf(
-            ')'  to '(',
-            ']'  to '[',
-            '}'  to '{',
-            '>'  to '<',
-            '"'  to '"',
-            '\'' to '\'',
-            '`'  to '`'
-        )
-    }
-
-    @Test
-    fun `randomPair happy`() {
-        repeat(10) {
-            randomPair("[", "]") shouldBe ("[" to "]")
-            randomPair("[{", "}]") shouldBeIn listOf(("[" to "]"), ("{" to "}"))
-            randomPair("\"", "\"") shouldBe ("\"" to "\"")
-        }
-    }
-
-    @Test
-    fun `randomPair left is empty`() {
-        repeat(10) {
-            randomPair("", "}") shouldBe ("" to "}")
-            randomPair("", "T") shouldBe ("" to "T")
-        }
-    }
-
-    @Test
-    fun `randomPair right is empty`() {
-        repeat(10) {
-            randomPair("<", "") shouldBe ("<" to "")
-            randomPair("X", "") shouldBe ("X" to "")
-        }
-    }
-
-    @Test
-    fun `randomPair both are empty`() {
-        repeat(10) {
-            randomPair("", "") shouldBe ("" to "")
-        }
-    }
-
-    @Test
-    fun `randomPair both unknown symbols, one side (randomly) should be empty`() {
-        repeat(10) {
-            randomPair("X", "T") shouldBeIn listOf(("X" to ""), ("" to "T"))
-        }
-    }
-
-    @Test
-    fun `randomPair one known and one unknown symbol, one side (randomly) should be empty`() {
-        repeat(10) {
-            randomPair("(", "T") shouldBeIn listOf(("(" to ""), ("" to "T"))
-            randomPair("X", ")") shouldBeIn listOf(("X" to ""), ("" to ")"))
-        }
-    }
-
-    @Test
-    fun `randomPair known and unknown symbols, one side (randomly) should be empty`() {
-        repeat(10) {
-            randomPair("(X", "T") shouldBeIn listOf(("X" to ""), ("(" to ""), ("" to "T"))
-            randomPair("X", "T)") shouldBeIn listOf(("X" to ""), ("" to "T"), ("" to ")"))
-            randomPair("(X", "T)") shouldBeIn listOf(("X" to ""), ("" to "T"), ("(" to ""), ("" to ")"), ("(" to ")"))
-        }
-    }
-
-    @Test
-    fun `punctuationMarks non-pair-able symbols`() {
-        val punctuationMarks = "!WW="
-        repeat(10) {
-            punctuationMarks(punctuationMarks, 3) shouldBeIn setOf(
-                "!!!", "!!=", "!==", "===", "=!!", "==!", "!=!", "=!="
-            )
-        }
-    }
-
-    @Test
-    fun `punctuationMarks WW left and right empty`() {
-        val punctuationMarks = "WW"
-        repeat(10) {
-            punctuationMarks(punctuationMarks, 3) shouldBe ""
-        }
-    }
-
-    @Test
-    fun `punctuationMarks empty punctuation marks`() {
-        val punctuationMarks = ""
-        repeat(10) {
-            punctuationMarks(punctuationMarks, 3) shouldBe ""
-        }
-    }
 
     @Test
     fun `punctuationMarks no WW`() {
