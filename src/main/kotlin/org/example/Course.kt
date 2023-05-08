@@ -59,7 +59,9 @@ fun createCourse(
                     buildLesson(
                         "${lessonCtr.next()}: $letters and text",
                         lineLength, symbolsPerLesson, newCharacters) {
-                        repeatSymbols(letters, 4)
+                        alternatingSymbols(letters, 4)
+                        repeatSymbols(letters, 2)
+                        words(words)
                         words(words)
                         words(words)
                         shuffledSymbols(letters, 4)
@@ -88,6 +90,9 @@ fun createCourse(
                     "${lessonCtr.next()}: $groupLetters",
                     lineLength, symbolsPerLesson, newCharacters) {
                     repeatSymbols(groupLetters, groupLetters.length)
+                    shuffledSymbols(groupLetters, groupLetters.length)
+                    alternatingSymbols(groupLetters, 1)
+                    repeatSymbols(groupLetters, groupLetters.length)
                 }
             )
 
@@ -97,7 +102,7 @@ fun createCourse(
                     buildLesson(
                         "${lessonCtr.next()}: $groupLetters and text",
                         lineLength, symbolsPerLesson, newCharacters) {
-                        repeatSymbols(groupLetters, groupLetters.length)
+                        alternatingSymbols(groupLetters, 4)
                         words(words)
                         words(words)
                         repeatSymbols(groupLetters, groupLetters.length)
