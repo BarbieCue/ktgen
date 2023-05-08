@@ -69,18 +69,7 @@ fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String):
  Lesson builder
  */
 
-fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newCharacters: String = "", init: L.() -> L): Lesson {
-    val l = L(title = title).init()
-    if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
-        return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = "")
-
-    val textAsSingleLine = invokeConcatSingleLine(symbolsPerLesson, l.buildSteps)
-    if (textAsSingleLine.isEmpty())
-        return Lesson(id = l.id, title = l.title, newCharacters = newCharacters, text = "")
-
-    val text = toTextBlock(textAsSingleLine, symbolsPerLesson, lineLength)
-    return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = text)
-}
+typealias TextGenerator = (numberOfSymbols: Int) -> String
 
 internal fun symbolsPerGenerator(symbolsPerLesson: Int, numberOfGenerators: Int): Int {
     return if (symbolsPerLesson <= 0 || numberOfGenerators <= 0) 0
@@ -140,7 +129,18 @@ fun toTextBlock(str: String, symbolsTotal: Int, lineLength: Int): String {
     }
 }
 
-typealias TextGenerator = (numberOfSymbols: Int) -> String
+fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newCharacters: String = "", init: L.() -> L): Lesson {
+    val l = L(title = title).init()
+    if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
+        return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = "")
+
+    val textAsSingleLine = invokeConcatSingleLine(symbolsPerLesson, l.buildSteps)
+    if (textAsSingleLine.isEmpty())
+        return Lesson(id = l.id, title = l.title, newCharacters = newCharacters, text = "")
+
+    val text = toTextBlock(textAsSingleLine, symbolsPerLesson, lineLength)
+    return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = text)
+}
 
 class L(
     val id: String = UUID.randomUUID().toString(),
