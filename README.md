@@ -195,12 +195,11 @@ java -jar build/libs/ktgen.jar -k docs/german-layout.xml
 
 ### Combination
 
-Generating keyboard layout lessons can be combined with
-your custom lesson generation.
+Keyboard layout lessons can be combined with custom lessons.
 This happens automatically when the `course_definition.ktgen` file
 is not empty.
-Lessons with keyboard layout are generated first,
-then your custom lessons.
+Lessons with keyboard layout are created first,
+then custom lessons.
 
 ## Help
 
