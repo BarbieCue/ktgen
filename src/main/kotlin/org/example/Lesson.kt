@@ -129,7 +129,11 @@ fun toTextBlock(str: String, symbolsTotal: Int, lineLength: Int): String {
     }
 }
 
-fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newCharacters: String = "", init: L.() -> L): Lesson {
+fun lessonBuilder(lineLength: Int, symbolsPerLesson: Int, newCharacters: String = ""): (String, L.() -> L) -> Lesson {
+    return { title, buildStep -> buildLesson(title, lineLength, symbolsPerLesson, newCharacters, buildStep) }
+}
+
+internal fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newCharacters: String = "", init: L.() -> L): Lesson {
     val l = L(title = title).init()
     if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
         return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = "")
