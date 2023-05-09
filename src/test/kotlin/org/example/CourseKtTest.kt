@@ -9,9 +9,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldHaveMaxLength
 import io.kotest.matchers.string.shouldHaveMinLength
+import java.io.File
 import java.nio.file.attribute.PosixFilePermissions
 import java.util.*
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.createTempDirectory
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
 
@@ -53,21 +55,54 @@ class CourseKtTest : IOExpectSpec({
 
     context("writeCourseFile") {
 
-        expect("false when writing failed") {
+        expect("file exists after successful write") {
+            val file = tmpFile("my_test_course${UUID.randomUUID()}.xml")
+            writeCourseFile(file.absolutePathString(), Course())
+            file.exists() shouldBe true
+        }
+
+        expect("file does not exist when writing failed") {
             val readOnly = PosixFilePermissions.fromString("r--r--r--")
             val fileAttributes = PosixFilePermissions.asFileAttribute(readOnly)
-            val file = tmpFile("my_test_course${UUID.randomUUID()}.xml", fileAttributes)
-            writeCourseFile("$file", Course(lessons = emptyList())) shouldBe false
+            val roDir = createTempDirectory("my-ro-dir", fileAttributes)
+            val path = "$roDir/my_test_course${UUID.randomUUID()}.xml"
+            writeCourseFile(path, Course())
+            File(path).exists() shouldBe false
         }
 
-        expect("false when path is empty") {
-            writeCourseFile("", Course(lessons = emptyList())) shouldBe false
+        expect("nothing happens when path is empty") {
+            shouldNotThrow<Exception> { writeCourseFile("", Course()) }
         }
 
-        expect("file exists after write") {
-            val file = tmpFile("my_test_course${UUID.randomUUID()}.xml")
-            writeCourseFile(file.absolutePathString(), Course(lessons = emptyList()))
-            file.exists() shouldBe true
+        expect("nothing happens when path is invalid") {
+            shouldNotThrow<Exception> { writeCourseFile("{/}....{}*", Course()) }
+        }
+    }
+
+    context("writeCourse") {
+
+        expect("file exists after successful write") {
+            val dir = createTempDirectory("my-dir")
+            val path = "$dir/my_test_course${UUID.randomUUID()}.xml"
+            writeCourse(Course(), listOf(path))
+            File(path).exists() shouldBe true
+        }
+
+        expect("file does not exist when writing failed") {
+            val readOnly = PosixFilePermissions.fromString("r--r--r--")
+            val fileAttributes = PosixFilePermissions.asFileAttribute(readOnly)
+            val roDir = createTempDirectory("my-ro-dir", fileAttributes)
+            val path = "$roDir/my_test_course${UUID.randomUUID()}.xml"
+            writeCourse(Course(), listOf(path))
+            File(path).exists() shouldBe false
+        }
+
+        expect("nothing happens when path is empty") {
+            shouldNotThrow<Exception> { writeCourse(Course(), listOf("")) }
+        }
+
+        expect("nothing happens when path is invalid") {
+            shouldNotThrow<Exception> { writeCourse(Course(), listOf("{/}....{}*")) }
         }
     }
 

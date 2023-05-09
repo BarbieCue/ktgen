@@ -8,7 +8,7 @@ fun createCourse(
 ): Course {
 
     if (courseSymbols.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
-        return Course(lessons = emptyList())
+        return Course()
 
     val lessons = mutableListOf<Lesson>()
     val lessonCtr = generateSequence(1) { it + 1 }.iterator()

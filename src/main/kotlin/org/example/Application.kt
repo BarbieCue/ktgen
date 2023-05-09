@@ -8,7 +8,7 @@ internal fun readCourseSymbols(path: String): Collection<String> = try {
     val text = File(path).readText().trim()
     parseCourseSymbols(text)
 } catch (e: Exception) {
-    System.err.println("${e.message} $path")
+    System.err.println("${e.message} ($path)")
     emptyList()
 }
 
@@ -17,51 +17,63 @@ internal fun parseCourseSymbols(text: String): Collection<String> {
     return if (list.size == 1 && list.single().isEmpty()) emptyList() else list
 }
 
-fun KeyboardLayout.toCourseSymbols(): List<String> {
+internal fun KeyboardLayout.toCourseSymbols(): List<String> {
     val hands = hands(this)
     val keyPairs = pairKeys(hands)
     val ordered = customOrder(keyPairs)
     return lowerLetters(ordered).plus(upperLetters(ordered))
 }
 
-fun writeCourseFile(path: String, course: Course) = try {
+internal fun writeCourse(course: Course, to: List<String>) {
+    to.forEach {
+        if (it == "stdout") println(course.toXml())
+        else writeCourseFile(it, course)
+    }
+}
+
+internal fun writeCourseFile(path: String, course: Course) = try {
     File(path).writeText(course.toXml())
-    true
 } catch (e: Exception) {
-    System.err.println(e.message)
-    false
+    System.err.println("${e.message} ($path)")
 }
 
 @OptIn(ExperimentalCli::class)
 fun main(args: Array<String>) {
 
-    val parser = ArgParser("ktgen")
+    val parser = ArgParser("ktgen", strictSubcommandOptionsOrder = true)
 
-    // Course definition
-    class CourseDefinition: Subcommand("course", "The course definition. More information can be found in the readme file.") {
+    // IO
+    class Input: Subcommand("input", "The course definition. More information can be found in the readme file.") {
 
-        val file by option(ArgType.String, description = "Path to a course definition file.",
-            fullName = "file", shortName = "f").default("")
-
-        val stdin by option(ArgType.String, description = "The course definition as single string.",
-            fullName = "stdin", shortName = "i").default("")
-
-        val keyboardFile by option(ArgType.String, description = "Path to a keyboard layout xml file (KTouch export). Generates a course especially for that keyboard layout.",
-            fullName = "keyboard-file", shortName = "k").default("")
-
+        val inputFile by option(ArgType.String, "file", "f", "Path to a course definition file.").default("")
+        val stdin by option(ArgType.String, "stdin", "i", "The course definition as single string.").default("")
+        val keyboardFile by option(ArgType.String, "keyboard-layout", "k", "Path to a keyboard layout xml file (KTouch export). Generates a course especially for that keyboard layout.").default("")
         val value = mutableListOf<String>()
 
         override fun execute() {
-            value.addAll(readCourseSymbols(file))
+            value.addAll(readCourseSymbols(inputFile))
             value.addAll(parseCourseSymbols(stdin))
             if (keyboardFile.isNotEmpty()) KeyboardLayout.create(keyboardFile)?.toCourseSymbols()?.forEach { value.add(it) }
         }
     }
-    val definition = CourseDefinition()
-    parser.subcommands(definition)
+    val input = Input()
+    parser.subcommands(input)
 
-    val output by parser.option(ArgType.String, "output", "o", "Output file.").default("ktgen_course.xml")
-    val printCourseToStdout by parser.option(ArgType.Boolean, "print", "p", "Output the generated course also on stdout").default(false)
+    TODO("register input and output correctly.")
+
+    class Output: Subcommand("output", "Output to a file or to stdout.") {
+
+        val outputFile by parser.option(ArgType.String, "file", "f", "Write the course to this file (create or overwrite)").default("")
+        val stdout by parser.option(ArgType.Boolean, "stdout", "o", "Write course to stdout").default(false)
+        val value = mutableListOf<String>()
+
+        override fun execute() {
+            if (outputFile.isNotEmpty()) value.add(outputFile)
+            if (stdout) value.add("stdout")
+        }
+    }
+    val output = Output()
+    parser.subcommands(output)
 
     // Dictionary
     val textFile by parser.option(ArgType.String, "text-file", "file", "Path to a dictionary input file. Can be an arbitrary text file containing continuous text (whitespace and/or newline separated words).").default("")
@@ -94,16 +106,11 @@ fun main(args: Array<String>) {
 
     val dictionary = buildDictionary(textFile, website, minWordLength, maxWordLength, dictionarySize)
 
-    if (definition.value.isEmpty()) {
+    if (input.value.isEmpty()) {
         System.err.println("Missing (or empty) course definition. No course is created.")
         return
     }
 
-    val course = createCourse(definition.value, dictionary, lineLength, symbolsPerLesson)
-
-    if (printCourseToStdout)
-        println(course.toXml())
-
-    if (writeCourseFile(output, course) && !printCourseToStdout)
-        println("-> $output")
+    val course = createCourse(input.value, dictionary, lineLength, symbolsPerLesson)
+    writeCourse(course, output.value)
 }
