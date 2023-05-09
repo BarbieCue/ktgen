@@ -57,7 +57,7 @@ fun createCourse(
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(
-                        "${lessonCtr.next()}: $letters + text",
+                        "${lessonCtr.next()}: $letters + Text",
                         lineLength, symbolsPerLesson, newCharacters) {
                         words(words)
                         shuffledSymbols(letters, 2)
@@ -87,7 +87,7 @@ fun createCourse(
             val groupLetters = unpack(lessonSymbols)
             lessons.add(
                 buildLesson(
-                    "${lessonCtr.next()}: $groupLetters",
+                    "${lessonCtr.next()}: Group $groupLetters",
                     lineLength, symbolsPerLesson, newCharacters) {
                     repeatSymbols(groupLetters, groupLetters.length)
                     shuffledSymbols(groupLetters, groupLetters.length)
@@ -100,7 +100,7 @@ fun createCourse(
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(
-                        "${lessonCtr.next()}: $groupLetters + text",
+                        "${lessonCtr.next()}: Group $groupLetters + Text",
                         lineLength, symbolsPerLesson, newCharacters) {
                         alternatingSymbols(groupLetters, 4)
                         words(words)
@@ -114,7 +114,7 @@ fun createCourse(
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(
-                        "${lessonCtr.next()}: Text $groupLetters",
+                        "${lessonCtr.next()}: Group Text $groupLetters",
                         lineLength, symbolsPerLesson, newCharacters) {
                         words(words)
                     }
