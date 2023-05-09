@@ -57,14 +57,14 @@ fun createCourse(
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(
-                        "${lessonCtr.next()}: $letters and text",
+                        "${lessonCtr.next()}: $letters + text",
                         lineLength, symbolsPerLesson, newCharacters) {
-                        alternatingSymbols(letters, 4)
-                        repeatSymbols(letters, 2)
+                        words(words)
+                        shuffledSymbols(letters, 2)
                         words(words)
                         words(words)
+                        shuffledSymbols(letters, 2)
                         words(words)
-                        shuffledSymbols(letters, 4)
                     }
                 )
             }
@@ -73,7 +73,7 @@ fun createCourse(
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(
-                        "${lessonCtr.next()}: Text ($letters)",
+                        "${lessonCtr.next()}: Text $letters",
                         lineLength, symbolsPerLesson, newCharacters) {
                         words(words)
                     }
@@ -100,7 +100,7 @@ fun createCourse(
             if (words.isNotEmpty()) {
                 lessons.add(
                     buildLesson(
-                        "${lessonCtr.next()}: $groupLetters and text",
+                        "${lessonCtr.next()}: $groupLetters + text",
                         lineLength, symbolsPerLesson, newCharacters) {
                         alternatingSymbols(groupLetters, 4)
                         words(words)
