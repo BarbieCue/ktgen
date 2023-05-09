@@ -1,24 +1,5 @@
 package org.example
 
-import java.io.File
-
-fun readCourseSymbols(path: String): List<String> = try {
-    val text = File(path).readText().trim()
-    val list = text.split("\\s+".toRegex())
-    if (list.size == 1 && list.single().isEmpty()) emptyList() else list
-} catch (e: Exception) {
-    System.err.println(e.message)
-    emptyList()
-}
-
-fun writeCourseFile(path: String, course: Course) = try {
-    File(path).writeText(course.toXml())
-    true
-} catch (e: Exception) {
-    System.err.println(e.message)
-    false
-}
-
 fun createCourse(
     courseSymbols: List<String>,
     dictionary: Collection<String>,

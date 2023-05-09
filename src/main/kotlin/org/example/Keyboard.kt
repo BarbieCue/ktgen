@@ -129,10 +129,3 @@ fun filter(keyPairs: List<KeyPair>, pattern: Regex): List<String> {
 
 fun upperLetters(keyPairs: List<KeyPair>): List<String> = filter(keyPairs, "[A-ZÜÄÖẞ]+".toRegex())
 fun lowerLetters(keyPairs: List<KeyPair>): List<String> = filter(keyPairs, "[a-züäöß]+".toRegex())
-
-fun KeyboardLayout.toCourseSymbols(): List<String> {
-    val hands = hands(this)
-    val keyPairs = pairKeys(hands)
-    val ordered = customOrder(keyPairs)
-    return lowerLetters(ordered).plus(upperLetters(ordered))
-}

@@ -40,6 +40,17 @@ class CourseKtTest : IOExpectSpec({
         }
     }
 
+    context("parseCourseSymbols") {
+
+        expect("read whitespace separated characters") {
+            parseCourseSymbols("ab\t cd\n{WW}     ,.\n\n  1234") shouldBe listOf("ab", "cd", "{WW}", ",.", "1234")
+        }
+
+        expect("result is empty when input is empty") {
+            parseCourseSymbols("") shouldBe emptyList()
+        }
+    }
+
     context("writeCourseFile") {
 
         expect("false when writing failed") {
