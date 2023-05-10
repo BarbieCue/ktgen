@@ -51,7 +51,7 @@ because there are not enough letters to find meaningful words.
 The word order will be preserved by default, making it possible to build
 meaningful **sentences** automatically.
 
-There are two ways to equip _ktgen_ with a dictionary.
+There are two ways to equip _ktgen_ with a dictionary. They can be combined with each other.
 
 
 ### Text file
@@ -223,4 +223,27 @@ The course is written to the `ktgen_course.xml` file if none of the options is s
 
 ```shell
 java -jar build/libs/ktgen.jar --help
+```
+
+
+## Examples
+
+A course with lessons defined in _mylessons.txt_,
+containing words from the file _mydict.txt_ and from the website _https://example.com_
+
+```shell
+java -jar build/libs/ktgen.jar -file mydict.txt -web https://example.com -if mylessons.txt
+```
+
+A course for the german keyboard layout,
+containing words from the website _https://de.wikipedia.org/wiki/Ameisen_
+
+```shell
+java -jar build/libs/ktgen.jar -k docs/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen
+```
+
+A course with two lessons `asdf` and `jklö`, read from stdin and write to stdout
+
+```shell
+java -jar build/libs/ktgen.jar -i "asdf jklö" -o
 ```
