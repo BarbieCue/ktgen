@@ -32,9 +32,9 @@ fun main(args: Array<String>) {
 
     parser.parse(args)
 
-    if (inputFile.isNotEmpty()) input.addAll(readCourseSymbols(inputFile))
-    if (stdin.isNotEmpty()) input.addAll(parseCourseSymbols(stdin))
-    if (keyboardFile.isNotEmpty()) KeyboardLayout.create(keyboardFile)?.toCourseSymbols()?.forEach { input.add(it) }
+    if (inputFile.isNotEmpty()) input.addAll(readLessonSpecification(inputFile))
+    if (stdin.isNotEmpty()) input.addAll(parseLessonSpecification(stdin))
+    if (keyboardFile.isNotEmpty()) KeyboardLayout.create(keyboardFile)?.toLessonSpecification()?.forEach { input.add(it) }
 
     if (outputFile.isNotEmpty()) output.add(outputFile)
     if (stdout) output.add("stdout")

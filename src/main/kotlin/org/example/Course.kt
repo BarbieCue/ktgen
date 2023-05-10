@@ -3,20 +3,20 @@ package org.example
 import java.io.File
 
 fun createCourse(
-    courseSymbols: List<String>,
+    lessonSpecifications: Collection<String>,
     dictionary: Collection<String>,
     lineLength: Int,
     symbolsPerLesson: Int
 ): Course {
 
-    if (courseSymbols.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
+    if (lessonSpecifications.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
         return Course()
 
     val lessons = mutableListOf<Lesson>()
     val lessonCtr = generateSequence(1) { it + 1 }.iterator()
     val charsHistory = StringBuilder()
 
-    courseSymbols.forEach { lessonSymbols ->
+    lessonSpecifications.forEach { lessonSymbols ->
 
         val newCharacters = charsHistory.newCharacters(lessonSymbols)
         val lessonBuilder = lessonBuilder(lineLength, symbolsPerLesson, newCharacters)

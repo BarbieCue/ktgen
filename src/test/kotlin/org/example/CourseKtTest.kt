@@ -112,29 +112,29 @@ class CourseKtTest : IOExpectSpec({
         }
 
         expect("course consists of lessons containing the specified symbols") {
-            val courseSymbols = listOf("ab", "cd")
-            val course = createCourse(courseSymbols, emptyList(), 20, 100)
+            val lessonSpecification = listOf("ab", "cd")
+            val course = createCourse(lessonSpecification, emptyList(), 20, 100)
             course.lessons.joinToString("") { it.newCharacters } shouldBe "abcd"
         }
 
         expect("course has no lessons when there are no specified symbols") {
-            val courseSymbols = emptyList<String>()
-            val course = createCourse(courseSymbols, emptyList(), 20, 100)
+            val lessonSpecification = emptyList<String>()
+            val course = createCourse(lessonSpecification, emptyList(), 20, 100)
             course.lessons shouldBe emptyList()
         }
 
         expect("each lesson text contains exactly the specified amount of non-whitespace symbols (symbols-per-lesson)") {
-            val courseSymbols = listOf("ab", "cd")
+            val lessonSpecification = listOf("ab", "cd")
             val symbolsPerLesson = 100
-            val course = createCourse(courseSymbols, emptyList(), 20, symbolsPerLesson)
+            val course = createCourse(lessonSpecification, emptyList(), 20, symbolsPerLesson)
             course.lessons shouldHaveAtLeastSize 2
             course.lessons.forAll { it.text.symbolsCount() shouldBe 100 }
         }
 
         expect("each line of each lesson's text has a length of line-length or line-length-1, except the last line can be shorter") {
-            val courseSymbols = listOf("ab", "cd")
+            val lessonSpecification = listOf("ab", "cd")
             val lineLength = 20
-            val course = createCourse(courseSymbols, emptyList(), lineLength, 100)
+            val course = createCourse(lessonSpecification, emptyList(), lineLength, 100)
             course.lessons shouldHaveAtLeastSize 2
             course.lessons.forAll { lesson ->
                 val lines = lesson.text.split('\n')
@@ -147,28 +147,28 @@ class CourseKtTest : IOExpectSpec({
         }
 
         expect("course contains word lessons when a non-empty dictionary is passed") {
-            val courseSymbols = listOf("ab", "cd", "ef", "gh")
+            val lessonSpecification = listOf("ab", "cd", "ef", "gh")
             val dictionary = listOf("gag")
-            val course = createCourse(courseSymbols, dictionary, 20, 100)
+            val course = createCourse(lessonSpecification, dictionary, 20, 100)
             course.lessons shouldHaveAtLeastSize 1
             course.lessons.count { it.text.contains("gag") } shouldBeGreaterThanOrEqual 1
         }
 
         expect("line-length range test") {
-            val courseSymbols = listOf("ab")
+            val lessonSpecification = listOf("ab")
             val symbolsPerLesson = 200
-            createCourse(courseSymbols, emptyList(), -100, symbolsPerLesson).lessons shouldHaveSize 0
-            createCourse(courseSymbols, emptyList(), -1, symbolsPerLesson).lessons shouldHaveSize 0
-            createCourse(courseSymbols, emptyList(), 0, symbolsPerLesson).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), -100, symbolsPerLesson).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), -1, symbolsPerLesson).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), 0, symbolsPerLesson).lessons shouldHaveSize 0
 
-            createCourse(courseSymbols, emptyList(), 1, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(courseSymbols, emptyList(), 1, symbolsPerLesson).lessons.forAll {
+            createCourse(lessonSpecification, emptyList(), 1, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(lessonSpecification, emptyList(), 1, symbolsPerLesson).lessons.forAll {
                 it.text.split('\n') shouldHaveSize 200
                 it.text.split('\n').forAll { line -> line shouldHaveLength 1 }
             }
 
-            createCourse(courseSymbols, emptyList(), 100, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(courseSymbols, emptyList(), 100, symbolsPerLesson).lessons.forAll {
+            createCourse(lessonSpecification, emptyList(), 100, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(lessonSpecification, emptyList(), 100, symbolsPerLesson).lessons.forAll {
                 it.text.split('\n') shouldHaveAtLeastSize 1
                 it.text.split('\n').dropLast(1) // last line can be shorter
                     .forAll { line ->
@@ -177,17 +177,17 @@ class CourseKtTest : IOExpectSpec({
         }
 
         expect("symbols-per-lesson range test") {
-            val courseSymbols = listOf("ab")
+            val lessonSpecification = listOf("ab")
             val lineLength = 100
-            createCourse(courseSymbols, emptyList(), lineLength, -100).lessons shouldHaveSize 0
-            createCourse(courseSymbols, emptyList(), lineLength, -1).lessons shouldHaveSize 0
-            createCourse(courseSymbols, emptyList(), lineLength, 0).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), lineLength, -100).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), lineLength, -1).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), lineLength, 0).lessons shouldHaveSize 0
 
-            createCourse(courseSymbols, emptyList(), lineLength, 1).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(courseSymbols, emptyList(), lineLength, 1).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  1 }
+            createCourse(lessonSpecification, emptyList(), lineLength, 1).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(lessonSpecification, emptyList(), lineLength, 1).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  1 }
 
-            createCourse(courseSymbols, emptyList(), lineLength, 100).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(courseSymbols, emptyList(), lineLength, 100).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  100 }
+            createCourse(lessonSpecification, emptyList(), lineLength, 100).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(lessonSpecification, emptyList(), lineLength, 100).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  100 }
         }
     }
 })

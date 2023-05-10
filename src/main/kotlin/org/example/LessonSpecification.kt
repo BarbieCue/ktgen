@@ -2,20 +2,20 @@ package org.example
 
 import java.io.File
 
-internal fun readCourseSymbols(path: String): Collection<String> = try {
+internal fun readLessonSpecification(path: String): Collection<String> = try {
     val text = File(path).readText().trim()
-    parseCourseSymbols(text)
+    parseLessonSpecification(text)
 } catch (e: Exception) {
     System.err.println("${e.message} ($path)")
     emptyList()
 }
 
-internal fun parseCourseSymbols(text: String): Collection<String> {
+internal fun parseLessonSpecification(text: String): Collection<String> {
     val list = text.split("\\s+".toRegex())
     return if (list.size == 1 && list.single().isEmpty()) emptyList() else list
 }
 
-internal fun KeyboardLayout.toCourseSymbols(): List<String> {
+internal fun KeyboardLayout.toLessonSpecification(): Collection<String> {
     val hands = hands(this)
     val keyPairs = pairKeys(hands)
     val ordered = customOrder(keyPairs)
