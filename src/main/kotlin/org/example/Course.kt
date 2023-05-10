@@ -1,5 +1,7 @@
 package org.example
 
+import java.io.File
+
 fun createCourse(
     courseSymbols: List<String>,
     dictionary: Collection<String>,
@@ -155,4 +157,18 @@ fun createCourse(
     }
 
     return Course(lessons = lessons)
+}
+
+
+internal fun writeCourse(course: Course, to: List<String>) {
+    to.forEach {
+        if (it == "stdout") println(course.toXml())
+        else writeCourseFile(it, course)
+    }
+}
+
+internal fun writeCourseFile(path: String, course: Course) = try {
+    File(path).writeText(course.toXml())
+} catch (e: Exception) {
+    System.err.println("${e.message} ($path)")
 }
