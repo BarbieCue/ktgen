@@ -37,43 +37,19 @@ internal fun writeCourseFile(path: String, course: Course) = try {
     System.err.println("${e.message} ($path)")
 }
 
-@OptIn(ExperimentalCli::class)
 fun main(args: Array<String>) {
 
-    val parser = ArgParser("ktgen", strictSubcommandOptionsOrder = true)
+    val parser = ArgParser("ktgen", strictSubcommandOptionsOrder = false)
 
     // IO
-    class Input: Subcommand("input", "The course definition. More information can be found in the readme file.") {
+    val inputFile by parser.option(ArgType.String, "input-file", "if", "Path to a course definition file.").default("")
+    val stdin by parser.option(ArgType.String, "stdin", "i", "The course definition as single string.").default("")
+    val keyboardFile by parser.option(ArgType.String, "keyboard-layout", "k", "Path to a keyboard layout xml file (KTouch export). Generates a course especially for that keyboard layout.").default("")
+    val input = mutableListOf<String>()
 
-        val inputFile by option(ArgType.String, "file", "f", "Path to a course definition file.").default("")
-        val stdin by option(ArgType.String, "stdin", "i", "The course definition as single string.").default("")
-        val keyboardFile by option(ArgType.String, "keyboard-layout", "k", "Path to a keyboard layout xml file (KTouch export). Generates a course especially for that keyboard layout.").default("")
-        val value = mutableListOf<String>()
-
-        override fun execute() {
-            value.addAll(readCourseSymbols(inputFile))
-            value.addAll(parseCourseSymbols(stdin))
-            if (keyboardFile.isNotEmpty()) KeyboardLayout.create(keyboardFile)?.toCourseSymbols()?.forEach { value.add(it) }
-        }
-    }
-    val input = Input()
-    parser.subcommands(input)
-
-    TODO("register input and output correctly.")
-
-    class Output: Subcommand("output", "Output to a file or to stdout.") {
-
-        val outputFile by parser.option(ArgType.String, "file", "f", "Write the course to this file (create or overwrite)").default("")
-        val stdout by parser.option(ArgType.Boolean, "stdout", "o", "Write course to stdout").default(false)
-        val value = mutableListOf<String>()
-
-        override fun execute() {
-            if (outputFile.isNotEmpty()) value.add(outputFile)
-            if (stdout) value.add("stdout")
-        }
-    }
-    val output = Output()
-    parser.subcommands(output)
+    val outputFile by parser.option(ArgType.String, "output-file", "of", "Write the course to this file (create or overwrite)").default("")
+    val stdout by parser.option(ArgType.Boolean, "stdout", "o", "Write course to stdout").default(false)
+    val output = mutableListOf<String>()
 
     // Dictionary
     val textFile by parser.option(ArgType.String, "text-file", "file", "Path to a dictionary input file. Can be an arbitrary text file containing continuous text (whitespace and/or newline separated words).").default("")
@@ -87,6 +63,13 @@ fun main(args: Array<String>) {
     val maxWordLength by parser.option(ArgType.Int, "max-word-length", "max", "Take only words having this maximal length.").default(100)
 
     parser.parse(args)
+
+    if (inputFile.isNotEmpty()) input.addAll(readCourseSymbols(inputFile))
+    if (stdin.isNotEmpty()) input.addAll(parseCourseSymbols(stdin))
+    if (keyboardFile.isNotEmpty()) KeyboardLayout.create(keyboardFile)?.toCourseSymbols()?.forEach { input.add(it) }
+
+    if (outputFile.isNotEmpty()) output.add(outputFile)
+    if (stdout) output.add("stdout")
 
     if (symbolsPerLesson <= 0) {
         System.err.println("The lesson length must be at least 1.")
@@ -106,11 +89,11 @@ fun main(args: Array<String>) {
 
     val dictionary = buildDictionary(textFile, website, minWordLength, maxWordLength, dictionarySize)
 
-    if (input.value.isEmpty()) {
+    if (input.isEmpty()) {
         System.err.println("Missing (or empty) course definition. No course is created.")
         return
     }
 
-    val course = createCourse(input.value, dictionary, lineLength, symbolsPerLesson)
-    writeCourse(course, output.value)
+    val course = createCourse(input, dictionary, lineLength, symbolsPerLesson)
+    writeCourse(course, output)
 }
