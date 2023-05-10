@@ -7,7 +7,7 @@ import kotlinx.cli.default
 
 fun main(args: Array<String>) {
 
-    val parser = ArgParser("ktgen", strictSubcommandOptionsOrder = false)
+    val parser = ArgParser("ktgen")
 
     // IO
     val inputFile by parser.option(ArgType.String, "input-file", "if", "Path to a lesson specification file.").default("")
