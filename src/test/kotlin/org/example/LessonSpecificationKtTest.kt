@@ -10,13 +10,13 @@ class LessonSpecificationKtTest : IOExpectSpec({
     context("readLessonSpecification") {
 
         expect("read whitespace separated characters as lesson specification from file") {
-            val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
+            val file = tmpFile("ktgen_lesson_specification_test${UUID.randomUUID()}")
             file.writeText("ab cd\n{WW}     ,.\n\n  1234")
             readLessonSpecification(file.absolutePathString()) shouldBe listOf("ab", "cd", "{WW}", ",.", "1234")
         }
 
         expect("empty collection when file is empty") {
-            val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
+            val file = tmpFile("ktgen_lesson_specification_test${UUID.randomUUID()}")
             file.writeText("")
             readLessonSpecification(file.absolutePathString()) shouldBe emptyList()
         }

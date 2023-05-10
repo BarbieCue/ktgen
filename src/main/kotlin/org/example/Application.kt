@@ -10,8 +10,8 @@ fun main(args: Array<String>) {
     val parser = ArgParser("ktgen", strictSubcommandOptionsOrder = false)
 
     // IO
-    val inputFile by parser.option(ArgType.String, "input-file", "if", "Path to a course definition file.").default("")
-    val stdin by parser.option(ArgType.String, "stdin", "i", "The course definition as single string.").default("")
+    val inputFile by parser.option(ArgType.String, "input-file", "if", "Path to a lesson specification file.").default("")
+    val stdin by parser.option(ArgType.String, "stdin", "i", "The lesson specification as single string.").default("")
     val keyboardFile by parser.option(ArgType.String, "keyboard-layout", "k", "Path to a keyboard layout xml file (KTouch export). Generates a course especially for that keyboard layout.").default("")
     val input = mutableListOf<String>()
 
@@ -32,10 +32,14 @@ fun main(args: Array<String>) {
 
     parser.parse(args)
 
-    if (inputFile.isNotEmpty()) input.addAll(readLessonSpecification(inputFile))
     if (stdin.isNotEmpty()) input.addAll(parseLessonSpecification(stdin))
+    if (inputFile.isEmpty() && stdin.isEmpty() && keyboardFile.isEmpty())
+        input.addAll(readLessonSpecification("lesson_specification.ktgen"))
+    else if (inputFile.isNotEmpty())
+        input.addAll(readLessonSpecification(inputFile))
     if (keyboardFile.isNotEmpty()) KeyboardLayout.create(keyboardFile)?.toLessonSpecification()?.forEach { input.add(it) }
 
+    if (outputFile.isEmpty() && !stdout) output.add("ktgen_course.xml")
     if (outputFile.isNotEmpty()) output.add(outputFile)
     if (stdout) output.add("stdout")
 
@@ -58,7 +62,7 @@ fun main(args: Array<String>) {
     val dictionary = buildDictionary(textFile, website, minWordLength, maxWordLength, dictionarySize)
 
     if (input.isEmpty()) {
-        System.err.println("Missing (or empty) course definition. No course is created.")
+        System.err.println("Missing (or empty) lesson specification. No course is created.")
         return
     }
 

@@ -18,7 +18,7 @@ Java 17 or higher
 
 ### Define your course
 
-Edit the course definition file `course_definition.ktgen` for your needs.
+Edit the lesson specification file `lesson_specification.ktgen` for your needs.
 
 ```text
 ab cd ef gh ij kl mn op qr st uv wx yz
@@ -45,9 +45,9 @@ It can be imported into KTouch.
 
 ## Dictionary
 
-Provide some kind of dictionary to add words to your lessons.
+Provide some kind of dictionary to **add words to your lessons**.
 The first lessons are mostly created with random combinations of letters,
-because there are not enough letters to find meaningful **words**.
+because there are not enough letters to find meaningful words.
 The word order will be preserved by default, making it possible to build
 meaningful **sentences** automatically.
 
@@ -76,9 +76,9 @@ java -jar build/libs/ktgen.jar -web https://en.wikipedia.org/wiki/Barbie
 ![keyboard path](docs/text-from-website.jpg)
 
 
-## Course definition
+## Lesson specification
 
-As mentioned above, the `course_definition.ktgen` file describes your course.
+As mentioned above, the `lesson_specification.ktgen` file describes the lessons for your course.
 The following format applies here.
 
 
@@ -174,7 +174,6 @@ ab cd ef gh ij kl mn op qr st uv wx yz
 This produces words like `china`, `letter`, `lesson`.
 
 
-
 ## Keyboard layout
 
 You can use a keyboard layout to create finger-by-finger lessons that
@@ -193,13 +192,32 @@ java -jar build/libs/ktgen.jar -k docs/german-layout.xml
 ```
 
 
-### Combination
+## Stdin and Stdout
 
-Keyboard layout lessons can be combined with custom lessons.
-This happens automatically when the `course_definition.ktgen` file
-is not empty.
-Lessons with keyboard layout are created first,
-then custom lessons.
+- You can pass the lesson specification as string to stdin. For example `-i "ab cd ef [WW]"`
+- The created course can be written to stdout using the `-o`.
+
+
+### IO combination
+
+
+#### Input
+
+All possibilities of entering lesson specifications can be combined (additive).
+They apply as follows:
+
+1. Stdin `-i <string>`
+2. Specification file `-if <file>`
+3. Keyboard layout `-k <file>`
+
+The specification file `lesson_specification.ktgen` is used if none of these options is set.
+
+
+#### Output
+
+Write the course to stdout (`-o`) or to a file (`-of <file>`) or to both.
+The course is written to the `ktgen_course.xml` file if none of the options is set.
+
 
 ## Help
 
