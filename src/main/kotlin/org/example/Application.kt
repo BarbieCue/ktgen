@@ -1,8 +1,6 @@
 package org.example
 
-import kotlinx.cli.ArgParser
-import kotlinx.cli.ArgType
-import kotlinx.cli.default
+import kotlinx.cli.*
 
 
 fun main(args: Array<String>) {
@@ -10,14 +8,9 @@ fun main(args: Array<String>) {
     val parser = ArgParser("ktgen")
 
     // IO
-    val inputFile by parser.option(ArgType.String, "input-file", "if", "Path to a lesson specification file.").default("")
-    val stdin by parser.option(ArgType.String, "stdin", "i", "The lesson specification as single string.").default("")
-    val keyboardFile by parser.option(ArgType.String, "keyboard-layout", "k", "Path to a keyboard layout xml file (KTouch export). Generates a course especially for that keyboard layout.").default("")
-    val input = mutableListOf<String>()
-
+    val lessonSpecification by parser.argument(ArgType.String, description = "Path(s) to lesson specification files like 'lesson_specification.ktgen'. Keyboard layout xml files (KTouch export) are also valid.").vararg().optional()
     val outputFile by parser.option(ArgType.String, "output-file", "of", "Write the course to this file (create or overwrite)").default("")
     val stdout by parser.option(ArgType.Boolean, "stdout", "o", "Write course to stdout").default(false)
-    val output = mutableListOf<String>()
 
     // Dictionary
     val textFile by parser.option(ArgType.String, "text-file", "file", "Path to a dictionary input file. Can be an arbitrary text file containing continuous text (whitespace and/or newline separated words).").default("")
@@ -32,13 +25,11 @@ fun main(args: Array<String>) {
 
     parser.parse(args)
 
-    if (stdin.isNotEmpty()) input.addAll(parseLessonSpecification(stdin))
-    if (inputFile.isEmpty() && stdin.isEmpty() && keyboardFile.isEmpty())
-        input.addAll(readLessonSpecification("lesson_specification.ktgen"))
-    else if (inputFile.isNotEmpty())
-        input.addAll(readLessonSpecification(inputFile))
-    if (keyboardFile.isNotEmpty()) KeyboardLayout.create(keyboardFile)?.toLessonSpecification()?.forEach { input.add(it) }
+    val input = mutableListOf<String>()
+    if (lessonSpecification.isEmpty()) input.addAll(readLessonSpecificationFile("lesson_specification.ktgen"))
+    else lessonSpecification.forEach { input.addAll(readLessonSpecificationFile(it)) }
 
+    val output = mutableListOf<String>()
     if (outputFile.isEmpty() && !stdout) output.add("ktgen_course.xml")
     if (outputFile.isNotEmpty()) output.add(outputFile)
     if (stdout) output.add("stdout")
