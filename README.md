@@ -45,13 +45,14 @@ It can be imported into KTouch.
 
 ## Dictionary
 
-Provide some kind of dictionary to **add words to your lessons**.
+Provide some kind of dictionary to **add words to your course**.
 The first lessons are mostly created with random combinations of letters,
 because there are not enough letters to find meaningful words.
+As the number of letters increases, more and more words can be found.
 The word order will be preserved by default, making it possible to build
 meaningful **sentences** automatically.
 
-There are two ways to equip _ktgen_ with a dictionary. They can be combined with each other.
+There are two ways to equip *ktgen* with a dictionary. They can be combined with each other.
 
 
 ### Text file
@@ -66,7 +67,7 @@ java -jar build/libs/ktgen.jar -file README.md
 
 ### Website
 
-Link a website of your choice with `-web <url>` and let _ktgen_
+Link a website of your choice with `-web <url>` and let *ktgen*
 extract text from it.
 
 ```shell
@@ -150,7 +151,7 @@ ab cd ef gh ij kl mn op qr st uv wx yz
 This produces words like `\pear`, `barbie/`, `+pear`, `-apple`, `,barbie`, `pear;`, ..
 
 But, if the side matters, so that the punctuation mark can only be
-to the left or only to the right of a word, then use the `WW` pattern (_WW_ stands for _word_).
+to the left or only to the right of a word, then use the `WW` pattern (*WW* stands for *word*).
 
 ```text
 ab cd ef gh ij kl mn op qr st uv wx yz
@@ -163,7 +164,7 @@ This produces words like `(pear)`, `[barbie]`, `{pear}`, `apple.`, `barbie,` ..
 ### Letter groups
 
 In every language, letters appear as fixed groups.
-For example, _"tt"_, _"ss"_, _"ch"_, _"nn"_ or _"sch"_.
+For example, *"tt"*, *"ss"*, *"ch"*, *"nn"* or *"sch"*.
 Lessons for such groups are generated with square brackets.
 
 ```text
@@ -185,65 +186,75 @@ on the keyboard, starting with the basic finger position.
 
 
 1. Export a keyboard layout from KTouch (e.g `german-layout.xml`)
-2. Pass it to _ktgen_ with `-k german-layout.xml`
+2. Pass it as argument to *ktgen*
 
 ```shell
-java -jar build/libs/ktgen.jar -k docs/german-layout.xml
+java -jar build/libs/ktgen.jar docs/german-layout.xml
 ```
 
 
-## Stdin and Stdout
+### Combining lesson specifications
 
-- You can pass the lesson specification as string to stdin. For example `-i "ab cd ef [WW]"`
-- The created course can be written to stdout using the `-o`.
+Multiple lessons specifications can be combined to a single course, simply by passing them as arguments to *ktgen*.
+They are applied in order. For example:
 
+```shell
+java -jar build/libs/ktgen.jar lesson_specification.ktgen docs/german-layout.xml another_spec.txt
+```
+The first lessons are created from *lesson_specification.ktgen*.
+Then the lessons for the German keyboard layout follow and at the end of the course 
+the lessons from the file *another_spec.txt*.
 
-### IO combination
-
-
-#### Input
-
-All possibilities of entering lesson specifications can be combined (additive).
-They apply as follows:
-
-1. Stdin `-i <string>`
-2. Specification file `-if <file>`
-3. Keyboard layout `-k <file>`
-
-The specification file `lesson_specification.ktgen` is used if none of these options is set.
+The specification file `lesson_specification.ktgen` is used by default,
+if no lesson specification is passed as argument.
 
 
-#### Output
+### Output
 
-Write the course to stdout (`-o`) or to a file (`-of <file>`) or to both.
-The course is written to the `ktgen_course.xml` file if none of the options is set.
+You can write the course to stdout `-o` or to a file `-of <file>` or to both.
+
+The course will be written to the `ktgen_course.xml` file by default if none of the options are set.
+
+
+## Examples
+
+A course with lessons from *mylessons.txt*,
+containing words from the file *mydict.txt* and from the website *https://docs.dagger.io/*
+written to *ktgen_course.xml*.
+
+```shell
+java -jar build/libs/ktgen.jar -file mydict.txt -web https://docs.dagger.io/ mylessons.txt
+```
+
+A course for the german keyboard layout containing words from the website _https://de.wikipedia.org/wiki/Ameisen_
+written to *ktgen_course.xml*.
+
+```shell
+java -jar build/libs/ktgen.jar docs/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen
+```
+
+A course for the german keyboard layout written to the file *my_ktouch_course.xml*.
+
+```shell
+java -jar build/libs/ktgen.jar -of my_ktouch_course.xml docs/german-layout.xml
+```
+
+A course for *lesson_specification.ktgen* written to stdout.
+
+```shell
+java -jar build/libs/ktgen.jar -o
+```
+
+A course that starts with lessons for *letters.ktgen* and ends with lessons for *punctuation_marks.ktgen* 
+written to *ktgen_course.xml* and to stdout.
+
+```shell
+java -jar build/libs/ktgen.jar letters.ktgen punctuation_marks.ktgen -of ktgen_course.xml -o
+```
 
 
 ## Help
 
 ```shell
 java -jar build/libs/ktgen.jar --help
-```
-
-
-## Examples
-
-A course with lessons defined in _mylessons.txt_,
-containing words from the file _mydict.txt_ and from the website _https://example.com_
-
-```shell
-java -jar build/libs/ktgen.jar -file mydict.txt -web https://example.com -if mylessons.txt
-```
-
-A course for the german keyboard layout,
-containing words from the website _https://de.wikipedia.org/wiki/Ameisen_
-
-```shell
-java -jar build/libs/ktgen.jar -k docs/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen
-```
-
-A course with two lessons `asdf` and `jklö`, read from stdin and write to stdout
-
-```shell
-java -jar build/libs/ktgen.jar -i "asdf jklö" -o
 ```
