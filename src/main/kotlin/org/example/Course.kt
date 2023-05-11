@@ -2,38 +2,21 @@ package org.example
 
 import java.io.File
 
-fun readCourseSymbols(path: String): List<String> = try {
-    val text = File(path).readText().trim()
-    val list = text.split("\\s+".toRegex())
-    if (list.size == 1 && list.single().isEmpty()) emptyList() else list
-} catch (e: Exception) {
-    System.err.println(e.message)
-    emptyList()
-}
-
-fun writeCourseFile(path: String, course: Course) = try {
-    File(path).writeText(course.toXml())
-    true
-} catch (e: Exception) {
-    System.err.println(e.message)
-    false
-}
-
 fun createCourse(
-    courseSymbols: List<String>,
+    lessonSpecifications: Collection<String>,
     dictionary: Collection<String>,
     lineLength: Int,
     symbolsPerLesson: Int
 ): Course {
 
-    if (courseSymbols.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
-        return Course(lessons = emptyList())
+    if (lessonSpecifications.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
+        return Course()
 
     val lessons = mutableListOf<Lesson>()
     val lessonCtr = generateSequence(1) { it + 1 }.iterator()
     val charsHistory = StringBuilder()
 
-    courseSymbols.forEach { lessonSymbols ->
+    lessonSpecifications.forEach { lessonSymbols ->
 
         val newCharacters = charsHistory.newCharacters(lessonSymbols)
         val lessonBuilder = lessonBuilder(lineLength, symbolsPerLesson, newCharacters)
@@ -174,4 +157,18 @@ fun createCourse(
     }
 
     return Course(lessons = lessons)
+}
+
+
+internal fun writeCourse(course: Course, to: List<String>) {
+    to.forEach {
+        if (it == "stdout") println(course.toXml())
+        else writeCourseFile(it, course)
+    }
+}
+
+internal fun writeCourseFile(path: String, course: Course) = try {
+    File(path).writeText(course.toXml())
+} catch (e: Exception) {
+    System.err.println("${e.message} ($path)")
 }

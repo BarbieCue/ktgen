@@ -9,54 +9,65 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldHaveMaxLength
 import io.kotest.matchers.string.shouldHaveMinLength
+import java.io.File
 import java.nio.file.attribute.PosixFilePermissions
 import java.util.*
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.createTempDirectory
 import kotlin.io.path.exists
-import kotlin.io.path.writeText
 
 class CourseKtTest : IOExpectSpec({
 
-    context("readCourseSymbols") {
+    context("writeCourseFile") {
 
-        expect("read whitespace separated characters as course symbols from file") {
-            val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
-            file.writeText("ab cd\n{WW}     ,.\n\n  1234")
-            readCourseSymbols(file.absolutePathString()) shouldBe listOf("ab", "cd", "{WW}", ",.", "1234")
+        expect("file exists after successful write") {
+            val file = tmpFile("my_test_course${UUID.randomUUID()}.xml")
+            writeCourseFile(file.absolutePathString(), Course())
+            file.exists() shouldBe true
         }
 
-        expect("empty collection when file is empty") {
-            val file = tmpFile("ktgen_course_definition_test${UUID.randomUUID()}")
-            file.writeText("")
-            readCourseSymbols(file.absolutePathString()) shouldBe emptyList()
+        expect("file does not exist when writing failed") {
+            val readOnly = PosixFilePermissions.fromString("r--r--r--")
+            val fileAttributes = PosixFilePermissions.asFileAttribute(readOnly)
+            val roDir = createTempDirectory("my-ro-dir", fileAttributes)
+            val path = "$roDir/my_test_course${UUID.randomUUID()}.xml"
+            writeCourseFile(path, Course())
+            File(path).exists() shouldBe false
         }
 
-        expect("empty collection when file not found") {
-            readCourseSymbols("a_non_existing_file") shouldBe emptyList()
+        expect("nothing happens when path is empty") {
+            shouldNotThrow<Exception> { writeCourseFile("", Course()) }
         }
 
-        expect("empty collection when path is empty") {
-            readCourseSymbols("") shouldBe emptyList()
+        expect("nothing happens when path is invalid") {
+            shouldNotThrow<Exception> { writeCourseFile("{/}....{}*", Course()) }
         }
     }
 
-    context("writeCourseFile") {
+    context("writeCourse") {
 
-        expect("false when writing failed") {
+        expect("file exists after successful write") {
+            val dir = createTempDirectory("my-dir")
+            val path = "$dir/my_test_course${UUID.randomUUID()}.xml"
+            writeCourse(Course(), listOf(path))
+            File(path).exists() shouldBe true
+        }
+
+        expect("file does not exist when writing failed") {
             val readOnly = PosixFilePermissions.fromString("r--r--r--")
             val fileAttributes = PosixFilePermissions.asFileAttribute(readOnly)
-            val file = tmpFile("my_test_course${UUID.randomUUID()}.xml", fileAttributes)
-            writeCourseFile("$file", Course(lessons = emptyList())) shouldBe false
+            val roDir = createTempDirectory("my-ro-dir", fileAttributes)
+            val path = "$roDir/my_test_course${UUID.randomUUID()}.xml"
+            writeCourse(Course(), listOf(path))
+            File(path).exists() shouldBe false
         }
 
-        expect("false when path is empty") {
-            writeCourseFile("", Course(lessons = emptyList())) shouldBe false
+        expect("nothing happens when path is empty") {
+            shouldNotThrow<Exception> { writeCourse(Course(), listOf("")) }
         }
 
-        expect("file exists after write") {
-            val file = tmpFile("my_test_course${UUID.randomUUID()}.xml")
-            writeCourseFile(file.absolutePathString(), Course(lessons = emptyList()))
-            file.exists() shouldBe true
+        expect("nothing happens when path is invalid") {
+            shouldNotThrow<Exception> { writeCourse(Course(), listOf("{/}....{}*")) }
         }
     }
 
@@ -101,29 +112,29 @@ class CourseKtTest : IOExpectSpec({
         }
 
         expect("course consists of lessons containing the specified symbols") {
-            val courseSymbols = listOf("ab", "cd")
-            val course = createCourse(courseSymbols, emptyList(), 20, 100)
+            val lessonSpecification = listOf("ab", "cd")
+            val course = createCourse(lessonSpecification, emptyList(), 20, 100)
             course.lessons.joinToString("") { it.newCharacters } shouldBe "abcd"
         }
 
         expect("course has no lessons when there are no specified symbols") {
-            val courseSymbols = emptyList<String>()
-            val course = createCourse(courseSymbols, emptyList(), 20, 100)
+            val lessonSpecification = emptyList<String>()
+            val course = createCourse(lessonSpecification, emptyList(), 20, 100)
             course.lessons shouldBe emptyList()
         }
 
         expect("each lesson text contains exactly the specified amount of non-whitespace symbols (symbols-per-lesson)") {
-            val courseSymbols = listOf("ab", "cd")
+            val lessonSpecification = listOf("ab", "cd")
             val symbolsPerLesson = 100
-            val course = createCourse(courseSymbols, emptyList(), 20, symbolsPerLesson)
+            val course = createCourse(lessonSpecification, emptyList(), 20, symbolsPerLesson)
             course.lessons shouldHaveAtLeastSize 2
             course.lessons.forAll { it.text.symbolsCount() shouldBe 100 }
         }
 
         expect("each line of each lesson's text has a length of line-length or line-length-1, except the last line can be shorter") {
-            val courseSymbols = listOf("ab", "cd")
+            val lessonSpecification = listOf("ab", "cd")
             val lineLength = 20
-            val course = createCourse(courseSymbols, emptyList(), lineLength, 100)
+            val course = createCourse(lessonSpecification, emptyList(), lineLength, 100)
             course.lessons shouldHaveAtLeastSize 2
             course.lessons.forAll { lesson ->
                 val lines = lesson.text.split('\n')
@@ -136,28 +147,28 @@ class CourseKtTest : IOExpectSpec({
         }
 
         expect("course contains word lessons when a non-empty dictionary is passed") {
-            val courseSymbols = listOf("ab", "cd", "ef", "gh")
+            val lessonSpecification = listOf("ab", "cd", "ef", "gh")
             val dictionary = listOf("gag")
-            val course = createCourse(courseSymbols, dictionary, 20, 100)
+            val course = createCourse(lessonSpecification, dictionary, 20, 100)
             course.lessons shouldHaveAtLeastSize 1
             course.lessons.count { it.text.contains("gag") } shouldBeGreaterThanOrEqual 1
         }
 
         expect("line-length range test") {
-            val courseSymbols = listOf("ab")
+            val lessonSpecification = listOf("ab")
             val symbolsPerLesson = 200
-            createCourse(courseSymbols, emptyList(), -100, symbolsPerLesson).lessons shouldHaveSize 0
-            createCourse(courseSymbols, emptyList(), -1, symbolsPerLesson).lessons shouldHaveSize 0
-            createCourse(courseSymbols, emptyList(), 0, symbolsPerLesson).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), -100, symbolsPerLesson).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), -1, symbolsPerLesson).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), 0, symbolsPerLesson).lessons shouldHaveSize 0
 
-            createCourse(courseSymbols, emptyList(), 1, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(courseSymbols, emptyList(), 1, symbolsPerLesson).lessons.forAll {
+            createCourse(lessonSpecification, emptyList(), 1, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(lessonSpecification, emptyList(), 1, symbolsPerLesson).lessons.forAll {
                 it.text.split('\n') shouldHaveSize 200
                 it.text.split('\n').forAll { line -> line shouldHaveLength 1 }
             }
 
-            createCourse(courseSymbols, emptyList(), 100, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(courseSymbols, emptyList(), 100, symbolsPerLesson).lessons.forAll {
+            createCourse(lessonSpecification, emptyList(), 100, symbolsPerLesson).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(lessonSpecification, emptyList(), 100, symbolsPerLesson).lessons.forAll {
                 it.text.split('\n') shouldHaveAtLeastSize 1
                 it.text.split('\n').dropLast(1) // last line can be shorter
                     .forAll { line ->
@@ -166,17 +177,17 @@ class CourseKtTest : IOExpectSpec({
         }
 
         expect("symbols-per-lesson range test") {
-            val courseSymbols = listOf("ab")
+            val lessonSpecification = listOf("ab")
             val lineLength = 100
-            createCourse(courseSymbols, emptyList(), lineLength, -100).lessons shouldHaveSize 0
-            createCourse(courseSymbols, emptyList(), lineLength, -1).lessons shouldHaveSize 0
-            createCourse(courseSymbols, emptyList(), lineLength, 0).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), lineLength, -100).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), lineLength, -1).lessons shouldHaveSize 0
+            createCourse(lessonSpecification, emptyList(), lineLength, 0).lessons shouldHaveSize 0
 
-            createCourse(courseSymbols, emptyList(), lineLength, 1).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(courseSymbols, emptyList(), lineLength, 1).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  1 }
+            createCourse(lessonSpecification, emptyList(), lineLength, 1).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(lessonSpecification, emptyList(), lineLength, 1).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  1 }
 
-            createCourse(courseSymbols, emptyList(), lineLength, 100).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(courseSymbols, emptyList(), lineLength, 100).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  100 }
+            createCourse(lessonSpecification, emptyList(), lineLength, 100).lessons.size shouldBeGreaterThanOrEqual 1
+            createCourse(lessonSpecification, emptyList(), lineLength, 100).lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe  100 }
         }
     }
 })

@@ -83,7 +83,7 @@ data class KeyboardLayout (
     val keys: Keys = Keys()
 ) {
     companion object {
-        fun create(path: String): KeyboardLayout? = try {
+        fun create(path: String, printError: Boolean = true): KeyboardLayout? = try {
             val rawXml = File(path).readText().trim()
             val xml = XML {
                 xmlVersion = XmlVersion.XML10
@@ -91,7 +91,7 @@ data class KeyboardLayout (
             val serializer = serializer<KeyboardLayout>()
             xml.decodeFromString(serializer, rawXml)
         } catch (e: Exception) {
-            System.err.println("Error on reading keyboard ${e.message}")
+            if (printError) System.err.println("Error on reading keyboard ${e.message}")
             null
         }
     }
