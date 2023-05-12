@@ -1,11 +1,8 @@
 plugins {
-    kotlin("jvm") version "1.8.10"
-    kotlin("plugin.serialization") version "1.8.10"
-    id("io.ktor.plugin") version "2.2.4"
+    kotlin("jvm") version "1.8.21"
+    kotlin("plugin.serialization") version "1.8.21"
+    id("io.ktor.plugin") version "2.3.0"
 }
-
-group = "org.example"
-version = "0.0.1"
 
 application {
     mainClass.set("org.example.ApplicationKt")
@@ -34,15 +31,19 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
 
     // Xml
-    implementation("io.github.pdvrieze.xmlutil:core-jvm:0.85.0")
-    implementation("io.github.pdvrieze.xmlutil:serialization-jvm:0.85.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.5.0")
+    implementation("io.github.pdvrieze.xmlutil:core-jvm:0.86.0")
+    implementation("io.github.pdvrieze.xmlutil:serialization-jvm:0.86.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.5.1")
 
-    testImplementation("io.kotest:kotest-runner-junit5:5.5.5")
-    testImplementation("io.kotest:kotest-assertions-json-jvm:5.5.5")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:5.5.5")
-    testImplementation("io.kotest:kotest-property:5.5.5")
-    testImplementation("io.ktor:ktor-server-core-jvm:2.2.4")
-    testImplementation("io.ktor:ktor-server-netty-jvm:2.2.4")
-    testImplementation("ch.qos.logback:logback-classic:1.4.6")
+    // kotest
+    testImplementation("io.kotest:kotest-runner-junit5:5.6.2")
+    testImplementation("io.kotest:kotest-assertions-json-jvm:5.6.2")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:5.6.2")
+    testImplementation("io.kotest:kotest-property:5.6.2")
+
+    // ktor
+    testImplementation("io.ktor:ktor-server-core-jvm:2.3.0")
+    testImplementation("io.ktor:ktor-server-netty-jvm:2.3.0")
+
+    testImplementation("ch.qos.logback:logback-classic:1.4.7")
 }
