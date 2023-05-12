@@ -206,7 +206,7 @@ on the keyboard, starting with the basic finger position.
 2. Pass it as argument to *ktgen*
 
 ```shell
-java -jar build/libs/ktgen.jar docs/german-layout.xml
+java -jar build/libs/ktgen.jar docs/examples/german-layout.xml
 ```
 
 
@@ -216,7 +216,7 @@ Multiple lessons specifications can be combined to a single course, simply by pa
 They are applied in order. For example:
 
 ```shell
-java -jar build/libs/ktgen.jar lesson_specification.ktgen docs/german-layout.xml another_spec.txt
+java -jar build/libs/ktgen.jar lesson_specification.ktgen docs/examples/german-layout.xml docs/examples/letters.ktgen
 ```
 The first lessons are created from *lesson_specification.ktgen*.
 Then the lessons for the German keyboard layout follow and at the end of the course 
@@ -235,19 +235,33 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
 
 ## Examples
 
--   A course with lessons from *mylessons.txt* and *my_other_lessons.ktgen*
-    containing words from the file *mydict.txt* and from the website *https://docs.dagger.io/*
+-   A course that starts with lessons for *letters.ktgen* and ends with lessons for *digits.ktgen*
     written to *ktgen_course.xml*.
+
+    ```shell
+    java -jar build/libs/ktgen.jar ./docs/examples/letters.ktgen ./docs/examples/digits.ktgen
+    ```
+
+    ```shell
+    docker run \
+    -v ./docs/examples/:/app/files \
+    barbiecue/ktgen:latest /app/files/letters.ktgen /app/files/digits.ktgen \
+    -o > ktgen_course.xml
+    ```
+
+-   A course with lessons from *letters.ktgen* containing words from the file 
+    *mydict.txt* and from the website *https://docs.dagger.io/* written to *ktgen_course.xml*.
     
     ```shell
-    java -jar build/libs/ktgen.jar -file mydict.txt -web https://docs.dagger.io/ mylessons.txt my_other_lessons.ktgen
+    java -jar build/libs/ktgen.jar -file ./docs/examples/mydict.txt -web https://docs.dagger.io/ ./docs/examples/letters.ktgen
     ```
     
     ```shell
     docker run \
-    -v path/to/my/files/:/app/ \
-    barbiecue/ktgen:latest /app/mylessons.txt /app/my_other_lessons.ktgen \
-    -file /app/mydict.txt \
+    -v ./docs/examples/:/app/files \
+    barbiecue/ktgen:latest /app/files/letters.ktgen \
+    -file /app/files/mydict.txt \
+    -web https://docs.dagger.io/ \
     -o > ktgen_course.xml
     ```
 
@@ -255,27 +269,45 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
     written to *ktgen_course.xml*.
     
     ```shell
-    java -jar build/libs/ktgen.jar german-ktouch-layout.xml -web https://de.wikipedia.org/wiki/Ameisen
+    java -jar build/libs/ktgen.jar docs/examples/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen
     ```
-    
+
     ```shell
     docker run \
-    -v path/to/my/files/:/app/ \
-    barbiecue/ktgen:latest /app/german-ktouch-layout.xml \
+    -v ./docs/examples/:/app/files \
+    barbiecue/ktgen:latest /app/files/german-layout.xml \
     -web https://de.wikipedia.org/wiki/Ameisen \
+    -o > ktgen_course.xml
+    ```
+
+-   A course for the german keyboard layout containing words from the website _https://de.wikipedia.org/wiki/Ameisen_
+    where each word is max 10 characters long and each lesson has a length of 500 characters. 
+    Written to *ktgen_course.xml*.
+
+    ```shell
+    java -jar build/libs/ktgen.jar docs/examples/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen -max 10 -length 500
+    ```
+
+    ```shell
+    docker run \
+    -v ./docs/examples/:/app/files \
+    barbiecue/ktgen:latest /app/files/german-layout.xml \
+    -web https://de.wikipedia.org/wiki/Ameisen \
+    -max 10 \
+    -length 500 \
     -o > ktgen_course.xml
     ```
 
 -   A course for the german keyboard layout written to the file *my_ktouch_course.xml*.
     
     ```shell
-    java -jar build/libs/ktgen.jar -of my_ktouch_course.xml docs/german-layout.xml
+    java -jar build/libs/ktgen.jar -of my_ktouch_course.xml docs/examples/german-layout.xml
     ```
-    
+
     ```shell
     docker run \
-    -v path/to/my/files/:/app/ \
-    barbiecue/ktgen:latest /app/german-ktouch-layout.xml \
+    -v ./docs/examples/:/app/files \
+    barbiecue/ktgen:latest /app/files/german-layout.xml \
     -o > my_ktouch_course.xml
     ```
 
@@ -284,26 +316,11 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
     ```shell
     java -jar build/libs/ktgen.jar -o
     ```
-    
-    ```shell
-    docker run \
-    -v path/to/my/lesson_specification.ktgen:/app/lesson_specification.ktgen \
-    barbiecue/ktgen:latest /app/lesson_specification.ktgen \
-    -o
-    ```
 
--   A course that starts with lessons for *letters.ktgen* and ends with lessons for *punctuation_marks.ktgen* 
-    written to *ktgen_course.xml* and to stdout.
-    
-    ```shell
-    java -jar build/libs/ktgen.jar letters.ktgen punctuation_marks.ktgen -of ktgen_course.xml -o
-    ```
-    
     ```shell
     docker run \
-    -v path/to/my/files/:/app/ \
-    barbiecue/ktgen:latest /app/letters.ktgen /app/punctuation_marks.ktgen\
-    -o > ktgen_course.xml
+    -v ./lesson_specification.ktgen:/app/lesson_specification.ktgen \
+    barbiecue/ktgen:latest /app/lesson_specification.ktgen -o
     ```
 
 
