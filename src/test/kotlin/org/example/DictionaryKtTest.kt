@@ -69,10 +69,6 @@ class DictionaryKtTest : IOExpectSpec({
             "abc".consistsOfAny("bca") shouldBe true
         }
 
-        expect("false when the input string contains different symbols than the target string") {
-            "abc".containsAny("x") shouldBe false
-        }
-
         expect("true when the input string contains more symbols than target string") {
             "abc".consistsOfAny("abcdef") shouldBe true
             "abc".consistsOfAny("abcx") shouldBe true
@@ -101,9 +97,24 @@ class DictionaryKtTest : IOExpectSpec({
             "abcabc".consistsOfAny("cba") shouldBe true
             "abcabc".consistsOfAny("cbaxy") shouldBe true
         }
+    }
+
+    context("containsAny") {
+
+        expect("true when input string contains at least one symbol that is also contained in the target string") {
+            "abc".containsAny("a") shouldBe true
+            "abc".containsAny("b") shouldBe true
+            "abc".containsAny("c") shouldBe true
+            "abc".containsAny("ac") shouldBe true
+            "abc".containsAny("ax") shouldBe true
+        }
 
         expect("false when input string is empty") {
             "abc".containsAny("") shouldBe false
+        }
+
+        expect("false when the input string symbols differ completely from the symbols in the target string") {
+            "abc".containsAny("x") shouldBe false
         }
     }
 

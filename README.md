@@ -8,13 +8,17 @@
 
 ### 1. Define your course
 
-Edit the lesson specification file `lesson_specification.ktgen` for your needs.
+Edit the lesson specification file `lesson_specification.ktgen` for your needs. Example:
 
 ```text
 ab cd ef gh ij kl mn op qr st uv wx yz
 AB CD EF GH IJ KL MN OP QR ST UV WX YZ
-WW,. WW!? "WW" 'WW' (WW) {WW} [WW] <WW>
-~` +* #$ |& ^- :; 01 23 45 67 89
+[sch] [ein] [ion]
+WW,. WW!? WW:;
+(WW) {WW} [WW] <WW>
+"WW" 'WW' `WW`
+~ +* #$ |& ^-
+01 23 45 67 89
 ```
 
 The format is explained below.
@@ -22,7 +26,29 @@ The format is explained below.
 
 ### 2. Run ktgen
 
-Via Docker or Java (explained below).
+
+#### Public Docker Image
+
+```shell
+docker run -v ./:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen -o > ktgen_course.xml
+```
+
+The `lesson_specification.ktgen` file is passed via bind mount.
+Make sure to have it in place (`./lesson_specification.ktgen`),
+e.g. create the file or simply clone this repository before running the docker command.
+
+
+#### Java
+
+Requires Java 17 or higher
+
+```shell
+./gradlew buildFatJar
+```
+```shell
+java -jar build/libs/ktgen.jar
+```
+
 
 
 ### 3. Done
@@ -31,34 +57,6 @@ Your KTouch course has been generated and written to `ktgen_course.xml`.
 It can be imported into KTouch.
 
 
-## Run with existing Docker Image
-
-```shell
-docker run \
--v path/to/your/lesson_specification.ktgen:/app/lesson_specification.ktgen \
-barbiecue/ktgen:latest /app/lesson_specification.ktgen \
--o > ktgen_course.xml
-```
-
-Pass your custom *lesson_specification.ktgen* to the docker container via volume bind.
-So change `path/to/your/lesson_specification.ktgen` accordingly.
-
-
-## Run locally with Java
-
-Requires Java 17 or higher
-
-### Build ktgen
-
-```shell
-./gradlew buildFatJar
-```
-
-### Run ktgen
-
-```shell
-java -jar build/libs/ktgen.jar
-```
 
 ## Dictionary
 
@@ -78,6 +76,10 @@ Use `-file <path>` to point to a dictionary file.
 No matter if it contains continuous text or one word per line.
 
 ```shell
+docker run -v ./:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen -file /files/README.md -o > ktgen_course.xml
+```
+
+```shell
 java -jar build/libs/ktgen.jar -file README.md
 ```
 
@@ -86,6 +88,11 @@ java -jar build/libs/ktgen.jar -file README.md
 
 Link a website of your choice with `-web <url>` and let *ktgen*
 extract text from it.
+
+```shell
+docker run -v ./:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen \
+-web https://en.wikipedia.org/wiki/Barbie -o > ktgen_course.xml
+```
 
 ```shell
 java -jar build/libs/ktgen.jar -web https://en.wikipedia.org/wiki/Barbie
@@ -161,49 +168,51 @@ If the side does not matter so that a punctuation mark can be to the left or to 
 you can just write it down.
 
 ```text
-ab cd ef gh ij kl mn op qr st uv wx yz
 \/ +- ,;
 ```
 
-This produces words like `\pear`, `barbie/`, `+pear`, `-apple`, `,barbie`, `pear;`, ..
+This leads to lessons containing words like `\pear`, `barbie/`, `+pear`, `-apple`, `,barbie`, `pear;`.
 
 But, if the side matters, so that the punctuation mark can only be
 to the left or only to the right of a word, then use the `WW` pattern (*WW* stands for *word*).
 
 ```text
-ab cd ef gh ij kl mn op qr st uv wx yz
 WW., [(WW)] {WW}
 ```
 
-This produces words like `(pear)`, `[barbie]`, `{pear}`, `apple.`, `barbie,` ..
+This leads to lessons containing words like `(pear)`, `[barbie]`, `{pear}`, `apple.`, `barbie,`.
 
 
 ### Letter groups
 
-In every language, letters appear as fixed groups.
-For example, *"tt"*, *"ss"*, *"ch"*, *"nn"* or *"sch"*.
-Lessons for such groups are generated with square brackets.
+In most languages, some letters often appear in fixed groups.
+For example, *"ion"*, *"ss"*, *"ch"*, *"ght"* or *"sch"*.
+Lessons for such groups are generated with _square brackets_.
 
 ```text
-ab cd ef gh ij kl mn op qr st uv wx yz
-[ch] [tt] [ss]
+[ch] [tt] [ion] [ght]
 ```
 
-This produces words like `china`, `letter`, `lesson`.
+This leads to lessons containing words like `china`, `chemie`, `letter`, `mission`, `compression`, `eight`, `fight`.
 
 
 ## Keyboard layout
 
-You can use a keyboard layout to create finger-by-finger lessons that
-focus on the key neighbors. Lowercase and uppercase letters are contained.
-A course created in this way follows an intuitive path across the keys
-on the keyboard, starting with the basic finger position.
+Let _ktgen_ create courses for a keyboard layout of your choice.
+
+Such a course consists of finger-to-finger lessons that focus on the key neighbors,
+This results in an intuitive path through the layout,
+which begins with the basic finger position.
 
 ![keyboard path](docs/keyboardpath.jpg)
 
 
 1. Export a keyboard layout from KTouch (e.g `german-layout.xml`)
 2. Pass it as argument to *ktgen*
+
+```shell
+docker run -v ./docs/examples/:/files barbiecue/ktgen:latest /files/german-layout.xml -o > ktgen_course.xml
+```
 
 ```shell
 java -jar build/libs/ktgen.jar docs/examples/german-layout.xml
@@ -216,14 +225,23 @@ Multiple lessons specifications can be combined to a single course, simply by pa
 They are applied in order. For example:
 
 ```shell
+docker run -v ./:/files barbiecue/ktgen:latest \
+/files/docs/examples/german-layout.xml /files/lesson_specification.ktgen /files/docs/examples/letters.ktgen \
+-o > ktgen_course.xml
+```
+
+```shell
 java -jar build/libs/ktgen.jar lesson_specification.ktgen docs/examples/german-layout.xml docs/examples/letters.ktgen
 ```
+
 The first lessons are created from *lesson_specification.ktgen*.
-Then the lessons for the German keyboard layout follow and at the end of the course 
-the lessons from the file *another_spec.txt*.
+Then the lessons for the German keyboard layout follow and at the end of the course
+the lessons from the file *letters.ktgen*.
 
 The specification file `lesson_specification.ktgen` is used by default,
-if no lesson specification is passed as argument.
+if no lesson specification is passed as argument, when running locally via Java.
+When using docker, you always have to pass a lesson specification.
+
 
 
 ## Output
@@ -239,88 +257,87 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
     written to *ktgen_course.xml*.
 
     ```shell
-    java -jar build/libs/ktgen.jar ./docs/examples/letters.ktgen ./docs/examples/digits.ktgen
-    ```
-
-    ```shell
-    docker run \
-    -v ./docs/examples/:/app/files \
-    barbiecue/ktgen:latest /app/files/letters.ktgen /app/files/digits.ktgen \
+    docker run -v ./docs/examples/:/files \
+    barbiecue/ktgen:latest /files/letters.ktgen /files/digits.ktgen \
     -o > ktgen_course.xml
     ```
 
--   A course with lessons from *letters.ktgen* containing words from the file 
-    *mydict.txt* and from the website *https://docs.dagger.io/* written to *ktgen_course.xml*.
-    
     ```shell
-    java -jar build/libs/ktgen.jar -file ./docs/examples/mydict.txt -web https://docs.dagger.io/ ./docs/examples/letters.ktgen
+    java -jar build/libs/ktgen.jar ./docs/examples/letters.ktgen ./docs/examples/digits.ktgen
     ```
-    
+
+
+-   A course with lessons from *letters.ktgen* containing words from the file
+    *mydict.txt* and from the website *https://docs.dagger.io/* written to *ktgen_course.xml*.
+
     ```shell
-    docker run \
-    -v ./docs/examples/:/app/files \
-    barbiecue/ktgen:latest /app/files/letters.ktgen \
-    -file /app/files/mydict.txt \
+    docker run -v ./docs/examples/:/files \
+    barbiecue/ktgen:latest /files/letters.ktgen \
+    -file /files/mydict.txt \
     -web https://docs.dagger.io/ \
     -o > ktgen_course.xml
     ```
 
+    ```shell
+    java -jar build/libs/ktgen.jar -file ./docs/examples/mydict.txt -web https://docs.dagger.io/ ./docs/examples/letters.ktgen
+    ```
+
+
 -   A course for the german keyboard layout containing words from the website _https://de.wikipedia.org/wiki/Ameisen_
     written to *ktgen_course.xml*.
-    
+
+    ```shell
+    docker run -v ./docs/examples/:/files \
+    barbiecue/ktgen:latest /files/german-layout.xml \
+    -web https://de.wikipedia.org/wiki/Ameisen \
+    -o > ktgen_course.xml
+    ```
+
     ```shell
     java -jar build/libs/ktgen.jar docs/examples/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen
     ```
 
-    ```shell
-    docker run \
-    -v ./docs/examples/:/app/files \
-    barbiecue/ktgen:latest /app/files/german-layout.xml \
-    -web https://de.wikipedia.org/wiki/Ameisen \
-    -o > ktgen_course.xml
-    ```
 
 -   A course for the german keyboard layout containing words from the website _https://de.wikipedia.org/wiki/Ameisen_
-    where each word is max 10 characters long and each lesson has a length of 500 characters. 
+    where each word is max 10 characters long and each lesson has a length of 500 characters.
     Written to *ktgen_course.xml*.
+-
+  ```shell
+  docker run -v ./docs/examples/:/files \
+  barbiecue/ktgen:latest /files/german-layout.xml \
+  -web https://de.wikipedia.org/wiki/Ameisen \
+  -max 10 \
+  -length 500 \
+  -o > ktgen_course.xml
+  ```
 
-    ```shell
-    java -jar build/libs/ktgen.jar docs/examples/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen -max 10 -length 500
-    ```
+  ```shell
+  java -jar build/libs/ktgen.jar docs/examples/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen -max 10 -length 500
+  ```
 
-    ```shell
-    docker run \
-    -v ./docs/examples/:/app/files \
-    barbiecue/ktgen:latest /app/files/german-layout.xml \
-    -web https://de.wikipedia.org/wiki/Ameisen \
-    -max 10 \
-    -length 500 \
-    -o > ktgen_course.xml
-    ```
 
 -   A course for the german keyboard layout written to the file *my_ktouch_course.xml*.
-    
+
+    ```shell
+    docker run -v ./docs/examples/:/files \
+    barbiecue/ktgen:latest /files/german-layout.xml \
+    -o > my_ktouch_course.xml
+    ```
+
     ```shell
     java -jar build/libs/ktgen.jar -of my_ktouch_course.xml docs/examples/german-layout.xml
     ```
 
-    ```shell
-    docker run \
-    -v ./docs/examples/:/app/files \
-    barbiecue/ktgen:latest /app/files/german-layout.xml \
-    -o > my_ktouch_course.xml
-    ```
 
 -   A course for *lesson_specification.ktgen* written to stdout.
-    
+
     ```shell
     java -jar build/libs/ktgen.jar -o
     ```
 
     ```shell
-    docker run \
-    -v ./lesson_specification.ktgen:/app/lesson_specification.ktgen \
-    barbiecue/ktgen:latest /app/lesson_specification.ktgen -o
+    docker run -v ./lesson_specification.ktgen:/files/lesson_specification.ktgen \
+    barbiecue/ktgen:latest /files/lesson_specification.ktgen -o
     ```
 
 

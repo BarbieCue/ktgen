@@ -18,6 +18,5 @@ internal fun readLessonSpecificationFile(path: String): Collection<String> = try
 internal fun KeyboardLayout.toLessonSpecification(): Collection<String> {
     val hands = hands(this)
     val keyPairs = pairKeys(hands)
-    val ordered = customOrder(keyPairs)
-    return lowerLetters(ordered).plus(upperLetters(ordered))
+    return keyPairs.customOrder().mapChars()
 }

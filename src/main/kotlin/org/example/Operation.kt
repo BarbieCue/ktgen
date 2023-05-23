@@ -1,46 +1,37 @@
 package org.example
 
 import java.util.Random
+import kotlin.text.repeat as charSeqRepeat
 
 
-/*
- Chars
- */
-
-fun shuffle(symbols: String): String {
-    val carr = symbols.toCharArray()
+fun String.shuffle(): String {
+    val carr = toCharArray()
     carr.shuffle()
     return carr.concatToString().trim()
 }
 
-fun repeat(symbols: String, length: Int): String =
-    if (length <= 0 || symbols.isEmpty()) ""
-    else symbols.repeat(length/symbols.length+1).slice((0 until length)).trim()
+fun String.repeat(length: Int): String =
+    if (length <= 0 || isEmpty()) ""
+    else charSeqRepeat(length/this.length+1).slice((0 until length)).trim()
 
-fun segment(symbols: String, length: Int): String {
+fun String.segment(length: Int): String {
     if (length < 1) return ""
     return buildString {
-        for (from in 0..symbols.length step length) {
-            val to = if (from + length >= symbols.length) symbols.length - 1 else from + length - 1
-            append(symbols.slice((from..to)))
+        for (from in 0..this@segment.length step length) {
+            val to = if (from + length >= this@segment.length) this@segment.length - 1 else from + length - 1
+            append(this@segment.slice((from..to)))
             append(' ')
         }
     }.trim()
 }
 
 
-/*
- Words
- */
-
-fun joinRepeat(words: Collection<String>, sumNonWhitespaceChars: Int): String =
-    if (words.isEmpty() || sumNonWhitespaceChars <= 0
-        || words.all { it.isEmpty() }
-        || words.none { it.length <= sumNonWhitespaceChars }) ""
+fun Collection<String>.joinRepeat(sumNonWhitespaceChars: Int): String =
+    if (isEmpty() || sumNonWhitespaceChars <= 0
+        || all { it.isEmpty() }
+        || none { it.length <= sumNonWhitespaceChars }) ""
     else {
-        val wordLoop = words
-            .filter { it.length <= sumNonWhitespaceChars }
-            .repeatInfinite().iterator()
+        val wordLoop = filter { it.length <= sumNonWhitespaceChars }.repeatInfinite().iterator()
         buildString {
             var ctr = 0
             while (true) {
@@ -48,7 +39,7 @@ fun joinRepeat(words: Collection<String>, sumNonWhitespaceChars: Int): String =
                 ctr += word.length
                 if (ctr > sumNonWhitespaceChars) {
                     val tooMuch = ctr - sumNonWhitespaceChars
-                    val fillWord = words.find { it.length == word.length - tooMuch }
+                    val fillWord = this@joinRepeat.find { it.length == word.length - tooMuch }
                     if (fillWord != null) append(fillWord)
                     else append(word.take(word.length - tooMuch))
                     break
@@ -63,11 +54,6 @@ fun <T> Collection<T>.repeatInfinite() = sequence {
     if (any()) while (true) yieldAll(this@repeatInfinite)
 }
 
-
-/*
- Symbols
- */
-
 internal val pairs = hashMapOf(
     '(' to ')',
     '[' to ']',
@@ -80,8 +66,8 @@ internal val pairs = hashMapOf(
 
 internal val pairsRevers = pairs.map { it.value to it.key }.toMap()
 
-internal fun splitWWLeftRight(wwString: String): Pair<String, String> =
-    wwString.substringBefore("WW") to wwString.substringAfter("WW")
+internal fun String.splitWWLeftRight(): Pair<String, String> =
+    substringBefore("WW") to substringAfter("WW")
 
 internal fun randomPair(left: String, right: String): Pair<String, String> {
     return if (left.isNotEmpty() && right.isNotEmpty())
@@ -105,25 +91,10 @@ internal fun randomPair(left: String, right: String): Pair<String, String> {
     }
 }
 
-fun punctuationMarks(punctuationMarks: String, length: Int): String {
-    if (punctuationMarks.isEmpty() || length <= 0) return ""
-    val (left, right) = splitWWLeftRight(punctuationMarks)
-    if ((left+right).isEmpty()) return ""
-    return buildString {
-        while (this.length < length) {
-            val (l, r) = randomPair(left, right)
-            append(if (punctuationMarks.matches(wwRegex)) "$l$r" else {
-                val set = (l+r).toSet()
-                if (set.isNotEmpty()) "${set.random()}" else ""
-            })
-        }
-    }
-}
-
-fun wordsWithPunctuationMarks(words: Collection<String>, punctuationMarks: String): List<String> {
-    if (words.isEmpty() || punctuationMarks.isEmpty()) return emptyList()
-    val (left, right) = splitWWLeftRight(punctuationMarks)
-    return words.map {
+fun Collection<String>.prefixOrAppendPunctuationMarks(punctuationMarks: String): List<String> {
+    if (isEmpty() || punctuationMarks.isEmpty()) return emptyList()
+    val (left, right) = punctuationMarks.splitWWLeftRight()
+    return map {
         val (l, r) = randomPair(left, right)
         if (punctuationMarks.matches(wwRegex)) "$l$it$r" else {
             if ((l+r).isEmpty()) it

@@ -1,11 +1,9 @@
 package org.example
 
-import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldMatch
 import java.util.*
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.writeText
@@ -469,7 +467,7 @@ class KeyboardKtTest : IOExpectSpec({
             val hands = hands(keyboardLayout!!)
             val pairs = pairKeys(hands)
 
-            val customOrder = customOrder(pairs)
+            val customOrder = pairs.customOrder()
             customOrder[0].pair.first!!.chars.map { it.text } shouldContain "f"
             customOrder[0].pair.second!!.chars.map { it.text } shouldContain "j"
             customOrder[1].pair.first!!.chars.map { it.text } shouldContain "d"
@@ -503,60 +501,165 @@ class KeyboardKtTest : IOExpectSpec({
         }
 
         expect("return empty list on empty input") {
-            customOrder(emptyList()) shouldBe emptyList()
+            emptyList<KeyPair>().customOrder() shouldBe emptyList()
         }
     }
 
-    context("filter") {
+    context("mapChars") {
 
-        expect("keyboard layout english USA filters pairs where the keys match the filter pattern") {
+        context("Key") {
+
+            context("charAtPosition") {
+
+                expect("return the first character found at the given position") {
+                    val a = Char(position = "hidden", text = "A")
+                    val b = Char(position = "hidden", text = "B")
+                    Key(chars = listOf(a, b)).charAtPosition(CharPosition.DEFAULT)!! shouldBe a
+                }
+
+                expect("return null when there is no char at this position") {
+                    Key(chars = listOf(
+                        Char(position = "hidden", text = "A"),
+                        Char(position = "hidden", text = "B"))
+                    ).charAtPosition(CharPosition.TOP_LEFT) shouldBe null
+                }
+
+                expect("return null when the key has no chars") {
+                    Key(chars = emptyList()).charAtPosition(CharPosition.DEFAULT) shouldBe null
+                }
+            }
+        }
+
+        context("Pair<Key?, Key?>") {
+
+            context("mapCharsByPosition") {
+
+                expect("maps a left char to a right char by the nearest position") {
+                    val c1 = Char(position = CharPosition.DEFAULT.value, text = "f")
+                    val c2 = Char(position = CharPosition.DEFAULT.value, text = "j")
+                    Pair(Key(chars = listOf(c1)), Key(chars = listOf(c2))
+                    ).mapCharsByPosition(CharPosition.DEFAULT, listOf(
+                        CharPosition.DEFAULT,
+                        CharPosition.BOTTOM_LEFT,
+                        CharPosition.TOP_LEFT,
+                        CharPosition.BOTTOM_RIGHT,
+                        CharPosition.TOP_RIGHT,
+                    )) shouldBe Pair(c1, c2)
+                }
+
+                expect("try take a char from one of the successor positions, when there is no char at the current position") {
+                    val c1 = Char(position = CharPosition.DEFAULT.value, text = "a")
+                    val c2 = Char(position = CharPosition.BOTTOM_LEFT.value, text = ";")
+                    Pair(Key(chars = listOf(c1)), Key(chars = listOf(c2))
+                    ).mapCharsByPosition(CharPosition.DEFAULT, listOf(
+                        CharPosition.DEFAULT,
+                        CharPosition.BOTTOM_LEFT,
+                    )) shouldBe Pair(c1, c2)
+
+                    val c3 = Char(position = CharPosition.TOP_RIGHT.value, text = "*")
+                    Pair(Key(chars = listOf(c1)), Key(chars = listOf(c3))
+                    ).mapCharsByPosition(CharPosition.DEFAULT, listOf(
+                        CharPosition.DEFAULT,
+                        CharPosition.BOTTOM_LEFT,
+                        CharPosition.TOP_LEFT,
+                        CharPosition.BOTTOM_RIGHT,
+                        CharPosition.TOP_RIGHT,
+                    )) shouldBe Pair(c1, c3)
+                }
+
+                expect("left result side is null when there is no possible char") {
+                    val c1 = Char(null, "", "")
+                    val c2 = Char(position = CharPosition.BOTTOM_LEFT.value, text = ";")
+                    Pair(Key(chars = listOf(c1)), Key(chars = listOf(c2))
+                    ).mapCharsByPosition(CharPosition.DEFAULT, listOf(
+                        CharPosition.DEFAULT,
+                        CharPosition.BOTTOM_LEFT,
+                        CharPosition.TOP_LEFT,
+                        CharPosition.BOTTOM_RIGHT,
+                        CharPosition.TOP_RIGHT,
+                    )) shouldBe Pair(null, c2)
+                }
+
+                expect("right result side is null when there is no possible char to map to") {
+                    val c1 = Char(position = CharPosition.DEFAULT.value, text = "a")
+                    val c2 = Char(null, "", "")
+                    Pair(Key(chars = listOf(c1)), Key(chars = listOf(c2))
+                    ).mapCharsByPosition(CharPosition.DEFAULT, listOf(
+                        CharPosition.DEFAULT,
+                        CharPosition.BOTTOM_LEFT,
+                        CharPosition.TOP_LEFT,
+                        CharPosition.BOTTOM_RIGHT,
+                        CharPosition.TOP_RIGHT,
+                    )) shouldBe Pair(c1, null)
+                }
+
+                expect("return null when left-position is not contained in the right-positions list") {
+                    Pair(Key(chars = listOf(Char())), Key(chars = listOf(Char())))
+                        .mapCharsByPosition(CharPosition.TOP_LEFT, listOf(CharPosition.DEFAULT)) shouldBe null
+                }
+
+                expect("start searching in the right-positions list at the index of left-position") {
+                    val c1 = Char(position = CharPosition.TOP_LEFT.value, text = "a")
+                    val c2 = Char(position = CharPosition.DEFAULT.value, text = ";")
+                    Pair(Key(chars = listOf(c1)), Key(chars = listOf(c2))
+                    ).mapCharsByPosition(CharPosition.TOP_LEFT, listOf(
+                        CharPosition.DEFAULT,
+                        CharPosition.BOTTOM_LEFT,
+                        CharPosition.TOP_LEFT,
+                        CharPosition.BOTTOM_RIGHT,
+                        CharPosition.TOP_RIGHT,
+                    )) shouldBe Pair(c1, null)
+                }
+            }
+        }
+
+        context("List<String>") {
+
+            context("withoutDuplicateSingles") {
+
+                expect("remove single chars from the list, when there are entries in the list having a length of 2 and contain the single entry") {
+                    listOf("ab", "bc", "de", "b").withoutDuplicateSingles() shouldBe listOf("ab", "bc", "de")
+                    listOf("ab", "bc", "de", "b", "b").withoutDuplicateSingles() shouldBe listOf("ab", "bc", "de")
+                }
+
+                expect("return empty list on empty input") {
+                    emptyList<String>().withoutDuplicateSingles() shouldBe emptyList()
+                }
+            }
+
+            context("onlyAllowedSymbols") {
+
+                expect("filter the input list for digits, letters and punctuation marks") {
+                    listOf("ab", "bc", "de", "12").onlyAllowedSymbols() shouldBe listOf("ab", "bc", "de", "12")
+                    listOf("ab", "bc", ".", "⇥", "b", "⇲").onlyAllowedSymbols() shouldBe listOf("ab", "bc", ".", "b")
+                    listOf("⇡", "↲").onlyAllowedSymbols() shouldBe emptyList()
+                }
+
+                expect("return empty list on empty input") {
+                    emptyList<String>().onlyAllowedSymbols() shouldBe emptyList()
+                }
+            }
+        }
+
+        expect("map the symbols (chars) of the partner keys into a single string, return them all as list") {
             val keyboardLayout = exampleKeyboardEnglishUSA()
             val hands = hands(keyboardLayout!!)
             val pairs = pairKeys(hands)
-
-            val letterPairs = filter(pairs, "[a-z]+".toRegex())
-            letterPairs shouldHaveSize 15
-            letterPairs.forAll { it shouldMatch "[a-z]+".toRegex() }
-
-            val digitPairs = filter(pairs, "[0-9]+".toRegex())
-            digitPairs shouldHaveSize 5
-            digitPairs.forAll { it shouldMatch "[0-9]+".toRegex() }
+            val joinedChars = pairs.mapChars()
+            joinedChars shouldBe listOf(
+                "qp", "a;", "z/", "wo", "sl", "x.",
+                "ei", "dk", "c,", "ru", "ty", "fj",
+                "gh", "vm", "bn", "10", "`-", "29",
+                "38", "47", "56", "=[", "]\\", "'",
+                "!)", "~_", "QP", "A:", "Z?", "@(",
+                "WO", "SL", "X>", "#*", "EI", "DK",
+                "C<", "$&", "%^", "RU", "TY", "FJ",
+                "GH", "VM", "BN", "+{", "}|", "\""
+            )
         }
 
         expect("return empty list on empty input") {
-            filter(emptyList(), ".*".toRegex()) shouldBe emptyList()
-        }
-    }
-
-    context("upperLetters") {
-
-        expect("keyboard layout english USA return upper letter pairs") {
-            val keyboardLayout = exampleKeyboardEnglishUSA()
-            val hands = hands(keyboardLayout!!)
-            val pairs = pairKeys(hands)
-            val letterPairs = upperLetters(pairs)
-            letterPairs shouldHaveSize 15
-            letterPairs.forAll { it shouldMatch "[A-ZÜÄÖẞ]+".toRegex() }
-        }
-
-        expect("return empty list on empty input") {
-            upperLetters(emptyList()) shouldBe emptyList()
-        }
-    }
-
-    context("lowerLetters") {
-
-        expect("keyboard layout english USA return lower letter pairs") {
-            val keyboardLayout = exampleKeyboardEnglishUSA()
-            val hands = hands(keyboardLayout!!)
-            val pairs = pairKeys(hands)
-            val letterPairs = lowerLetters(pairs)
-            letterPairs shouldHaveSize 15
-            letterPairs.forAll { it shouldMatch "[a-züäöß]+".toRegex() }
-        }
-
-        expect("return empty list on empty input") {
-            lowerLetters(emptyList()) shouldBe emptyList()
+            emptyList<KeyPair>().mapChars() shouldBe emptyList()
         }
     }
 

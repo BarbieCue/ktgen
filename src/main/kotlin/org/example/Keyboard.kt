@@ -98,34 +98,79 @@ fun pairKeys(hands: Pair<Hand, Hand>?): List<KeyPair> {
     return result
 }
 
-fun customOrder(keyPairs: List<KeyPair>): List<KeyPair> {
+fun List<KeyPair>.customOrder(): List<KeyPair> {
     val path = setOf( // for example when using a QWERTY layout like 'english (USA)':
-        keyPairs.filter { it.finger == 3 && it.level == 2 && it.index == 0 }, // fj
-        keyPairs.filter { it.finger == 2 && it.level == 2 && it.index == 0 }, // dk
-        keyPairs.filter { it.finger == 1 && it.level == 2 && it.index == 0 }, // sl
-        keyPairs.filter { it.finger == 0 && it.level == 2 && it.index == 0 }, // a;
-        keyPairs.filter { it.finger == 3 && it.level == 2 && it.index == 1 }, // gh
-        keyPairs.filter { it.finger == 3 && it.level == 1 && it.index == 1 }, // ty
-        keyPairs.filter { it.finger == 3 && it.level == 3 && it.index == 0 }, // vm
-        keyPairs.filter { it.finger == 3 && it.level == 3 && it.index == 1 }, // bn
-        keyPairs.filter { it.finger == 3 && it.level == 1 && it.index == 0 }, // ru
-        keyPairs.filter { it.finger == 2 && it.level == 1 && it.index == 0 }, // ei
-        keyPairs.filter { it.finger == 2 && it.level == 3 && it.index == 0 }, // c,
-        keyPairs.filter { it.finger == 1 && it.level == 1 && it.index == 0 }, // wo
-        keyPairs.filter { it.finger == 1 && it.level == 3 && it.index == 0 }, // x.
-        keyPairs.filter { it.finger == 0 && it.level == 1 && it.index == 0 }, // qp
-        keyPairs.filter { it.finger == 0 && it.level == 3 && it.index == 0 }  // z/
+        filter { it.finger == 3 && it.level == 2 && it.index == 0 }, // fj
+        filter { it.finger == 2 && it.level == 2 && it.index == 0 }, // dk
+        filter { it.finger == 1 && it.level == 2 && it.index == 0 }, // sl
+        filter { it.finger == 0 && it.level == 2 && it.index == 0 }, // a;
+        filter { it.finger == 3 && it.level == 2 && it.index == 1 }, // gh
+        filter { it.finger == 3 && it.level == 1 && it.index == 1 }, // ty
+        filter { it.finger == 3 && it.level == 3 && it.index == 0 }, // vm
+        filter { it.finger == 3 && it.level == 3 && it.index == 1 }, // bn
+        filter { it.finger == 3 && it.level == 1 && it.index == 0 }, // ru
+        filter { it.finger == 2 && it.level == 1 && it.index == 0 }, // ei
+        filter { it.finger == 2 && it.level == 3 && it.index == 0 }, // c,
+        filter { it.finger == 1 && it.level == 1 && it.index == 0 }, // wo
+        filter { it.finger == 1 && it.level == 3 && it.index == 0 }, // x.
+        filter { it.finger == 0 && it.level == 1 && it.index == 0 }, // qp
+        filter { it.finger == 0 && it.level == 3 && it.index == 0 }  // z/
     ).flatten()
-    return path.plus(keyPairs.minus(path.toSet()))
+    return path.plus(minus(path.toSet()))
 }
 
-fun filter(keyPairs: List<KeyPair>, pattern: Regex): List<String> {
-    return keyPairs.map { pair ->
-        val l = pair.pair.first?.chars?.firstOrNull { it.text.matches(pattern) }?.text
-        val r = pair.pair.second?.chars?.firstOrNull { it.text.matches(pattern) }?.text
-        (l ?: "") + (r ?: "")
+enum class CharPosition(val value: String) {
+    DEFAULT("hidden"),
+    BOTTOM_LEFT("bottomLeft"),
+    TOP_LEFT("topLeft"),
+    BOTTOM_RIGHT("bottomRight"),
+    TOP_RIGHT("topRight"),
+}
+
+internal fun Key.charAtPosition(position: CharPosition) =
+    chars.firstOrNull { it.position == position.value }
+
+internal fun Pair<Key?, Key?>.mapCharsByPosition(leftPosition: CharPosition, rightPositions: List<CharPosition>): Pair<Char?, Char?>? {
+    if (!rightPositions.contains(leftPosition)) return null
+    val leftChar = first?.charAtPosition(leftPosition)
+    for (right in rightPositions.subList(rightPositions.indexOf(leftPosition), rightPositions.size)) {
+        val rightChar = second?.charAtPosition(right) ?: continue
+        return leftChar to rightChar
+    }
+    return leftChar to null
+}
+
+internal fun List<String>.withoutDuplicateSingles() =
+    filter { single ->
+        if (single.length == 1) filter { it.length == 2 }.none { it.contains(single) }
+        else true
+    }
+
+internal fun List<String>.onlyAllowedSymbols(): List<String> =
+    map { it.map { char ->
+        if ("$char".matches(lettersRegex) ||
+            "$char".matches(digitRegex) ||
+            "$char".matches(punctuationRegex)) char
+        else ""}.joinToString("")
     }.filter { it.isNotEmpty() }
-}
 
-fun upperLetters(keyPairs: List<KeyPair>): List<String> = filter(keyPairs, "[A-ZÜÄÖẞ]+".toRegex())
-fun lowerLetters(keyPairs: List<KeyPair>): List<String> = filter(keyPairs, "[a-züäöß]+".toRegex())
+fun List<KeyPair>.mapChars(): List<String> {
+    val positions = listOf(
+        CharPosition.DEFAULT,
+        CharPosition.BOTTOM_LEFT,
+        CharPosition.TOP_LEFT,
+        CharPosition.BOTTOM_RIGHT,
+        CharPosition.TOP_RIGHT,
+    )
+    val result = mutableListOf<String>()
+    positions.forEach { position ->
+        forEach {
+            val pair = it.pair.mapCharsByPosition(position, positions)
+            val leftCharSymbol = pair?.first?.text ?: ""
+            val rightCharSymbol = pair?.second?.text ?: ""
+            val concat = leftCharSymbol + rightCharSymbol
+            if (concat.isNotEmpty() && !result.contains(concat)) result.add(concat)
+        }
+    }
+    return result.onlyAllowedSymbols().withoutDuplicateSingles()
+}
