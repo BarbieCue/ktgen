@@ -34,14 +34,17 @@ class LessonSpecificationKtTest : IOExpectSpec({
 
         context("toLessonSpecification") {
 
-            expect("english USA return string list of paired symbols") {
+            expect("english USA return string list of custom ordered, paired symbols") {
                 val keyboardLayout = exampleKeyboardEnglishUSA()
                 keyboardLayout!!.toLessonSpecification() shouldBe listOf(
-                    "fj", "dk", "sl", "a", "gh", "ty", "vm",
-                    "bn", "ru", "ei", "c", "wo", "x", "qp", "z",
-                    "FJ", "DK", "SL", "A", "GH", "TY", "VM",
-                    "BN", "RU", "EI", "C", "WO", "X", "QP", "Z"
-                )
+                    "fj", "dk", "sl", "a;", "gh", "ty",
+                    "vm", "bn", "ru", "ei", "c,", "wo",
+                    "x.", "qp", "z/", "10", "`-", "29",
+                    "38", "47", "56", "=[", "]\\", "'",
+                    "FJ", "DK", "SL", "A:", "GH", "TY",
+                    "VM", "BN", "RU", "EI", "C<", "WO",
+                    "X>", "QP", "Z?", "!)", "~_", "@(",
+                    "#*", "$&", "%^", "+{", "}|", "\"")
             }
         }
     }

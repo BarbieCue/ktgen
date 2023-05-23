@@ -5,7 +5,6 @@ import io.kotest.data.headers
 import io.kotest.data.row
 import io.kotest.data.table
 import io.kotest.inspectors.forAll
-import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
@@ -57,44 +56,20 @@ class LessonKtTest : ConcurrentExpectSpec({
         }
     }
 
-    context("unpack") {
-
-        expect("unpack WW strings") {
-            unpack("{WW}") shouldBe "{}"
-        }
-
-        expect("unpack letter groups") {
-            unpack("[sch]") shouldBe "sch"
-        }
-
-        expect("return original input, if it is not packed") {
-            unpack("apple pear") shouldBe "apple pear"
-        }
-
-        expect("empty input leads to empty output") {
-            unpack("") shouldBe ""
-        }
-    }
-
     context("lessonWords") {
 
-        expect("lesson-symbols must be contained in the chars-history") {
-            setOf("ab", "abrc", "abrcel").lessonWords("abrcel", "el") shouldBe setOf("abrcel")
-            setOf("ab", "abrc", "abrcel").lessonWords("abrc", "el") shouldBe emptyList()
-        }
-
         expect("first lesson's words consist of the first lessons symbols only") {
-            val dict = setOf("ab", "abrc", "abrcel")
+            val dict = setOf("ab", "abrc", "abrce", "abrcel")
             val charsHistory = "ab"
             val lessonSymbols = "ab"
             dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("ab")
         }
 
         expect("words from lessons 2..n can contain symbols from all last lesson, but definitely contain at least one of the current lesson's symbols") {
-            val dict = setOf("ab", "abrc", "abrcel")
+            val dict = setOf("ab", "abrc", "abrce", "abrcel")
             val charsHistory = "abrcel"
             val lessonSymbols = "el"
-            dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("abrcel")
+            dict.lessonWords(charsHistory, lessonSymbols) shouldBe setOf("abrce", "abrcel")
         }
 
         expect("rotate the dict randomly but always preserve the word order") {
@@ -126,7 +101,7 @@ class LessonKtTest : ConcurrentExpectSpec({
             dict.lessonWords(charsHistory, lessonSymbols) shouldBe emptyList()
         }
 
-        expect("if lesson symbols contains non-letters, ignore them and take words from history based on letters") {
+        expect("if lesson symbols contain non-letters, ignore them and take words from history based on letters") {
             val dict = setOf("ad", "b", "tt", "a", "cd", "bd", "xx", "d")
             val charsHistory = "abc_[]d().;"
             val lessonSymbols = "_[]d().;"
@@ -140,7 +115,7 @@ class LessonKtTest : ConcurrentExpectSpec({
             dict.lessonWords(charsHistory, lessonSymbols) shouldContainExactlyInAnyOrder listOf("ab", "b", "a", "ba", "bab")
         }
 
-        expect("if lesson symbols is a letter group, take words from history which contain the group") {
+        expect("if lesson symbols is a letter group, take words from history containing the group") {
             val dict = setOf("apple", "letter", "lesson", "china", "brain")
             val charsHistory = "ialetrsonch"
             val lessonSymbols = "[tt]"
@@ -166,72 +141,13 @@ class LessonKtTest : ConcurrentExpectSpec({
         }
     }
 
-    context("ww") {
-
-        expect("return the WW part") {
-            ww("WW") shouldBe "WW"
-            ww("(WW)") shouldBe "(WW)"
-            ww("WW)=/\\") shouldBe "WW)=/\\"
-            ww("_}*?/{(WW") shouldBe "_}*?/{(WW"
-        }
-
-        expect("return empty string when there is no WW part") {
-            ww("W") shouldBe ""
-            ww("") shouldBe ""
-            ww("abc") shouldBe ""
-        }
-
-        expect("WW must be capital letters") {
-            ww("{WW}") shouldBe "{WW}"
-            ww("{ww}") shouldBe ""
-            ww("{Ww}") shouldBe ""
-            ww("{wW}") shouldBe ""
-        }
-
-        expect("return the first WW part only") {
-            ww("(WW)(WW)") shouldBe "(WW)("
-            ww("(WW)';[{(WW)}]") shouldBe "(WW)';[{("
-        }
-
-        expect("ignore everything else") {
-            ww("abcABC(WW)") shouldBe "(WW)"
-            ww("abcABC(WW)1abcABC") shouldBe "(WW)"
-            ww("abc:ABC(WW)1a,bc_ABC") shouldBe "(WW)"
-            ww("1WW1") shouldBe "WW"
-            ww("1abcWW") shouldBe "WW"
-            ww("()=abcWW") shouldBe "WW"
-        }
-    }
-
-    context("wwUnpack") {
-
-        expect("remove the WW in a WW string and return only the symbols") {
-            wwUnpack("(WW)") shouldBe "()"
-            wwUnpack("WW)=/\\") shouldBe ")=/\\"
-            wwUnpack("_}*?/{(WW") shouldBe "_}*?/{("
-            wwUnpack("WW") shouldBe ""
-            wwUnpack("W") shouldBe ""
-            wwUnpack("") shouldBe ""
-        }
-
-        expect("ignore everything else") {
-            wwUnpack("abcABC(WW)") shouldBe "()"
-            wwUnpack("abcABC(WW)1abcABC") shouldBe "()"
-            wwUnpack("abc:ABC(WW)1a,bc_ABC") shouldBe "()"
-            wwUnpack("abcABCWW") shouldBe ""
-            wwUnpack("1WW1") shouldBe ""
-            wwUnpack("1abcWW") shouldBe ""
-            wwUnpack("()=abcWW") shouldBe ""
-        }
-    }
-
     context("letterGroupRegex") {
 
         expect("match letter groups") {
             "[sch]" shouldMatch letterGroupRegex
         }
 
-        expect("not match anything else") {
+        expect("not match non-letter groups") {
             "[sch]a" shouldNotMatch letterGroupRegex.pattern
             "a[sch]" shouldNotMatch letterGroupRegex.pattern
             "[]" shouldNotMatch letterGroupRegex.pattern
@@ -241,181 +157,77 @@ class LessonKtTest : ConcurrentExpectSpec({
         }
     }
 
-    context("letterGroup") {
+    context("lower letters regex") {
 
-        expect("return group of letters inclusive square brackets") {
-            letterGroup("[sch]") shouldBe "[sch]"
-            letterGroup("[123]") shouldBe ""
-            letterGroup("[%';]") shouldBe ""
+        expect("match lowercase letters") {
+            "abcdefghijklmnopqrstuvwxyzäöüß" shouldMatch lowerLetters
+            "aaa" shouldMatch lowerLetters
         }
 
-        expect("return the first group only") {
-            letterGroup("[sch][ch][ss][tt]") shouldBe "[sch]"
-            letterGroup("[tt][ch][ss]") shouldBe "[tt]"
+        expect("not match digits") {
+            "0123456789" shouldNotMatch lowerLetters.pattern
         }
 
-        expect("return empty string on empty group") {
-            letterGroup("[]") shouldBe ""
-        }
-
-        expect("return empty string when group consists of non-letters") {
-            letterGroup("[123]") shouldBe ""
-            letterGroup("[%';]") shouldBe ""
-        }
-
-        expect("return empty string when group contains non-letters") {
-            letterGroup("[sch12]") shouldBe ""
-            letterGroup("[sch%';]") shouldBe ""
-        }
-
-        expect("ignore surrounding square brackets") {
-            letterGroup("[[sch]]") shouldBe "[sch]"
-            letterGroup("[[[sch]]]") shouldBe "[sch]"
-        }
-
-        expect("WW part can not be a letter group") {
-            letterGroup("[WW]") shouldBe ""
-            letterGroup("{[WW]}") shouldBe ""
+        expect("not match punctuation marks") {
+            "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~" shouldNotMatch lowerLetters.pattern
         }
     }
 
-    context("letterGroupUnpack") {
+    context("upper letters regex") {
 
-        expect("return the letters of the group") {
-            letterGroupUnpack("[sch]") shouldBe "sch"
+        expect("match uppercase letters") {
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞ" shouldMatch upperLetters
+            "AAA" shouldMatch upperLetters
         }
 
-        expect("handle the first group only") {
-            letterGroupUnpack("[sch][ch][ss][tt]") shouldBe "sch"
-            letterGroupUnpack("[tt][ch][ss]") shouldBe "tt"
+        expect("not match digits") {
+            "0123456789" shouldNotMatch upperLetters.pattern
         }
 
-        expect("return an empty string when the group is empty") {
-            letterGroupUnpack("[]") shouldBe ""
-        }
-
-        expect("return empty string when group consists of non-letters") {
-            letterGroupUnpack("[123]") shouldBe ""
-            letterGroupUnpack("[%';]") shouldBe ""
-        }
-
-        expect("ignore surrounding square brackets") {
-            letterGroupUnpack("[[sch]]") shouldBe "sch"
-            letterGroupUnpack("[[[sch]]]") shouldBe "sch"
-        }
-
-        expect("WW part can not be a letter group") {
-            letterGroupUnpack("[WW]") shouldBe ""
-            letterGroupUnpack("{[WW]}") shouldBe ""
-        }
-    }
-
-    context("unconditionalPunctuation") {
-
-        expect("return punctuation marks which are not related to WW") {
-            unconditionalPunctuation("!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~") shouldBe "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
-            unconditionalPunctuation("abc") shouldBe ""
-            unconditionalPunctuation("abc:") shouldBe ":"
-            unconditionalPunctuation("123") shouldBe ""
-            unconditionalPunctuation("123:") shouldBe ":"
-            unconditionalPunctuation("1,2(WW)") shouldBe ","
-            unconditionalPunctuation("()=abc=(WW)=") shouldBe "()="
-            unconditionalPunctuation("()=abc[WW]") shouldBe "()="
-        }
-
-        expect("ignore WW part") {
-            unconditionalPunctuation("abcABC(WW)") shouldBe ""
-            unconditionalPunctuation("abcABCWW") shouldBe ""
-            unconditionalPunctuation("1WW1") shouldBe ""
-            unconditionalPunctuation("1abcWW") shouldBe ""
+        expect("not match punctuation marks") {
+            "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~" shouldNotMatch upperLetters.pattern
         }
     }
 
     context("letters regex") {
 
         expect("match lowercase and uppercase letters") {
-            "abcdefghijklmnopqrstuvwxyzäöüßABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞ".matches(lettersRegex) shouldBe true
+            "abcdefghijklmnopqrstuvwxyzäöüßABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞ" shouldMatch lettersRegex
+            "aaa" shouldMatch lettersRegex
+            "AAA" shouldMatch lettersRegex
         }
 
         expect("not match digits") {
-            "0123456789".matches(lettersRegex) shouldBe false
+            "0123456789" shouldNotMatch lettersRegex.pattern
         }
 
         expect("not match punctuation marks") {
-            "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~".matches(lettersRegex) shouldBe false
+            "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~" shouldNotMatch lettersRegex.pattern
         }
     }
 
-    context("letters") {
+    context("digits regex") {
 
-        expect("return lowercase and uppercase letters") {
-            letters("W") shouldBe "W"
-            letters("üäöß") shouldBe "üäöß"
-            letters("abc") shouldBe "abc"
-            letters("a,bc()=;deXXf") shouldBe "abcdeXXf"
-            letters("abc123deXXf") shouldBe "abcdeXXf"
-            letters("") shouldBe ""
+        expect("match digits") {
+            "123" shouldMatch digitRegex
         }
 
-        expect("ignore digits") {
-            letters("123\"") shouldBe ""
-        }
-
-        expect("ignore punctuation marks") {
-            letters(",.';%{}[]()") shouldBe ""
-        }
-
-        expect("ignore WW part") {
-            letters("WW") shouldBe ""
-            letters("(WW)") shouldBe ""
-            letters("abc(WW)abc(WW)';abc") shouldBe "abcabcabc"
-            letters("abc(WW)=;def") shouldBe "abcdef"
-        }
-
-        expect("ignore letter groups") {
-            letters("abc[sch]def") shouldBe "abcdef"
-            letters("abcdef[sch]") shouldBe "abcdef"
-            letters("[sch]abcdef") shouldBe "abcdef"
-            letters("[sch]abcdef[tt]") shouldBe "abcdef"
-            letters("abc[]def") shouldBe "abcdef"
-            letters("abcdef[]") shouldBe "abcdef"
-            letters("[]abcdef") shouldBe "abcdef"
-        }
-
-        expect("return empty string on empty input") {
-            letters("") shouldBe ""
+        expect("does not match non-digits") {
+            "123abc" shouldNotMatch digitRegex.pattern
+            "abc" shouldNotMatch digitRegex.pattern
+            "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~" shouldNotMatch digitRegex.pattern
         }
     }
 
-    context("digits") {
+    context("punctuation regex") {
 
-        expect("return digits") {
-            digits("0123456789") shouldBe "0123456789"
+        expect("match punctuation marks") {
+            "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~" shouldMatch punctuationRegex
         }
 
-        expect("ignore letters") {
-            digits("abc") shouldBe ""
-            digits("abc123deXXf") shouldBe "123"
-            digits("abc123deXXf,)(456") shouldBe "123456"
-        }
-
-        expect("ignore punctuation marks") {
-            digits(",()=;") shouldBe ""
-        }
-
-        expect("ignore WW part") {
-            digits("WW") shouldBe ""
-            digits("(WW)") shouldBe ""
-            digits("123(WW)") shouldBe "123"
-            digits("123(WW)=;456") shouldBe "123456"
-        }
-
-        expect("ignore letter groups") {
-            digits("123[sch]456") shouldBe "123456"
-        }
-
-        expect("return empty string on empty input") {
-            digits("") shouldBe ""
+        expect("does not match non-punctuation marks") {
+            "123" shouldNotMatch punctuationRegex.pattern
+            "abc" shouldNotMatch punctuationRegex.pattern
         }
     }
 
@@ -446,28 +258,28 @@ class LessonKtTest : ConcurrentExpectSpec({
     }
 
 
-    context("invokeConcatSingleLine") {
+    context("invokeConcat") {
 
         expect("returns concatenated generators results as single line, single whitespace separated") {
             fun repeatA(n: Int) = "a".repeat(n)
             fun repeatB(n: Int) = "b".repeat(n)
             fun repeatC(n: Int) = "c".repeat(n)
             val generators = listOf(::repeatA, ::repeatB, ::repeatC)
-            val result = invokeConcatSingleLine(10, generators)
+            val result = invokeConcat(10, generators)
             result shouldBe "aaa bbb ccc a"
         }
 
         expect("on single generator return the generators result with length of symbols-per-lesson") {
             fun repeatA(n: Int) = "a".repeat(n)
             val generators = listOf(::repeatA)
-            invokeConcatSingleLine(10, generators) shouldBe "aaaaaaaaaa"
+            invokeConcat(10, generators) shouldBe "aaaaaaaaaa"
         }
 
         expect("on many generators return all generators results separated by whitespace") {
             fun repeatA(n: Int) = "a".repeat(n)
             fun repeatB(n: Int) = "b".repeat(n)
             val generators = listOf(::repeatA, ::repeatB)
-            invokeConcatSingleLine(10, generators) shouldBe "aaaaa bbbbb"
+            invokeConcat(10, generators) shouldBe "aaaaa bbbbb"
         }
 
         expect("on many generators each generators result has length of symbols-per-lesson divided by number-of-generators") {
@@ -475,7 +287,7 @@ class LessonKtTest : ConcurrentExpectSpec({
             fun repeatB(n: Int) = "b".repeat(n)
             fun repeatC(n: Int) = "c".repeat(n)
             val generators = listOf(::repeatA, ::repeatB, ::repeatC)
-            val lines = invokeConcatSingleLine(9, generators).split(" ")
+            val lines = invokeConcat(9, generators).split(" ")
             lines[0] shouldHaveLength 3 // aaa
             lines[1] shouldHaveLength 3 // bbb
             lines[2] shouldHaveLength 3 // ccc
@@ -486,7 +298,7 @@ class LessonKtTest : ConcurrentExpectSpec({
             fun repeatB(n: Int) = "b".repeat(n)
             fun repeatC(n: Int) = "c".repeat(n)
             val generators = listOf(::repeatA, ::repeatB, ::repeatC)
-            val lines = invokeConcatSingleLine(10, generators).split(" ")
+            val lines = invokeConcat(10, generators).split(" ")
 
             lines[0] shouldHaveLength 3
             lines[1] shouldHaveLength 3
@@ -500,8 +312,12 @@ class LessonKtTest : ConcurrentExpectSpec({
         }
 
         expect("return empty string when generators have empty output") {
-            val generators = listOf{_: Int -> ""}
-            invokeConcatSingleLine(3, generators) shouldBe ""
+            fun repeatA(n: Int) = "a".repeat(n)
+            fun repeatB(n: Int) = "b".repeat(n)
+            fun emptyResult(n: Int) = ""
+            fun repeatC(n: Int) = "c".repeat(n)
+            val generators = listOf(::repeatA, ::repeatB, ::emptyResult, ::repeatC)
+            invokeConcat(3, generators) shouldBe ""
         }
     }
 
@@ -519,32 +335,423 @@ class LessonKtTest : ConcurrentExpectSpec({
                 result shouldBe "aaa bbb ccc"
             }
 
-            expect("re-invoke generators if necessary to get the total number of symbols") {
+            expect("result contains exactly the total number of non-whitespace characters (symbols-total)") {
                 fun repeatA(n: Int) = "a".repeat(n)
                 fun repeatB(n: Int) = "b".repeat(n)
                 fun repeatC(n: Int) = "c".repeat(n)
                 val generators = listOf(::repeatA, ::repeatB, ::repeatC)
-                val lines = generators.invokeConcat(3, 10).split(" ")
-
-                lines[0] shouldHaveLength 3
-                lines[1] shouldHaveLength 3
-                lines[2] shouldHaveLength 3
-                lines[3] shouldHaveLength 1
-
-                lines[0] shouldBe "aaa"
-                lines[1] shouldBe "bbb"
-                lines[2] shouldBe "ccc"
-                lines[3] shouldBe "a" // re-invoked first generator
+                val result = generators.invokeConcat(3, 200)
+                result.count { !it.isWhitespace() } shouldBe 200
             }
 
-            expect("return empty string when generators have empty output") {
-                val generators = listOf{_: Int -> ""}
+            expect("re-invoke generators from the beginning if necessary, to reach the total number of symbols") {
+                fun repeatA(n: Int) = "a".repeat(n)
+                fun repeatB(n: Int) = "b".repeat(n)
+                fun repeatC(n: Int) = "c".repeat(n)
+                val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+                val segments = generators.invokeConcat(3, 23).split(" ")
+
+                segments shouldHaveSize 8
+
+                segments[0] shouldHaveLength 3
+                segments[1] shouldHaveLength 3
+                segments[2] shouldHaveLength 3
+                segments[3] shouldHaveLength 3
+                segments[4] shouldHaveLength 3
+                segments[5] shouldHaveLength 3
+                segments[6] shouldHaveLength 3
+                segments[7] shouldHaveLength 2
+
+                segments[0] shouldBe "aaa"
+                segments[1] shouldBe "bbb"
+                segments[2] shouldBe "ccc"
+                segments[3] shouldBe "aaa"
+                segments[4] shouldBe "bbb"
+                segments[5] shouldBe "ccc"
+                segments[6] shouldBe "aaa"
+                segments[7] shouldBe "bb"
+            }
+
+            expect("return empty string when there it at least one generator with empty output") {
+                fun repeatA(n: Int) = "a".repeat(n)
+                fun repeatB(n: Int) = "b".repeat(n)
+                fun emptyResult(n: Int) = ""
+                fun repeatC(n: Int) = "c".repeat(n)
+                val generators = listOf(::repeatA, ::repeatB, ::emptyResult, ::repeatC)
                 generators.invokeConcat(3, 10) shouldBe ""
+            }
+
+            expect("return empty string when symbols-per-generator is <= 0") {
+                fun repeatA(n: Int) = "a".repeat(n)
+                fun repeatB(n: Int) = "b".repeat(n)
+                fun repeatC(n: Int) = "c".repeat(n)
+                val generators = listOf(::repeatA, ::repeatB, ::repeatC)
+                generators.invokeConcat(0, 10) shouldBe ""
+                generators.invokeConcat(-1, 10) shouldBe ""
             }
         }
     }
 
-    context("String") {
+    context("String extensions") {
+
+        context("unpack") {
+
+            expect("unpack pure WW strings") {
+                "{WW}".unpack() shouldBe "{}"
+            }
+
+            expect("unpack WW substrings in place") {
+                "abc{WW}123".unpack() shouldBe "abc{}123"
+            }
+
+            expect("unpack pure letter groups") {
+                "[sch]".unpack() shouldBe "sch"
+            }
+
+            expect("unpack letter group substrings in place") {
+                "abc[sch]123".unpack() shouldBe "abcsch123"
+            }
+
+            expect("return original input, if it is not packed") {
+                "apple pear".unpack() shouldBe "apple pear"
+            }
+
+            expect("empty input leads to empty output") {
+                "".unpack() shouldBe ""
+            }
+        }
+
+        context("ww") {
+
+            expect("return the WW part") {
+                "WW".ww() shouldBe "WW"
+                "(WW)".ww() shouldBe "(WW)"
+                "WW)=/\\".ww() shouldBe "WW)=/\\"
+                "_}*?/{(WW".ww() shouldBe "_}*?/{(WW"
+            }
+
+            expect("return empty string when there is no WW part") {
+                "W".ww() shouldBe ""
+                "abc".ww() shouldBe ""
+            }
+
+            expect("empty input leads to empty output") {
+                "".ww() shouldBe ""
+            }
+
+            expect("WW must be capital letters") {
+                "{WW}".ww() shouldBe "{WW}"
+                "{ww}".ww() shouldBe ""
+                "{Ww}".ww() shouldBe ""
+                "{wW}".ww() shouldBe ""
+            }
+
+            expect("return the first WW part only") {
+                "(WW)(WW)".ww() shouldBe "(WW)("
+                "(WW)';[{(WW)}]".ww() shouldBe "(WW)';[{("
+            }
+
+            expect("ignore everything else") {
+                "abcABC(WW)".ww() shouldBe "(WW)"
+                "abcABC(WW)1abcABC".ww() shouldBe "(WW)"
+                "abc:ABC(WW)1a,bc_ABC".ww() shouldBe "(WW)"
+                "1WW1".ww() shouldBe "WW"
+                "1abcWW".ww() shouldBe "WW"
+                "()=abcWW".ww() shouldBe "WW"
+            }
+        }
+
+        context("wwUnpack") {
+
+            expect("remove the WW from WW strings") {
+                "WW".unpackWW() shouldBe ""
+                "(WW)".unpackWW() shouldBe "()"
+                "WW)=/\\".unpackWW() shouldBe ")=/\\"
+                "_}*?/{(WW".unpackWW() shouldBe "_}*?/{("
+            }
+
+            expect("return input string when it contains no WW substring") {
+                "1234".unpackWW() shouldBe "1234"
+            }
+
+            expect("empty input leads to empty output") {
+                "".unpackWW() shouldBe ""
+            }
+        }
+
+        context("letterGroup") {
+
+            expect("return group of letters inclusive square brackets") {
+                "[sch]".letterGroup() shouldBe "[sch]"
+            }
+
+            expect("return the first group only") {
+                "[sch][ch][ss][tt]".letterGroup() shouldBe "[sch]"
+                "[tt][ch][ss]".letterGroup() shouldBe "[tt]"
+            }
+
+            expect("return empty string on empty group") {
+                "[]".letterGroup() shouldBe ""
+            }
+
+            expect("empty input leads to empty output") {
+                "".letterGroup() shouldBe ""
+            }
+
+            expect("return empty string when group consists of non-letters") {
+                "[123]".letterGroup() shouldBe ""
+                "[%';]".letterGroup() shouldBe ""
+            }
+
+            expect("return empty string when group contains non-letters") {
+                "[sch12]".letterGroup() shouldBe ""
+                "[sch%';]".letterGroup() shouldBe ""
+            }
+
+            expect("ignore surrounding square brackets") {
+                "[[sch]]".letterGroup() shouldBe "[sch]"
+                "[[[sch]]]".letterGroup() shouldBe "[sch]"
+            }
+
+            expect("WW part can not be a letter group") {
+                "[WW]".letterGroup() shouldBe ""
+                "{[WW]}".letterGroup() shouldBe ""
+            }
+        }
+
+        context("letterGroupUnpack") {
+
+            expect("return the letters of the group") {
+                "[sch]".unpackLetterGroup() shouldBe "sch"
+            }
+
+            expect("unpack a letter group in place") {
+                "abc[sch]123".unpackLetterGroup() shouldBe "abcsch123"
+            }
+
+            expect("handle the first group only") {
+                "[sch][ch][ss][tt]".unpackLetterGroup() shouldBe "sch[ch][ss][tt]"
+                "[tt][ch][ss]".unpackLetterGroup() shouldBe "tt[ch][ss]"
+            }
+
+            expect("an empty square bracket pair is not treated as letter group") {
+                "[]".unpackLetterGroup() shouldBe "[]"
+            }
+
+            expect("empty input leads to empty output") {
+                "".unpackLetterGroup() shouldBe ""
+            }
+
+            expect("return input string when it is not a letter group") {
+                "[123]".unpackLetterGroup() shouldBe "[123]"
+                "[%';]".unpackLetterGroup() shouldBe "[%';]"
+                "abc".unpackLetterGroup() shouldBe "abc"
+                "123".unpackLetterGroup() shouldBe "123"
+                ",.".unpackLetterGroup() shouldBe ",."
+            }
+
+            expect("WW part can not be a letter group") {
+                "[WW]".unpackLetterGroup() shouldBe ""
+                "{[WW]}".unpackLetterGroup() shouldBe ""
+            }
+        }
+
+        context("unconditionalPunctuation") {
+
+            expect("return punctuation marks which are not related to WW") {
+                "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~".punctuationMarks() shouldBe "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+                "abc".punctuationMarks() shouldBe ""
+                "abc:".punctuationMarks() shouldBe ":"
+                "123".punctuationMarks() shouldBe ""
+                "123:".punctuationMarks() shouldBe ":"
+                "1,2(WW)".punctuationMarks() shouldBe ","
+                "()=abc[WW]-".punctuationMarks() shouldBe "()="
+            }
+
+            expect("ignore WW part") {
+                "abcABC(WW)".punctuationMarks() shouldBe ""
+                "abcABCWW".punctuationMarks() shouldBe ""
+                "1WW1".punctuationMarks() shouldBe ""
+                "1abcWW".punctuationMarks() shouldBe ""
+            }
+        }
+
+        context("letters") {
+
+            expect("return lowercase and uppercase letters") {
+                "W".letters() shouldBe "W"
+                "üäöß".letters() shouldBe "üäöß"
+                "abc".letters() shouldBe "abc"
+                "a,bc()=;deXXf".letters() shouldBe "abcdeXXf"
+                "abc123deXXf".letters() shouldBe "abcdeXXf"
+                "".letters() shouldBe ""
+            }
+
+            expect("ignore digits") {
+                "123\"".letters() shouldBe ""
+            }
+
+            expect("ignore punctuation marks") {
+                ",.';%{}[]()".letters() shouldBe ""
+            }
+
+            expect("ignore WW part") {
+                "WW".letters() shouldBe ""
+                "(WW)".letters() shouldBe ""
+                "abc(WW)abc(WW)';abc".letters() shouldBe "abcabcabc"
+                "abc(WW)=;def".letters() shouldBe "abcdef"
+            }
+
+            expect("ignore letter groups") {
+                "abc[sch]def".letters() shouldBe "abcdef"
+                "abcdef[sch]".letters() shouldBe "abcdef"
+                "[sch]abcdef".letters() shouldBe "abcdef"
+                "[sch]abcdef[tt]".letters() shouldBe "abcdef"
+                "abc[]def".letters() shouldBe "abcdef"
+                "abcdef[]".letters() shouldBe "abcdef"
+                "[]abcdef".letters() shouldBe "abcdef"
+            }
+
+            expect("return empty string on empty input") {
+                "".letters() shouldBe ""
+            }
+        }
+
+        context("containsLetters") {
+
+            expect("false when string is a letter group") {
+                "[abc]".containsLetters() shouldBe false
+            }
+
+            expect("false when string is a ww string") {
+                "[WW]".containsLetters() shouldBe false
+            }
+
+            expect("true when string contains letters") {
+                "abc".containsLetters() shouldBe true
+                "abc123".containsLetters() shouldBe true
+            }
+
+            expect("false when string does not contain letters") {
+                "123".containsLetters() shouldBe false
+                ",.".containsLetters() shouldBe false
+            }
+
+            expect("false on empty string") {
+                "".containsLetters() shouldBe false
+            }
+        }
+
+        context("areDigits") {
+
+            expect("true when string consists only of digits") {
+                "0123456789".areDigits() shouldBe true
+            }
+
+            expect("false when string does not consists only of digits") {
+                "abc".areDigits() shouldBe false
+                "abc123".areDigits() shouldBe false
+                ".,".areDigits() shouldBe false
+                "1,3".areDigits() shouldBe false
+                "1.4".areDigits() shouldBe false
+            }
+        }
+
+        context("isLetterGroup") {
+
+            expect("true when string is a letter group") {
+                "[sch]".isLetterGroup() shouldBe true
+            }
+
+            expect("false when string is not a letter group") {
+                "abc".isLetterGroup() shouldBe false
+                "abc123".isLetterGroup() shouldBe false
+                ".,".isLetterGroup() shouldBe false
+                "1".isLetterGroup() shouldBe false
+                "1,3".isLetterGroup() shouldBe false
+            }
+
+            expect("false for WW strings") {
+                "[WW]".isLetterGroup() shouldBe false
+            }
+
+            expect("false on empty string") {
+                "".isLetterGroup() shouldBe false
+            }
+        }
+
+        context("toTextBlock") {
+
+            expect("break the input string into lines of max length line-length") {
+                val result = "abcdef abc abc abcdef abc".toTextBlock(20, 5)
+                val lines = result.split("\n")
+                lines[0] shouldHaveLength 5
+                lines[1] shouldHaveLength 5
+                lines[2] shouldHaveLength 5
+                lines[3] shouldHaveLength 5
+                lines[4] shouldHaveLength 2
+                result shouldBe """
+            abcde
+            f abc
+            abc a
+            bcdef
+            ab
+        """.trimIndent()
+            }
+
+            expect("input string property test") {
+                val arbitraryBuilder = Arb.stringPattern("[A-Za-z0-9.,;\\[\\]{}\t]{30}")
+                repeat(100) {
+                    val lines = arbitraryBuilder.next().toTextBlock(20, 5).split("\n")
+                    lines shouldHaveAtLeastSize 4
+                    lines[0] shouldHaveMinLength 3
+                    lines[0] shouldHaveMaxLength 5
+                    lines[1] shouldHaveMinLength 3
+                    lines[1] shouldHaveMaxLength 5
+                    lines[2] shouldHaveMinLength 3
+                    lines[2] shouldHaveMaxLength 5
+                    lines[3] shouldHaveMinLength 3
+                    lines[3] shouldHaveMaxLength 5
+                }
+            }
+
+            expect("normalize multiple chained whitespace characters to a single one") {
+                "abc    abc  \t abc   abc abc abc    abc".toTextBlock(20, 5) shouldBe
+                        """
+                    abc a
+                    bc ab
+                    c abc
+                    abc a
+                    bc ab
+                    """.trimIndent()
+            }
+
+            expect("input string length is smaller than symbols-total leads to result having input string length") {
+                "abc def ghi".toTextBlock(20, 5) shouldBe """
+            abc d
+            ef gh
+            i
+        """.trimIndent()
+            }
+
+            expect("input string length is smaller than line-length leads to result having input string length") {
+                "ac".toTextBlock(20, 5) shouldBe "ac"
+            }
+
+            expect("return empty string when input string is empty") {
+                "".toTextBlock(20, 5) shouldBe ""
+            }
+
+            expect("return empty string when symbols-total is zero or negative") {
+                "abc abc abc".toTextBlock(0, 10) shouldBe ""
+                "abc abc abc".toTextBlock(-1, 10) shouldBe ""
+            }
+
+            expect("return empty string when line-length is zero or negative") {
+                "abc abc abc".toTextBlock(10, 0) shouldBe ""
+                "abc abc abc".toTextBlock(10, -1) shouldBe ""
+            }
+        }
 
         context("symbolsCount") {
 
@@ -571,526 +778,381 @@ class LessonKtTest : ConcurrentExpectSpec({
         }
     }
 
-    context("toTextBlock") {
+    context("LessonBuilder") {
 
-        expect("break the input string into lines of max length line-length") {
-            val result = toTextBlock("abcdef abc abc abcdef abc", 20, 5)
-            val lines = result.split("\n")
-            lines[0] shouldHaveLength 5
-            lines[1] shouldHaveLength 5
-            lines[2] shouldHaveLength 5
-            lines[3] shouldHaveLength 5
-            lines[4] shouldHaveLength 2
-            result shouldBe """
-            abcde
-            f abc
-            abc a
-            bcdef
-            ab
-        """.trimIndent()
-        }
+        context("newLesson") {
 
-        expect("input string property test") {
-            val arbitraryBuilder = Arb.stringPattern("[A-Za-z0-9.,;\\[\\]{}\t]{30}")
-            repeat(100) {
-                val lines = toTextBlock(arbitraryBuilder.next(), 20, 5).split("\n")
-                lines shouldHaveAtLeastSize 4
-                lines[0] shouldHaveMinLength 3
-                lines[0] shouldHaveMaxLength 5
-                lines[1] shouldHaveMinLength 3
-                lines[1] shouldHaveMaxLength 5
-                lines[2] shouldHaveMinLength 3
-                lines[2] shouldHaveMaxLength 5
-                lines[3] shouldHaveMinLength 3
-                lines[3] shouldHaveMaxLength 5
+            fun L.exampleBuildStep(): L {
+                buildSteps.add { _ -> Arb.stringPattern("[A-Za-z0-9.,;@:<>]{100}\t[A-Za-z0-9.,;@:<>]{100}").next() }
+                return this@exampleBuildStep
             }
-        }
 
-        expect("normalize multiple chained whitespace characters to a single one") {
-            toTextBlock("abc    abc  \t abc   abc abc abc    abc", 20, 5) shouldBe
-                    """
-                    abc a
-                    bc ab
-                    c abc
-                    abc a
-                    bc ab
-                    """.trimIndent()
-        }
-
-        expect("input string length is smaller than symbols-total leads to result having input string length") {
-            toTextBlock("abc def ghi", 20, 5) shouldBe """
-            abc d
-            ef gh
-            i
-        """.trimIndent()
-        }
-
-        expect("input string length is smaller than line-length leads to result having input string length") {
-            toTextBlock("ac", 20, 5) shouldBe "ac"
-        }
-
-        expect("return empty string when input string is empty") {
-            toTextBlock("", 20, 5) shouldBe ""
-        }
-
-        expect("return empty string when symbols-total is zero or negative") {
-            toTextBlock("abc abc abc", 0, 10) shouldBe ""
-            toTextBlock("abc abc abc", -1, 10) shouldBe ""
-        }
-
-        expect("return empty string when line-length is zero or negative") {
-            toTextBlock("abc abc abc", 10, 0) shouldBe ""
-            toTextBlock("abc abc abc", 10, -1) shouldBe ""
-        }
-    }
-
-    context("buildLesson") {
-
-        fun L.exampleBuildStep(): L {
-            buildSteps.add { _ -> Arb.stringPattern("[A-Za-z0-9.,;@:<>]{100}\t[A-Za-z0-9.,;@:<>]{100}").next() }
-            return this@exampleBuildStep
-        }
-
-        expect("properties will be correctly assigned") {
-            val lesson = buildLesson("my lesson", 10, 10,"ab") {
-                exampleBuildStep()
-            }
-            lesson.title shouldBe "my lesson"
-            lesson.newCharacters shouldBe "ab"
-            lesson.text.length shouldBe 10
-        }
-
-        expect("apply all build steps") {
-            val text = buildLesson(lineLength = 30, symbolsPerLesson = 400) {
-                repeatSymbols("123", 3)
-                shuffledSymbols("def", 10)
-                wordsWithUnconditionalPunctuationMarks(listOf("hi"), ";")
-                words(listOf("apple"))
-                repeatSymbols("{}", 3)
-            }.text
-            text.count { !it.isWhitespace() } shouldBe 400
-            text shouldContain "123"
-            text shouldContain "[def]{3,}".toRegex()
-            text shouldContain "{}"
-            text shouldContain ";*hi;*".toRegex()
-            text shouldContain "apple"
-        }
-
-        expect("line-length range test") {
-            buildLesson(lineLength = -10, symbolsPerLesson = 10) {
-                exampleBuildStep()
-            }.text shouldHaveLength 0
-
-            buildLesson(lineLength = -1, symbolsPerLesson = 10) {
-                exampleBuildStep()
-            }.text shouldHaveLength 0
-
-            buildLesson(lineLength = 0, symbolsPerLesson = 10) {
-                exampleBuildStep()
-            }.text shouldHaveLength 0
-
-            buildLesson(lineLength = 1, symbolsPerLesson = 10) {
-                exampleBuildStep()
-            }.text.count { !it.isWhitespace() } shouldBe 10
-
-            buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                exampleBuildStep()
-            }.text shouldHaveLength 10
-        }
-
-        expect("symbols-per-lesson range test") {
-            buildLesson(lineLength = 10, symbolsPerLesson = -100) {
-                exampleBuildStep()
-            }.text shouldHaveLength 0
-
-            buildLesson(lineLength = 10, symbolsPerLesson = -10) {
-                exampleBuildStep()
-            }.text shouldHaveLength 0
-
-            buildLesson(lineLength = 10, symbolsPerLesson = -1) {
-                exampleBuildStep()
-            }.text shouldHaveLength 0
-
-            buildLesson(lineLength = 10, symbolsPerLesson = 0) {
-                exampleBuildStep()
-            }.text shouldHaveLength 0
-
-            buildLesson(lineLength = 10, symbolsPerLesson = 1) {
-                exampleBuildStep()
-            }.text shouldHaveLength 1
-
-            buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                exampleBuildStep()
-            }.text.count { !it.isWhitespace() } shouldBe 10
-
-            val text100 = buildLesson(lineLength = 10, symbolsPerLesson = 100) {
-                exampleBuildStep()
-            }.text
-            text100.split("\n") shouldHaveAtLeastSize 10
-            text100.count { !it.isWhitespace() } shouldBe 100
-        }
-
-        context("symbols-per-lesson < line-length") {
-
-            expect("result contains symbols-per-lesson non-whitespace characters") {
-                buildLesson(lineLength = 20, symbolsPerLesson = 8) {
+            expect("A lesson counter is added to the title") {
+                val lessonBuilder = LessonBuilder(10, 10, emptyList())
+                lessonBuilder.newLesson("ab", "ab") {
                     exampleBuildStep()
-                }.text.count { !it.isWhitespace() } shouldBe 8
-            }
-        }
-
-        context("symbols-per-lesson > line-length") {
-
-            expect("result is multiline containing symbols-per-lesson non-whitespace characters") {
-                val text = buildLesson(lineLength = 8, symbolsPerLesson = 20) {
+                }!!.title shouldBe "1: ab"
+                lessonBuilder.newLesson("cd", "cd") {
                     exampleBuildStep()
-                }.text
-                text.split("\n") shouldHaveAtLeastSize 2
-                text.count { !it.isWhitespace() } shouldBe 20
-            }
-        }
-
-        context("repeatSymbols") {
-
-            expect("repeat the input symbols") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    repeatSymbols("ab", 10)
-                }.text shouldBe "ababababab"
+                }!!.title shouldBe "2: cd"
             }
 
-            expect("segment-length range test") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    repeatSymbols("abc", -10)
-                }.text shouldHaveLength 0
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    repeatSymbols("abc", -1)
-                }.text shouldHaveLength 0
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    repeatSymbols("abc", 0)
-                }.text shouldHaveLength 0
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    repeatSymbols("abc", 1)
-                }.text shouldBe """
-                    a b c a b
-                    c a b c a
-                """.trimIndent()
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    repeatSymbols("abc", 10)
-                }.text shouldHaveLength 10
+            expect("only the first lesson for new symbols introduces them as 'newCharacters'") {
+                val lessonBuilder = LessonBuilder(10, 10, emptyList())
+                lessonBuilder.newLesson("my first ab lesson", "ab") {
+                    exampleBuildStep()
+                }!!.newCharacters shouldBe "ab"
+                lessonBuilder.newLesson("my second ab lesson", "ab") {
+                    exampleBuildStep()
+                }!!.newCharacters shouldBe ""
             }
 
-            expect("empty input leads to empty output") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    repeatSymbols("", 10)
-                }.text.length shouldBe 0
+            expect("apply all build steps") {
+                val lessonBuilder = LessonBuilder(30, 400, listOf("apple"))
+                val lessonText = lessonBuilder.newLesson("my lesson", "abc") {
+                    repeatSymbols(3)
+                    shuffleSymbols(10)
+                    alternateSymbols(2)
+                }!!.text
+                lessonText shouldContain "(abc )+".toRegex()
+                lessonText shouldContain "[abc]{10}".toRegex()
+                lessonText shouldContain "[a]{2}\\s[b]{2}\\s[c]{2}".toRegex()
             }
 
-            expect("result is trimmed") {
-                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    repeatSymbols("abc", 1)
-                }.text
-                text shouldNotStartWith "\\s"
-                text shouldNotEndWith "\\s"
-            }
-        }
+            expect("line-length range test") {
+                LessonBuilder(-10, 10, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    } shouldBe null
 
-        context("alternatingSymbols") {
+                LessonBuilder(-1, 10, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    } shouldBe null
 
-            expect("result consists of the input symbols in alternating fashion") {
-                buildLesson(lineLength = 14, symbolsPerLesson = 10) {
-                    alternatingSymbols("abc", 2)
-                }.text shouldBe "aa bb cc aa bb"
-            }
+                LessonBuilder(0, 10, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    } shouldBe null
 
-            expect("empty input leads to empty output") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    alternatingSymbols("", 10)
-                }.text.length shouldBe 0
-            }
+                LessonBuilder(1, 10, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    }!!.text.count { !it.isWhitespace() } shouldBe 10
 
-            expect("segment-length range test") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    alternatingSymbols("abc", -10)
-                }.text shouldHaveLength 0
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    alternatingSymbols("abc", -1)
-                }.text shouldHaveLength 0
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    alternatingSymbols("abc", 0)
-                }.text shouldHaveLength 0
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    alternatingSymbols("abc", 1)
-                }.text shouldBe """
-                    a b c a b
-                    c a b c a
-                """.trimIndent()
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    alternatingSymbols("abc", 10)
-                }.text shouldHaveLength 10
+                LessonBuilder(10, 10, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    }!!.text shouldHaveLength 10
             }
 
-            expect("result is trimmed") {
-                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    alternatingSymbols("abc", 1)
-                }.text
-                text shouldNotStartWith "\\s"
-                text shouldNotEndWith "\\s"
-            }
-        }
+            expect("symbols-per-lesson range test") {
+                LessonBuilder(10, -100, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    } shouldBe null
 
-        context("shuffledSymbols") {
+                LessonBuilder(10, -10, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    } shouldBe null
 
-            expect("shuffle the input symbols") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    shuffledSymbols("ab", 10)
-                }.text shouldMatch "[ab]{10}"
-            }
+                LessonBuilder(10, -1, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    } shouldBe null
 
-            expect("empty input leads to empty output") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    shuffledSymbols("", 10)
-                }.text.length shouldBe 0
-            }
+                LessonBuilder(10, 0, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    } shouldBe null
 
-            expect("segment-length range test") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    shuffledSymbols("abc", -10)
-                }.text shouldHaveLength 0
+                LessonBuilder(10, 1, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    }!!.text shouldHaveLength 1
 
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    shuffledSymbols("abc", -1)
-                }.text shouldHaveLength 0
+                LessonBuilder(10, 10, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    }!!.text.count { !it.isWhitespace() } shouldBe 10
 
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    shuffledSymbols("abc", 0)
-                }.text shouldHaveLength 0
-
-                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    shuffledSymbols("abc", 1)
-                }.text
-                text.split("\n")[0] shouldMatch "[abc ]{9}" // e.g. "a b c c a " 10 -> trimmed to "a b c c a" 9
-                text.split("\n")[1] shouldMatch "[abc ]{9}"
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    shuffledSymbols("abc", 10)
-                }.text shouldHaveLength 10
+                val text100 = LessonBuilder(10, 100, emptyList())
+                    .newLesson("my lesson", "abc") {
+                        exampleBuildStep()
+                    }!!.text
+                text100.split("\n") shouldHaveAtLeastSize 10
+                text100.count { !it.isWhitespace() } shouldBe 100
             }
 
-            expect("result is trimmed") {
-                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    shuffledSymbols("abc", 1)
-                }.text
-                text shouldNotStartWith "\\s"
-                text shouldNotEndWith "\\s"
-            }
-        }
+            context("symbols-per-lesson < line-length") {
 
-        context("words") {
-
-            expect("result consists of input words") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    words(listOf("hi", "are", "you", "ready"))
-                }.text shouldBe """
-                    hi are you
-                    hi
-                """.trimIndent()
-
-                buildLesson(lineLength = 4, symbolsPerLesson = 10) {
-                    words(listOf("hi", "are", "you", "ready"))
-                }.text shouldBe """
-                    hi a
-                    re y
-                    ou h
-                    i
-                """.trimIndent()
-            }
-
-            expect("empty input leads to empty output") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    words(emptyList())
-                }.text shouldBe ""
-            }
-
-            expect("result is trimmed") {
-                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    words(listOf("hi", "are", "you", "ready"))
-                }.text
-                text.split("\\s".toRegex()) shouldHaveSize 4
-                text.split("\\s".toRegex()).forAll { line ->
-                    line shouldNotStartWith "\\s"
-                    line shouldNotEndWith "\\s"
+                expect("result contains symbols-per-lesson non-whitespace characters") {
+                    LessonBuilder(20, 8, emptyList())
+                        .newLesson("my lesson", "abc") {
+                            exampleBuildStep()
+                        }!!.text.count { !it.isWhitespace() } shouldBe 8
                 }
             }
-        }
 
-        context("randomLeftRightPunctuationMarks") {
+            context("symbols-per-lesson > line-length") {
 
-            expect("result contains punctuation marks randomly, but left/right condition is met") {
-                val text = buildLesson(lineLength = 2, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("[{WW}]", 2)
-                }.text
-                text.split("\n") shouldHaveSize 5
-                text.split("\n").forAll { it shouldBeIn setOf("[]", "{}") }
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("[{WW,", 10)
-                }.text shouldMatch "[\\[\\{,]{10}"
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("WW}]", 10)
-                }.text shouldMatch "[\\]\\}]{10}"
-            }
-
-            expect("empty input leads to empty output") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("", 10)
-                }.text shouldBe ""
-            }
-
-            expect("segment-length range test") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("[{WW}].,", -10)
-                }.text shouldHaveLength 0
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("[{WW}].,", -1)
-                }.text shouldHaveLength 0
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("[{WW}].,", 0)
-                }.text shouldHaveLength 0
-
-                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("[{WW}].,", 1)
-                }.text
-                text.split("\n") shouldHaveSize 2
-                text.split("\n").forAll { it shouldMatch "[\\{\\[\\]\\}., ]{9}" } // e.g. "{ } [ ] , " 10 -> trimmed to "{ } [ ] ," 9
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("[{WW}].,", 10)
-                }.text shouldHaveLength 10
-            }
-
-            expect("result is trimmed") {
-                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    randomLeftRightPunctuationMarks("[{WW}].,", 1)
-                }.text
-                text shouldNotStartWith "\\s"
-                text shouldNotEndWith "\\s"
-            }
-        }
-
-        context("wordsWithLeftRightPunctuationMarks") {
-
-            expect("result consists of input words with added left and right punctuation marks") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 50) {
-                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
-                }.text shouldBe """
-                    [hi] [are]
-                    [you] [rea
-                    dy] [hi] [
-                    are] [you]
-                    [ready] [h
-                    i] [hi]
-                """.trimIndent()
-
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "WW,")
-                }.text shouldBe """
-                    hi, are, h
-                    i,
-                """.trimIndent()
-            }
-
-            expect("do not add punctuation marks when WW string has no punctuation marks") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "WW")
-                }.text shouldBe """
-                    hi are you
-                    hi
-                """.trimIndent()
-            }
-
-            expect("empty word list leads to empty output") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    wordsWithLeftRightPunctuationMarks(emptyList(), "WW.,;")
-                }.text shouldHaveLength 0
-            }
-
-            expect("empty WW string leads to empty output") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "")
-                }.text shouldHaveLength 0
-            }
-
-            expect("result is trimmed") {
-                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    wordsWithLeftRightPunctuationMarks(listOf("hi", "are", "you", "ready"), "[{WW}].,")
-                }.text
-                text.split("\\s".toRegex()) shouldHaveAtLeastSize 3
-                text.split("\\s".toRegex()).forAll { line ->
-                    line shouldNotStartWith "\\s"
-                    line shouldNotEndWith "\\s"
+                expect("result is multiline containing symbols-per-lesson non-whitespace characters") {
+                    val text = LessonBuilder(8, 20, emptyList())
+                        .newLesson("my lesson", "abc") {
+                            exampleBuildStep()
+                        }!!.text
+                    text.split("\n") shouldHaveAtLeastSize 2
+                    text.count { !it.isWhitespace() } shouldBe 20
                 }
             }
-        }
 
-        context("wordsWithUnconditionalPunctuationMarks") {
+            context("repeatSymbols") {
 
-            expect("result consists of input words with added punctuation marks") {
-                val text = buildLesson(lineLength = 20, symbolsPerLesson = 34) {
-                    wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), ".")
-                }.text
-                text.count { !it.isWhitespace() } shouldBe 34
-                text.split("\\s".toRegex()) shouldHaveAtLeastSize 1
-                text.split("\\s".toRegex())
-                    .forAll { it shouldBeIn setOf(
-                        "hi.", ".hi",
-                        "are.", ".are",
-                        "you.", ".you",
-                        "ready.", ".ready")
+                expect("repeat the input symbols") {
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            repeatSymbols(10)
+                        }!!.text shouldBe "ababababab"
+                }
+
+                expect("segment-length range test") {
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            repeatSymbols(-10)
+                        } shouldBe null
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            repeatSymbols(-1)
+                        } shouldBe null
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            repeatSymbols(0)
+                        } shouldBe null
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            repeatSymbols(1)
+                        }!!.text shouldBe """
+                            a b a b a
+                            b a b a b
+                        """.trimIndent()
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            repeatSymbols(10)
+                        }!!.text shouldHaveLength 10
+                }
+
+                expect("empty symbols lead to null result") {
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "") {
+                            repeatSymbols(10)
+                        } shouldBe null
+                }
+
+                expect("result is trimmed") {
+                    val text = LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            repeatSymbols(10)
+                        }!!.text
+                    text shouldNotStartWith "\\s"
+                    text shouldNotEndWith "\\s"
+                }
+            }
+
+            context("alternateSymbols") {
+
+                expect("result consists of the input symbols in alternating fashion") {
+                    LessonBuilder(14, 10, emptyList())
+                        .newLesson("my lesson", "abc") {
+                            alternateSymbols(2)
+                        }!!.text shouldBe "aa bb cc aa bb"
+                }
+
+                expect("empty symbols lead to null result") {
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "") {
+                            alternateSymbols(10)
+                        } shouldBe null
+                }
+
+                expect("segment-length range test") {
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            alternateSymbols(-10)
+                        } shouldBe null
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            alternateSymbols(-1)
+                        } shouldBe null
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            alternateSymbols(0)
+                        } shouldBe null
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            alternateSymbols(1)
+                        }!!.text shouldBe """
+                            a b a b a
+                            b a b a b
+                        """.trimIndent()
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            alternateSymbols(10)
+                        }!!.text shouldHaveLength 10
+                }
+
+                expect("result is trimmed") {
+                    val text = LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            alternateSymbols(5)
+                        }!!.text
+                    text shouldNotStartWith "\\s"
+                    text shouldNotEndWith "\\s"
+                }
+            }
+
+            context("shuffleSymbols") {
+
+                expect("shuffle the input symbols") {
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "ab") {
+                            shuffleSymbols(10)
+                        }!!.text shouldMatch "[ab]{10}"
+                }
+
+                expect("empty symbols lead to null result") {
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "") {
+                            shuffleSymbols(10)
+                        } shouldBe null
+                }
+
+                expect("segment-length range test") {
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "abc") {
+                            shuffleSymbols(-10)
+                        } shouldBe null
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "abc") {
+                            shuffleSymbols(-1)
+                        } shouldBe null
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "abc") {
+                            shuffleSymbols(0)
+                        } shouldBe null
+
+                    val text = LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "abc") {
+                            shuffleSymbols(1)
+                        }!!.text
+                    text.split("\n")[0] shouldMatch "[abc ]{9}" // e.g. "a b c c a " 10 -> trimmed to "a b c c a" 9
+                    text.split("\n")[1] shouldMatch "[abc ]{9}"
+
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "abc") {
+                            shuffleSymbols(10)
+                        }!!.text shouldHaveLength 10
+                }
+
+                expect("result is trimmed") {
+                    val text = LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "abc") {
+                            shuffleSymbols(1)
+                        }!!.text
+                    text shouldNotStartWith "\\s"
+                    text shouldNotEndWith "\\s"
+                }
+            }
+
+            context("words") {
+
+                expect("result consists of words from the dictionary consisting of symbols of the symbol history and containing the current lessons symbols") {
+                    val text = LessonBuilder(20, 10, listOf("abc", "are", "you"))
+                        .newLesson("my lesson", "acbreuoy") {
+                            words()
+                        }!!.text
+                    text shouldContain "abc"
+                    text shouldContain "are"
+                    text shouldContain "you"
+                }
+
+                expect("empty dictionary leads to null result") {
+                    LessonBuilder(10, 10, emptyList())
+                        .newLesson("my lesson", "acbreuoy") {
+                            words()
+                        } shouldBe null
+                }
+
+                expect("result is trimmed") {
+                    val text = LessonBuilder(10, 10, listOf("abc", "are", "you"))
+                        .newLesson("my lesson", "acbreuoy") {
+                            words()
+                        }!!.text
+                    text shouldNotStartWith "\\s"
+                    text shouldNotEndWith "\\s"
+                }
+
+                expect("each line is trimmed") {
+                    val text = LessonBuilder(10, 10, listOf("abc", "are", "you"))
+                        .newLesson("my lesson", "acbreuoy") {
+                            words()
+                        }!!.text
+                    text.split("\n") shouldHaveAtLeastSize 2
+                    text.split("\n").forAll { line ->
+                        line shouldNotStartWith "\\s"
+                        line shouldNotEndWith "\\s"
                     }
-            }
-
-            expect("can build pairs when a WW string is passed") {
-                val text = buildLesson(lineLength = 20, symbolsPerLesson = 34) {
-                    wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "[WW]")
-                }.text
-                text.count { !it.isWhitespace() } shouldBe 34
-                text.replace("\n", "")
-                    .split("\\s".toRegex())
-                    .forAll { it shouldBeIn setOf("[hi]", "[are]", "[you]", "[ready]") }
-            }
-
-            expect("empty word list leads to empty output") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    wordsWithUnconditionalPunctuationMarks(emptyList(), ".,;")
-                }.text shouldHaveLength 0
-            }
-
-            expect("empty punctuation-marks leads to empty output") {
-                buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "")
-                }.text shouldHaveLength 0
-            }
-
-            expect("result is trimmed") {
-                val text = buildLesson(lineLength = 10, symbolsPerLesson = 10) {
-                    wordsWithUnconditionalPunctuationMarks(listOf("hi", "are", "you", "ready"), "_.,")
-                }.text
-                text.split("\\s".toRegex()) shouldHaveAtLeastSize 3
-                text.split("\\s".toRegex()).forAll { line ->
-                    line shouldNotStartWith "\\s"
-                    line shouldNotEndWith "\\s"
                 }
+
+                expect("unconditional punctuation marks are prefixed or appended randomly to the words") {
+                    LessonBuilder(20, 10, listOf("abc", "are"))
+                        .newLesson("my lesson", "acb,re") {
+                            words()
+                        }!!.text shouldContain "((,abc)|(abc,)|(,are)|(are,))".toRegex()
+                }
+
+                expect("ww punctuation marks are paired around a word") {
+                    val lessonBuilder = LessonBuilder(20, 10, listOf("abc", "are"))
+                    lessonBuilder.newLesson("building symbol history", "acbre") {
+                        exampleBuildStep()
+                    }
+                    lessonBuilder.newLesson("my lesson", "<WW>") {
+                        words()
+                    }!!.text shouldContain "((<abc>)|(<are>))".toRegex()
+                }
+
+                expect("no word lessons are generated for digits") {
+                    val lessonBuilder = LessonBuilder(10, 10, listOf("abc", "are"))
+                    lessonBuilder.newLesson("building symbol history", "acbre") { exampleBuildStep() }
+                    lessonBuilder.newLesson("my lesson", "123") {
+                        words()
+                    } shouldBe null
+                }
+            }
+
+            expect("result is null when at least one build step has no (empty) output") {
+
+                fun L.nothing(): L {
+                    buildSteps.add { _ -> "" }
+                    return this@nothing
+                }
+
+                val lessonBuilder = LessonBuilder(10, 10, emptyList())
+                lessonBuilder.newLesson("building symbol history", "abc") {
+                    shuffleSymbols(2)
+                    nothing()
+                    repeatSymbols(10)
+                } shouldBe null
             }
         }
     }

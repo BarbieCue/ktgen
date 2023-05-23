@@ -1,73 +1,49 @@
 package org.example
 
-import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
 
 /*
- String filter
+ Known pattern
  */
 
+
 val wwRegex = "\\p{Punct}*WW\\p{Punct}*".toRegex()
-fun ww(s: String): String = wwRegex.find(s)?.value ?: ""
-fun wwUnpack(s: String): String = ww(s).replace("WW", "")
+fun String.ww(): String = wwRegex.find(this)?.value ?: ""
+fun String.unpackWW(): String = replace("WW", "")
 
-val lettersRegex = "[A-Za-züäößÜÄÖẞ]+".toRegex()
-fun letters(s: String): String =
-    lettersRegex.findAll(
-        s.replace(wwRegex, "")
-         .replace(letterGroupRegex, ""))
-        .joinToString("") { it.value }
+val lowerLetters = "[a-züäöß]+".toRegex()
+val upperLetters = "[A-ZÜÄÖẞ]+".toRegex()
+val lettersRegex = "[${lowerLetters.pattern}${upperLetters.pattern}]+".toRegex()
+fun String.letters(): String = lettersRegex
+    .findAll(replace(wwRegex, "")
+        .replace(letterGroupRegex, "")).joinToString("") { it.value }
+fun String.containsLetters() = replace(ww(), "").replace(letterGroup(), "").contains(lettersRegex)
 
-fun digits(s: String): String = "\\d+".toRegex().findAll(s).joinToString("") { it.value }
+val digitRegex = "\\d+".toRegex()
+fun String.areDigits(): Boolean = matches(digitRegex)
 
 val letterGroupRegex = "\\[${lettersRegex.pattern}\\]".toRegex()
-fun letterGroup(s: String): String = letterGroupRegex.find(s.replace(ww(s), ""))?.value ?: ""
-fun letterGroupUnpack(s: String): String = letterGroup(s).replace("[", "").replace("]", "")
+fun String.letterGroup(): String = letterGroupRegex.find(replace(ww(), ""))?.value ?: ""
+fun String.isLetterGroup(): Boolean = letterGroup().isNotEmpty()
+fun String.unpackLetterGroup(): String =
+    if (letterGroup().isNotEmpty())
+        replace(letterGroup(), letterGroup().replace("[", "").replace("]", ""))
+    else replace(ww(), "")
 
-fun unconditionalPunctuation(s: String): String =
-    "\\p{Punct}+".toRegex()
-        .find(s.replace(ww(s), "")
-               .replace(letterGroup(s), ""))?.value ?: ""
+val punctuationRegex = "\\p{Punct}+".toRegex()
+fun String.punctuationMarks(): String = punctuationRegex.findAll(
+    replace(ww(), "").replace(letterGroup(), "")).joinToString("") { it.value }
 
-fun StringBuilder.newCharacters(symbols: String): String {
-    val new = unpack(symbols).filter { !this.toString().contains(it) }
-    this.append(new)
-    return new
-}
-
-fun unpack(symbols: String): String {
-    return if (symbols.matches(wwRegex)) wwUnpack(symbols)
-    else if (symbols.matches(letterGroupRegex)) letterGroupUnpack(symbols)
-    else symbols
-}
-
-fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String): List<String> {
-    if (isEmpty()) return emptyList()
-    val list = toList()
-    val rand = Random.nextInt(0, max(size / 2, 1))
-    return list.subList(rand, size).plus(list.subList(0, rand))
-        .filter { it.consistsOfAny(letters(charsHistory)) &&
-
-                // words for letter groups
-                if (letterGroup(lessonSymbols).isNotEmpty())
-                    it.contains(letterGroupUnpack(lessonSymbols))
-
-                // words for letters
-                else if (letters(lessonSymbols).isNotEmpty())
-                    it.containsAny(letters(lessonSymbols))
-
-                // words for e.g. punctuation marks
-                else true
-        }
-}
+fun String.unpack(): String = unpackWW().unpackLetterGroup()
 
 
 /*
- Lesson builder
+ Lesson building
  */
+
 
 typealias TextGenerator = (numberOfSymbols: Int) -> String
 
@@ -77,18 +53,14 @@ internal fun symbolsPerGenerator(symbolsPerLesson: Int, numberOfGenerators: Int)
     else symbolsPerLesson / max(numberOfGenerators, 1)
 }
 
-internal fun invokeConcatSingleLine(symbolsPerLesson: Int, textGenerators: List<TextGenerator>): String {
-    if (symbolsPerLesson <= 0 || textGenerators.isEmpty()) return ""
-    val symbolsPerGenerator = symbolsPerGenerator(symbolsPerLesson, textGenerators.size)
-    return textGenerators.invokeConcat(symbolsPerGenerator, symbolsPerLesson)
-}
-
 internal fun List<TextGenerator>.invokeConcat(symbolsPerGenerator: Int, symbolsTotal: Int): String {
+    if (symbolsPerGenerator <= 0) return ""
+    val results = map { it(symbolsPerGenerator) }
+    if (results.any { it.isEmpty() }) return ""
     return buildString {
         while (symbolsCount() < symbolsTotal) {
-            this@invokeConcat.forEach {
-                val generatorResult = it(symbolsPerGenerator)
-                for (c in generatorResult) {
+            results.forEach {
+                for (c in it) {
                     append(c)
                     if (symbolsCount() >= symbolsTotal) return@buildString
                 }
@@ -99,26 +71,31 @@ internal fun List<TextGenerator>.invokeConcat(symbolsPerGenerator: Int, symbolsT
     }.trim()
 }
 
+internal fun invokeConcat(symbolsPerLesson: Int, textGenerators: List<TextGenerator>): String {
+    val symbolsPerGenerator = symbolsPerGenerator(symbolsPerLesson, textGenerators.size)
+    return textGenerators.invokeConcat(symbolsPerGenerator, symbolsPerLesson)
+}
+
 internal fun StringBuilder.symbolsCount(): Int = count { !it.isWhitespace() }
 
 internal fun String.symbolsCount(): Int = count { !it.isWhitespace() }
 
-fun String.normalizeWhitespaces(): String = replace("\\s{2,}".toRegex(), " ")
+internal fun String.normalizeWhitespaces(): String = replace("\\s{2,}".toRegex(), " ")
 
-fun toTextBlock(str: String, symbolsTotal: Int, lineLength: Int): String {
-    if (str.isEmpty() || symbolsTotal <= 0 || lineLength <= 0) return ""
-    if (str.length < lineLength) return str
+fun String.toTextBlock(symbolsTotal: Int, lineLength: Int): String {
+    if (isEmpty() || symbolsTotal <= 0 || lineLength <= 0) return ""
+    if (length < lineLength) return this
     return if (lineLength > symbolsTotal)
         buildString {
-            for (c in str) {
+            for (c in this@toTextBlock) {
                 append(c)
                 if (symbolsCount() == symbolsTotal) break
             }
         }.trim()
     else {
         buildString {
-            val bound = min(symbolsTotal, str.symbolsCount())
-            var mutableStr = str.normalizeWhitespaces()
+            val bound = min(symbolsTotal, this@toTextBlock.symbolsCount())
+            var mutableStr = this@toTextBlock.normalizeWhitespaces()
             while (symbolsCount() < bound) {
                 val line = mutableStr.take(lineLength)
                 appendLine(line.trim())
@@ -129,75 +106,97 @@ fun toTextBlock(str: String, symbolsTotal: Int, lineLength: Int): String {
     }
 }
 
-fun lessonBuilder(lineLength: Int, symbolsPerLesson: Int, newCharacters: String = ""): (String, L.() -> L) -> Lesson {
-    return { title, buildStep -> buildLesson(title, lineLength, symbolsPerLesson, newCharacters, buildStep) }
+fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String): List<String> {
+    if (isEmpty() || lessonSymbols.areDigits()) return emptyList()
+    val list = toList()
+    val rand = Random.nextInt(0, max(size / 2, 1))
+    return list.subList(rand, size).plus(list.subList(0, rand))
+        .filter { it.consistsOfAny(charsHistory.plus(lessonSymbols).letters()) &&
+
+                // words for letter groups
+                if (lessonSymbols.isLetterGroup())
+                    it.contains(lessonSymbols.unpackLetterGroup())
+
+                // words for letters
+                else if (lessonSymbols.containsLetters())
+                    it.containsAny(lessonSymbols.letters())
+
+                // words for e.g. punctuation marks
+                else true
+        }
 }
 
-internal fun buildLesson(title: String = "", lineLength: Int, symbolsPerLesson: Int, newCharacters: String = "", init: L.() -> L): Lesson {
-    val l = L(title = title).init()
-    if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
-        return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = "")
-
-    val textAsSingleLine = invokeConcatSingleLine(symbolsPerLesson, l.buildSteps)
-    if (textAsSingleLine.isEmpty())
-        return Lesson(id = l.id, title = l.title, newCharacters = newCharacters, text = "")
-
-    val text = toTextBlock(textAsSingleLine, symbolsPerLesson, lineLength)
-    return Lesson(id = l.id, title = title, newCharacters = newCharacters, text = text)
+fun StringBuilder.newCharacters(symbols: String): String {
+    val new = symbols.unpack().filter { !toString().contains(it) }
+    this.append(new)
+    return new
 }
 
-class L(
-    val id: String = UUID.randomUUID().toString(),
-    val title: String = "",
+class LessonBuilder(
+    private val lineLength: Int,
+    private val symbolsPerLesson: Int,
+    private val dictionary: Collection<String>
 ) {
+    private val lessonCtr = generateSequence(1) { it + 1 }.iterator()
+    private val charsHistory = StringBuilder()
+
+    fun newLesson(title: String, lessonSymbols: String, buildStep: L.() -> L): Lesson? =
+        newLesson(lessonCtr.next(), title, lineLength, symbolsPerLesson, lessonSymbols, charsHistory, dictionary, buildStep)
+
+    private fun newLesson(
+        lessonCtr: Int,
+        title: String,
+        lineLength: Int,
+        symbolsPerLesson: Int,
+        lessonSymbols: String,
+        charsHistory: StringBuilder,
+        dictionary: Collection<String>,
+        init: L.() -> L): Lesson? {
+
+        val words = dictionary.lessonWords(charsHistory.toString(), lessonSymbols)
+
+        val l = L(lessonSymbols, words).init()
+        if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0) return null
+
+        val textSingleLine = invokeConcat(symbolsPerLesson, l.buildSteps)
+        if (textSingleLine.isEmpty()) return null
+
+        val text = textSingleLine.toTextBlock(symbolsPerLesson, lineLength)
+        return Lesson(title = "${lessonCtr}: $title", newCharacters = charsHistory.newCharacters(lessonSymbols), text = text)
+    }
+}
+
+class L(private val symbols: String, private val words: Collection<String>) {
+
     val buildSteps = mutableListOf<TextGenerator>()
 
-    fun shuffledSymbols(symbols: String, segmentLength: Int): L {
+    fun shuffleSymbols(segmentLength: Int): L {
         buildSteps.add { numberOfSymbols ->
-            segment(shuffle(repeat(symbols, numberOfSymbols)), segmentLength)
+            symbols.unpack().repeat(numberOfSymbols).shuffle().segment(segmentLength)
         }
         return this
     }
 
-    fun repeatSymbols(symbols: String, segmentLength: Int): L {
+    fun repeatSymbols(segmentLength: Int): L {
         buildSteps.add { numberOfSymbols ->
-            segment(repeat(symbols, numberOfSymbols), segmentLength)
+            symbols.unpack().repeat(numberOfSymbols).segment(segmentLength)
         }
         return this
     }
 
-    fun alternatingSymbols(symbols: String, segmentLength: Int): L {
+    fun alternateSymbols(segmentLength: Int): L {
         buildSteps.add { numberOfSymbols ->
-            val stretched = symbols.map { "$it".repeat(max(segmentLength, 0)) }.joinToString("")
-            segment(repeat(stretched, numberOfSymbols), segmentLength)
+            val stretched = symbols.unpack().map { "$it".repeat(max(segmentLength, 0)) }.joinToString("")
+            stretched.repeat(numberOfSymbols).segment(segmentLength)
         }
         return this
     }
 
-    fun words(words: Collection<String>): L {
+    fun words(): L {
+        val punctuationMarks = symbols.ww().ifEmpty { symbols.punctuationMarks() }
         buildSteps.add { numberOfSymbols ->
-            joinRepeat(words, numberOfSymbols)
-        }
-        return this
-    }
-
-    fun randomLeftRightPunctuationMarks(wwString: String, segmentLength: Int): L {
-        buildSteps.add { numberOfSymbols ->
-            segment(punctuationMarks(wwString, numberOfSymbols), segmentLength)
-        }
-        return this
-    }
-
-    fun wordsWithLeftRightPunctuationMarks(words: Collection<String>, wwString: String): L {
-        buildSteps.add { numberOfSymbols ->
-            joinRepeat(wordsWithPunctuationMarks(words, wwString), numberOfSymbols)
-        }
-        return this
-    }
-
-    fun wordsWithUnconditionalPunctuationMarks(words: Collection<String>, punctuationMarks: String): L {
-        buildSteps.add { numberOfSymbols ->
-            joinRepeat(wordsWithPunctuationMarks(words, punctuationMarks), numberOfSymbols)
+            if (punctuationMarks.isEmpty()) words.joinRepeat(numberOfSymbols)
+            else words.prefixOrAppendPunctuationMarks(punctuationMarks).joinRepeat(numberOfSymbols)
         }
         return this
     }
