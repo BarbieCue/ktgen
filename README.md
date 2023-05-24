@@ -303,19 +303,19 @@ The following examples work immediately after you check out this repository and 
 -   A course for the german keyboard layout containing words from the website _https://de.wikipedia.org/wiki/Ameisen_
     where each word is max 10 characters long and each lesson has a length of 500 characters.
     Written to *ktgen_course.xml*.
--
-  ```shell
-  docker run -v $PWD/docs/examples/:/files \
-  barbiecue/ktgen:latest /files/german-layout.xml \
-  -web https://de.wikipedia.org/wiki/Ameisen \
-  -max 10 \
-  -length 500 \
-  -o > ktgen_course.xml
-  ```
+    
+    ```shell
+    docker run -v $PWD/docs/examples/:/files \
+    barbiecue/ktgen:latest /files/german-layout.xml \
+    -web https://de.wikipedia.org/wiki/Ameisen \
+    -max 10 \
+    -length 500 \
+    -o > ktgen_course.xml
+    ```
 
-  ```shell
-  java -jar build/libs/ktgen.jar docs/examples/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen -max 10 -length 500
-  ```
+    ```shell
+    java -jar build/libs/ktgen.jar docs/examples/german-layout.xml -web https://de.wikipedia.org/wiki/Ameisen -max 10 -length 500
+    ```
 
 
 -   A course for the german keyboard layout written to the file *my_ktouch_course.xml*.
