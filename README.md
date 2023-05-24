@@ -30,11 +30,11 @@ The format is explained below.
 #### Public Docker Image
 
 ```shell
-docker run -v ./:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen -o > ktgen_course.xml
+docker run -v $PWD/:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen -o > ktgen_course.xml
 ```
 
 The `lesson_specification.ktgen` file is passed via bind mount.
-Make sure to have it in place (`./lesson_specification.ktgen`),
+Make sure to have it in place (`$PWD/lesson_specification.ktgen`),
 e.g. create the file or simply clone this repository before running the docker command.
 
 
@@ -76,7 +76,7 @@ Use `-file <path>` to point to a dictionary file.
 No matter if it contains continuous text or one word per line.
 
 ```shell
-docker run -v ./:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen -file /files/README.md -o > ktgen_course.xml
+docker run -v $PWD/:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen -file /files/README.md -o > ktgen_course.xml
 ```
 
 ```shell
@@ -90,7 +90,7 @@ Link a website of your choice with `-web <url>` and let *ktgen*
 extract text from it.
 
 ```shell
-docker run -v ./:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen \
+docker run -v $PWD/:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen \
 -web https://en.wikipedia.org/wiki/Barbie -o > ktgen_course.xml
 ```
 
@@ -211,7 +211,7 @@ which begins with the basic finger position.
 2. Pass it as argument to *ktgen*
 
 ```shell
-docker run -v ./docs/examples/:/files barbiecue/ktgen:latest /files/german-layout.xml -o > ktgen_course.xml
+docker run -v $PWD/docs/examples/:/files barbiecue/ktgen:latest /files/german-layout.xml -o > ktgen_course.xml
 ```
 
 ```shell
@@ -225,7 +225,7 @@ Multiple lessons specifications can be combined to a single course, simply by pa
 They are applied in order. For example:
 
 ```shell
-docker run -v ./:/files barbiecue/ktgen:latest \
+docker run -v $PWD/:/files barbiecue/ktgen:latest \
 /files/docs/examples/german-layout.xml /files/lesson_specification.ktgen /files/docs/examples/letters.ktgen \
 -o > ktgen_course.xml
 ```
@@ -253,11 +253,13 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
 
 ## Examples
 
+The following examples work immediately after you check out this repository and navigate into it.
+
 -   A course that starts with lessons for *letters.ktgen* and ends with lessons for *digits.ktgen*
     written to *ktgen_course.xml*.
 
     ```shell
-    docker run -v ./docs/examples/:/files \
+    docker run -v $PWD/docs/examples/:/files \
     barbiecue/ktgen:latest /files/letters.ktgen /files/digits.ktgen \
     -o > ktgen_course.xml
     ```
@@ -271,7 +273,7 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
     *mydict.txt* and from the website *https://docs.dagger.io/* written to *ktgen_course.xml*.
 
     ```shell
-    docker run -v ./docs/examples/:/files \
+    docker run -v $PWD/docs/examples/:/files \
     barbiecue/ktgen:latest /files/letters.ktgen \
     -file /files/mydict.txt \
     -web https://docs.dagger.io/ \
@@ -287,7 +289,7 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
     written to *ktgen_course.xml*.
 
     ```shell
-    docker run -v ./docs/examples/:/files \
+    docker run -v $PWD/docs/examples/:/files \
     barbiecue/ktgen:latest /files/german-layout.xml \
     -web https://de.wikipedia.org/wiki/Ameisen \
     -o > ktgen_course.xml
@@ -303,7 +305,7 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
     Written to *ktgen_course.xml*.
 -
   ```shell
-  docker run -v ./docs/examples/:/files \
+  docker run -v $PWD/docs/examples/:/files \
   barbiecue/ktgen:latest /files/german-layout.xml \
   -web https://de.wikipedia.org/wiki/Ameisen \
   -max 10 \
@@ -319,7 +321,7 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
 -   A course for the german keyboard layout written to the file *my_ktouch_course.xml*.
 
     ```shell
-    docker run -v ./docs/examples/:/files \
+    docker run -v $PWD/docs/examples/:/files \
     barbiecue/ktgen:latest /files/german-layout.xml \
     -o > my_ktouch_course.xml
     ```
@@ -336,7 +338,7 @@ The course will be written to the `ktgen_course.xml` file by default if none of 
     ```
 
     ```shell
-    docker run -v ./lesson_specification.ktgen:/files/lesson_specification.ktgen \
+    docker run -v $PWD/lesson_specification.ktgen:/files/lesson_specification.ktgen \
     barbiecue/ktgen:latest /files/lesson_specification.ktgen -o
     ```
 
