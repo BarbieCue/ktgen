@@ -16,7 +16,7 @@ import io.kotest.property.arbitrary.stringPattern
 
 class LessonKtTest : ConcurrentExpectSpec({
 
-    context("StringBuilder") {
+    context("StringBuilder extensions") {
 
         context("newCharacters") {
 
@@ -682,56 +682,45 @@ class LessonKtTest : ConcurrentExpectSpec({
 
         context("toTextBlock") {
 
-            expect("break the input string into lines of max length line-length") {
+            expect("result contains exactly symbols-total non-whitespace characters") {
+                "abcdef abc abc abcdef abc".toTextBlock(20, 5).count { !it.isWhitespace() } shouldBe 20
+            }
+
+            expect("the result line length is about line-length, words are not broken by line breaks") {
                 val result = "abcdef abc abc abcdef abc".toTextBlock(20, 5)
                 val lines = result.split("\n")
-                lines[0] shouldHaveLength 5
-                lines[1] shouldHaveLength 5
-                lines[2] shouldHaveLength 5
-                lines[3] shouldHaveLength 5
+                lines[0] shouldHaveLength 6
+                lines[1] shouldHaveLength 3
+                lines[2] shouldHaveLength 3
+                lines[3] shouldHaveLength 6
                 lines[4] shouldHaveLength 2
                 result shouldBe """
-            abcde
-            f abc
-            abc a
-            bcdef
-            ab
-        """.trimIndent()
+                    abcdef
+                    abc
+                    abc
+                    abcdef
+                    ab
+                """.trimIndent()
             }
 
-            expect("input string property test") {
-                val arbitraryBuilder = Arb.stringPattern("[A-Za-z0-9.,;\\[\\]{}\t]{30}")
-                repeat(100) {
-                    val lines = arbitraryBuilder.next().toTextBlock(20, 5).split("\n")
-                    lines shouldHaveAtLeastSize 4
-                    lines[0] shouldHaveMinLength 3
-                    lines[0] shouldHaveMaxLength 5
-                    lines[1] shouldHaveMinLength 3
-                    lines[1] shouldHaveMaxLength 5
-                    lines[2] shouldHaveMinLength 3
-                    lines[2] shouldHaveMaxLength 5
-                    lines[3] shouldHaveMinLength 3
-                    lines[3] shouldHaveMaxLength 5
-                }
-            }
-
-            expect("normalize multiple chained whitespace characters to a single one") {
-                "abc    abc  \t abc   abc abc abc    abc".toTextBlock(20, 5) shouldBe
-                        """
-                    abc a
-                    bc ab
-                    c abc
-                    abc a
-                    bc ab
+            expect("normalize multiple chained whitespace characters into a single one") {
+                "abc    abc  \t abc   abc abc abc    abc".toTextBlock(20, 5) shouldBe """
+                    abc
+                    abc
+                    abc
+                    abc
+                    abc
+                    abc
+                    ab
                     """.trimIndent()
             }
 
-            expect("input string length is smaller than symbols-total leads to result having input string length") {
+            expect("an input string length smaller than symbols-total leads to result having input string length") {
                 "abc def ghi".toTextBlock(20, 5) shouldBe """
-            abc d
-            ef gh
-            i
-        """.trimIndent()
+                    abc
+                    def
+                    ghi
+                """.trimIndent()
             }
 
             expect("input string length is smaller than line-length leads to result having input string length") {
@@ -750,6 +739,39 @@ class LessonKtTest : ConcurrentExpectSpec({
             expect("return empty string when line-length is zero or negative") {
                 "abc abc abc".toTextBlock(10, 0) shouldBe ""
                 "abc abc abc".toTextBlock(10, -1) shouldBe ""
+            }
+        }
+
+        context("substringAtNearestWhitespace") {
+
+            expect("return substring from 0 to the last word before or after desired-length") {
+                "hi, my name is luka, i live on the second floor"
+                    .substringAtNearestWhitespace(10) shouldBe "hi, my name"
+            }
+
+            expect("empty input leads to empty output") {
+                "".substringAtNearestWhitespace(10) shouldBe ""
+            }
+
+            expect("desired-length range test") {
+                "hi, my name is luka".substringAtNearestWhitespace(-10) shouldBe ""
+                "hi, my name is luka".substringAtNearestWhitespace(-1) shouldBe ""
+                "hi, my name is luka".substringAtNearestWhitespace(0) shouldBe ""
+                "hi, my name is luka".substringAtNearestWhitespace(1) shouldBe "h"
+                "hi, my name is luka".substringAtNearestWhitespace(2) shouldBe "hi,"
+                "hi, my name is luka".substringAtNearestWhitespace(3) shouldBe "hi,"
+                "hi, my name is luka".substringAtNearestWhitespace(10) shouldBe "hi, my name"
+            }
+
+            expect("return input string when desired-length is larger than the length of the input string") {
+                "hi, my name is luka".substringAtNearestWhitespace(20) shouldBe "hi, my name is luka"
+            }
+
+            expect("return a substring from 0 up to desired-length when the input string does not contain any whitespaces") {
+                "hi,mynameisluka".substringAtNearestWhitespace(1) shouldBe "h"
+                "hi,mynameisluka".substringAtNearestWhitespace(5) shouldBe "hi,my"
+                "hi,mynameisluka".substringAtNearestWhitespace(10) shouldBe "hi,mynamei"
+                "hi,mynameisluka".substringAtNearestWhitespace(20) shouldBe "hi,mynameisluka"
             }
         }
 
@@ -776,6 +798,44 @@ class LessonKtTest : ConcurrentExpectSpec({
                 "".normalizeWhitespaces() shouldBe ""
             }
         }
+
+        context("isVeryDifferent") {
+
+            expect("false when equals") {
+                "abc".isVeryDifferent("abc") shouldBe false
+            }
+
+            expect("true when completely different") {
+                "abc".isVeryDifferent("def") shouldBe true
+            }
+
+            expect("true when different for more than 60 percent") {
+                "0123456789".isVeryDifferent("0121111111") shouldBe true
+            }
+
+            expect("false when different for less than 60 percent") {
+                "0123456789".isVeryDifferent("0123456111") shouldBe false
+            }
+
+            expect("true when other is null") {
+                "abc".isVeryDifferent(null) shouldBe true
+            }
+        }
+
+        context("isExciting") {
+
+            expect("false when contains 10 or less different words") {
+                "abc abc abc abc abc abc abc abc abc abc abc abc".isExciting() shouldBe false
+            }
+
+            expect("true when contains 11 or more different words") {
+                "a aa b bb ab ba aaab bbba baba abab aabb bbaa".isExciting() shouldBe true
+            }
+
+            expect("true when contains less than 11 words in sum") {
+                "ab ba aa bb".isExciting() shouldBe true
+            }
+        }
     }
 
     context("LessonBuilder") {
@@ -788,32 +848,34 @@ class LessonKtTest : ConcurrentExpectSpec({
             }
 
             expect("A lesson counter is added to the title") {
-                val lessonBuilder = LessonBuilder(10, 10, emptyList())
-                lessonBuilder.newLesson("ab", "ab") {
+                val lessonBuilder = LessonBuilder(10, 10, emptyList()).newLesson("ab", "ab") {
                     exampleBuildStep()
-                }!!.title shouldBe "1: ab"
+                }
+                lessonBuilder.lessons[0].title shouldBe "1: ab"
                 lessonBuilder.newLesson("cd", "cd") {
                     exampleBuildStep()
-                }!!.title shouldBe "2: cd"
+                }.lessons[1].title shouldBe "2: cd"
             }
 
             expect("only the first lesson for new symbols introduces them as 'newCharacters'") {
                 val lessonBuilder = LessonBuilder(10, 10, emptyList())
-                lessonBuilder.newLesson("my first ab lesson", "ab") {
-                    exampleBuildStep()
-                }!!.newCharacters shouldBe "ab"
+                    .newLesson("my first ab lesson", "ab") {
+                        exampleBuildStep()
+                    }
+                lessonBuilder.lessons[0].newCharacters shouldBe "ab"
                 lessonBuilder.newLesson("my second ab lesson", "ab") {
                     exampleBuildStep()
-                }!!.newCharacters shouldBe ""
+                }.lessons[1].newCharacters shouldBe ""
             }
 
             expect("apply all build steps") {
                 val lessonBuilder = LessonBuilder(30, 400, listOf("apple"))
-                val lessonText = lessonBuilder.newLesson("my lesson", "abc") {
-                    repeatSymbols(3)
-                    shuffleSymbols(10)
-                    alternateSymbols(2)
-                }!!.text
+                    .newLesson("my lesson", "abc") {
+                        repeatSymbols(3)
+                        shuffleSymbols(10)
+                        alternateSymbols(2)
+                    }
+                val lessonText = lessonBuilder.lessons[0].text
                 lessonText shouldContain "(abc )+".toRegex()
                 lessonText shouldContain "[abc]{10}".toRegex()
                 lessonText shouldContain "[a]{2}\\s[b]{2}\\s[c]{2}".toRegex()
@@ -823,64 +885,64 @@ class LessonKtTest : ConcurrentExpectSpec({
                 LessonBuilder(-10, 10, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    } shouldBe null
+                    }.lessons shouldBe emptyList()
 
                 LessonBuilder(-1, 10, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    } shouldBe null
+                    }.lessons shouldBe emptyList()
 
                 LessonBuilder(0, 10, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    } shouldBe null
+                    }.lessons shouldBe emptyList()
 
                 LessonBuilder(1, 10, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    }!!.text.count { !it.isWhitespace() } shouldBe 10
+                    }.lessons[0].text.count { !it.isWhitespace() } shouldBe 10
 
                 LessonBuilder(10, 10, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    }!!.text shouldHaveLength 10
+                    }.lessons[0].text shouldHaveLength 10
             }
 
             expect("symbols-per-lesson range test") {
                 LessonBuilder(10, -100, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    } shouldBe null
+                    }.lessons shouldBe emptyList()
 
                 LessonBuilder(10, -10, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    } shouldBe null
+                    }.lessons shouldBe emptyList()
 
                 LessonBuilder(10, -1, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    } shouldBe null
+                    }.lessons shouldBe emptyList()
 
                 LessonBuilder(10, 0, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    } shouldBe null
+                    }.lessons shouldBe emptyList()
 
                 LessonBuilder(10, 1, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    }!!.text shouldHaveLength 1
+                    }.lessons[0].text shouldHaveLength 1
 
                 LessonBuilder(10, 10, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    }!!.text.count { !it.isWhitespace() } shouldBe 10
+                    }.lessons[0].text.count { !it.isWhitespace() } shouldBe 10
 
                 val text100 = LessonBuilder(10, 100, emptyList())
                     .newLesson("my lesson", "abc") {
                         exampleBuildStep()
-                    }!!.text
+                    }.lessons[0].text
                 text100.split("\n") shouldHaveAtLeastSize 10
                 text100.count { !it.isWhitespace() } shouldBe 100
             }
@@ -891,7 +953,7 @@ class LessonKtTest : ConcurrentExpectSpec({
                     LessonBuilder(20, 8, emptyList())
                         .newLesson("my lesson", "abc") {
                             exampleBuildStep()
-                        }!!.text.count { !it.isWhitespace() } shouldBe 8
+                        }.lessons[0].text.count { !it.isWhitespace() } shouldBe 8
                 }
             }
 
@@ -901,7 +963,7 @@ class LessonKtTest : ConcurrentExpectSpec({
                     val text = LessonBuilder(8, 20, emptyList())
                         .newLesson("my lesson", "abc") {
                             exampleBuildStep()
-                        }!!.text
+                        }.lessons[0].text
                     text.split("\n") shouldHaveAtLeastSize 2
                     text.count { !it.isWhitespace() } shouldBe 20
                 }
@@ -913,29 +975,40 @@ class LessonKtTest : ConcurrentExpectSpec({
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             repeatSymbols(10)
-                        }!!.text shouldBe "ababababab"
+                        }.lessons[0].text shouldBe "ababababab"
+                }
+
+                expect("create content for all symbols from the input list") {
+                    val text = LessonBuilder(20, 40, emptyList())
+                        .newLesson("my lesson", listOf("ab", "cd")) {
+                            repeatSymbols(10)
+                        }.lessons[0].text
+                    text shouldContain "a"
+                    text shouldContain "b"
+                    text shouldContain "c"
+                    text shouldContain "d"
                 }
 
                 expect("segment-length range test") {
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             repeatSymbols(-10)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
 
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             repeatSymbols(-1)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
 
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             repeatSymbols(0)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
 
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             repeatSymbols(1)
-                        }!!.text shouldBe """
+                        }.lessons[0].text shouldBe """
                             a b a b a
                             b a b a b
                         """.trimIndent()
@@ -943,21 +1016,21 @@ class LessonKtTest : ConcurrentExpectSpec({
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             repeatSymbols(10)
-                        }!!.text shouldHaveLength 10
+                        }.lessons[0].text shouldHaveLength 10
                 }
 
-                expect("empty symbols lead to null result") {
+                expect("empty symbols lead to empty result") {
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "") {
                             repeatSymbols(10)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
                 }
 
                 expect("result is trimmed") {
                     val text = LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             repeatSymbols(10)
-                        }!!.text
+                        }.lessons[0].text
                     text shouldNotStartWith "\\s"
                     text shouldNotEndWith "\\s"
                 }
@@ -969,36 +1042,47 @@ class LessonKtTest : ConcurrentExpectSpec({
                     LessonBuilder(14, 10, emptyList())
                         .newLesson("my lesson", "abc") {
                             alternateSymbols(2)
-                        }!!.text shouldBe "aa bb cc aa bb"
+                        }.lessons[0].text shouldBe "aa bb cc aa bb"
                 }
 
-                expect("empty symbols lead to null result") {
+                expect("create content for all symbols from the input list") {
+                    val text = LessonBuilder(20, 40, emptyList())
+                        .newLesson("my lesson", listOf("ab", "cd")) {
+                            alternateSymbols(10)
+                        }.lessons[0].text
+                    text shouldContain "a"
+                    text shouldContain "b"
+                    text shouldContain "c"
+                    text shouldContain "d"
+                }
+
+                expect("empty symbols lead to empty result") {
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "") {
                             alternateSymbols(10)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
                 }
 
                 expect("segment-length range test") {
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             alternateSymbols(-10)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
 
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             alternateSymbols(-1)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
 
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             alternateSymbols(0)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
 
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             alternateSymbols(1)
-                        }!!.text shouldBe """
+                        }.lessons[0].text shouldBe """
                             a b a b a
                             b a b a b
                         """.trimIndent()
@@ -1006,14 +1090,14 @@ class LessonKtTest : ConcurrentExpectSpec({
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             alternateSymbols(10)
-                        }!!.text shouldHaveLength 10
+                        }.lessons[0].text shouldHaveLength 10
                 }
 
                 expect("result is trimmed") {
                     val text = LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             alternateSymbols(5)
-                        }!!.text
+                        }.lessons[0].text
                     text shouldNotStartWith "\\s"
                     text shouldNotEndWith "\\s"
                 }
@@ -1025,50 +1109,61 @@ class LessonKtTest : ConcurrentExpectSpec({
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "ab") {
                             shuffleSymbols(10)
-                        }!!.text shouldMatch "[ab]{10}"
+                        }.lessons[0].text shouldMatch "[ab]{10}"
                 }
 
-                expect("empty symbols lead to null result") {
+                expect("create content for all symbols from the input list") {
+                    val text = LessonBuilder(20, 40, emptyList())
+                        .newLesson("my lesson", listOf("ab", "cd")) {
+                            shuffleSymbols(10)
+                        }.lessons[0].text
+                    text shouldContain "a"
+                    text shouldContain "b"
+                    text shouldContain "c"
+                    text shouldContain "d"
+                }
+
+                expect("empty symbols lead to empty result") {
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "") {
                             shuffleSymbols(10)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
                 }
 
                 expect("segment-length range test") {
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "abc") {
                             shuffleSymbols(-10)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
 
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "abc") {
                             shuffleSymbols(-1)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
 
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "abc") {
                             shuffleSymbols(0)
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
 
                     val text = LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "abc") {
                             shuffleSymbols(1)
-                        }!!.text
+                        }.lessons[0].text
                     text.split("\n")[0] shouldMatch "[abc ]{9}" // e.g. "a b c c a " 10 -> trimmed to "a b c c a" 9
                     text.split("\n")[1] shouldMatch "[abc ]{9}"
 
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "abc") {
                             shuffleSymbols(10)
-                        }!!.text shouldHaveLength 10
+                        }.lessons[0].text shouldHaveLength 10
                 }
 
                 expect("result is trimmed") {
                     val text = LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "abc") {
                             shuffleSymbols(1)
-                        }!!.text
+                        }.lessons[0].text
                     text shouldNotStartWith "\\s"
                     text shouldNotEndWith "\\s"
                 }
@@ -1080,24 +1175,35 @@ class LessonKtTest : ConcurrentExpectSpec({
                     val text = LessonBuilder(20, 10, listOf("abc", "are", "you"))
                         .newLesson("my lesson", "acbreuoy") {
                             words()
-                        }!!.text
+                        }.lessons[0].text
                     text shouldContain "abc"
                     text shouldContain "are"
                     text shouldContain "you"
                 }
 
-                expect("empty dictionary leads to null result") {
+                expect("empty dictionary leads to empty result") {
                     LessonBuilder(10, 10, emptyList())
                         .newLesson("my lesson", "acbreuoy") {
                             words()
-                        } shouldBe null
+                        }.lessons shouldBe emptyList()
+                }
+
+                expect("create content for all symbols from the input list") {
+                    val text = LessonBuilder(20, 40, listOf("ab", "cd"))
+                        .newLesson("my lesson", listOf("ab", "cd")) {
+                            words()
+                        }.lessons[0].text
+                    text shouldContain "a"
+                    text shouldContain "b"
+                    text shouldContain "c"
+                    text shouldContain "d"
                 }
 
                 expect("result is trimmed") {
                     val text = LessonBuilder(10, 10, listOf("abc", "are", "you"))
                         .newLesson("my lesson", "acbreuoy") {
                             words()
-                        }!!.text
+                        }.lessons[0].text
                     text shouldNotStartWith "\\s"
                     text shouldNotEndWith "\\s"
                 }
@@ -1106,7 +1212,7 @@ class LessonKtTest : ConcurrentExpectSpec({
                     val text = LessonBuilder(10, 10, listOf("abc", "are", "you"))
                         .newLesson("my lesson", "acbreuoy") {
                             words()
-                        }!!.text
+                        }.lessons[0].text
                     text.split("\n") shouldHaveAtLeastSize 2
                     text.split("\n").forAll { line ->
                         line shouldNotStartWith "\\s"
@@ -1118,29 +1224,29 @@ class LessonKtTest : ConcurrentExpectSpec({
                     LessonBuilder(20, 10, listOf("abc", "are"))
                         .newLesson("my lesson", "acb,re") {
                             words()
-                        }!!.text shouldContain "((,abc)|(abc,)|(,are)|(are,))".toRegex()
+                        }.lessons[0].text shouldContain "((,abc)|(abc,)|(,are)|(are,))".toRegex()
                 }
 
-                expect("ww punctuation marks are paired around a word") {
-                    val lessonBuilder = LessonBuilder(20, 10, listOf("abc", "are"))
-                    lessonBuilder.newLesson("building symbol history", "acbre") {
-                        exampleBuildStep()
-                    }
-                    lessonBuilder.newLesson("my lesson", "<WW>") {
-                        words()
-                    }!!.text shouldContain "((<abc>)|(<are>))".toRegex()
+                expect("WW punctuation marks are paired around a word") {
+                    LessonBuilder(20, 10, listOf("abc", "are"))
+                        .newLesson("building symbol history", "acbre") {
+                            exampleBuildStep()
+                        }.newLesson("my lesson", "<WW>") {
+                            words()
+                        }.lessons[1].text shouldContain "((<abc>)|(<are>))".toRegex()
                 }
 
                 expect("no word lessons are generated for digits") {
-                    val lessonBuilder = LessonBuilder(10, 10, listOf("abc", "are"))
-                    lessonBuilder.newLesson("building symbol history", "acbre") { exampleBuildStep() }
-                    lessonBuilder.newLesson("my lesson", "123") {
-                        words()
-                    } shouldBe null
+                    LessonBuilder(10, 10, listOf("abc", "are"))
+                        .newLesson("building symbol history", "acbre") {
+                            exampleBuildStep()
+                        }.newLesson("my lesson", "123") {
+                            words()
+                        }.lessons.getOrNull(1) shouldBe null
                 }
             }
 
-            expect("result is null when at least one build step has no (empty) output") {
+            expect("result is empty when at least one build step has no (empty) output") {
 
                 fun L.nothing(): L {
                     buildSteps.add { _ -> "" }
@@ -1152,7 +1258,7 @@ class LessonKtTest : ConcurrentExpectSpec({
                     shuffleSymbols(2)
                     nothing()
                     repeatSymbols(10)
-                } shouldBe null
+                }.lessons shouldBe emptyList()
             }
         }
     }
