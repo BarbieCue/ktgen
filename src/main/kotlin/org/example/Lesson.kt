@@ -1,5 +1,6 @@
 package org.example
 
+import org.apache.commons.text.similarity.LevenshteinDistance
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -97,7 +98,7 @@ fun String.toTextBlock(symbolsTotal: Int, lineLength: Int): String {
             val bound = min(symbolsTotal, this@toTextBlock.symbolsCount())
             var mutableStr = this@toTextBlock.normalizeWhitespaces()
             while (symbolsCount() < bound) {
-                val line = mutableStr.take(lineLength)
+                val line = mutableStr.substringAtNearestWhitespace(lineLength)
                 appendLine(line.trim())
                 mutableStr = mutableStr.substringAfter(line).trim()
             }
@@ -106,23 +107,41 @@ fun String.toTextBlock(symbolsTotal: Int, lineLength: Int): String {
     }
 }
 
+fun String.substringAtNearestWhitespace(desiredLength: Int): String {
+    if (isEmpty() || desiredLength <= 0) return ""
+    if (desiredLength >= length) return this
+
+    fun String.findNearestWhitespace(startIndex: Int, currentIndex: Int,
+                                     forwardIndex: Int = 0, backwardIndex: Int = 0,
+                                     backwards: Boolean = false): Int {
+        val char = getOrNull(currentIndex) ?: return 0
+        if (char.isWhitespace()) return currentIndex
+        val nextDirection = if (currentIndex == 0) false // reached string start, only go forward
+                            else if (currentIndex >= length) true // reached string end, only go backward
+                            else !backwards // change direction
+        val nextForwardStep = if (nextDirection) forwardIndex else forwardIndex + 1
+        val nextBackwardStep = if (nextDirection) backwardIndex + 1 else backwardIndex
+        val nextIndex = if (nextDirection) startIndex - nextBackwardStep else startIndex + nextForwardStep
+        return findNearestWhitespace(startIndex, nextIndex, nextForwardStep, nextBackwardStep, nextDirection)
+    }
+
+    if (this[desiredLength].isWhitespace()) return substring(0, desiredLength)
+    val whitespaceIndex = findNearestWhitespace(desiredLength, desiredLength)
+    if (whitespaceIndex == 0) return substring(0, desiredLength)
+    return substring(0, whitespaceIndex)
+}
+
 fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String): List<String> {
     if (isEmpty() || lessonSymbols.areDigits()) return emptyList()
     val list = toList()
     val rand = Random.nextInt(0, max(size / 2, 1))
     return list.subList(rand, size).plus(list.subList(0, rand))
         .filter { it.consistsOfAny(charsHistory.plus(lessonSymbols).letters()) &&
-
-                // words for letter groups
-                if (lessonSymbols.isLetterGroup())
+                if (lessonSymbols.isLetterGroup()) // words for letter groups
                     it.contains(lessonSymbols.unpackLetterGroup())
-
-                // words for letters
-                else if (lessonSymbols.containsLetters())
+                else if (lessonSymbols.containsLetters()) // words for letters
                     it.containsAny(lessonSymbols.letters())
-
-                // words for e.g. punctuation marks
-                else true
+                else true // words for e.g. punctuation marks
         }
 }
 
@@ -132,71 +151,102 @@ fun StringBuilder.newCharacters(symbols: String): String {
     return new
 }
 
+internal fun String.isVeryDifferent(other: String?): Boolean {
+    if (other == null) return true
+    val levenshteinDistance = LevenshteinDistance().apply(other, this)
+    if (levenshteinDistance == 0) return false
+    val similarityScore = levenshteinDistance.toDouble() / length.toDouble()
+    return similarityScore > 0.6 // 0 = equal; 1 = completely different
+}
+
+internal fun String.isExciting(): Boolean {
+    val words = split("\\s".toRegex())
+    if (words.size <= 10) return true
+    val differentWords = words.distinct()
+    return differentWords.size > 10
+}
+
 class LessonBuilder(
     private val lineLength: Int,
     private val symbolsPerLesson: Int,
     private val dictionary: Collection<String>
 ) {
     private val lessonCtr = generateSequence(1) { it + 1 }.iterator()
-    private val charsHistory = StringBuilder()
+    private val symbolHistory = StringBuilder()
+    private val createdLessons = mutableListOf<Lesson>()
+    val lessons: List<Lesson> get() = createdLessons
 
-    fun newLesson(title: String, lessonSymbols: String, buildStep: L.() -> L): Lesson? =
-        newLesson(lessonCtr.next(), title, lineLength, symbolsPerLesson, lessonSymbols, charsHistory, dictionary, buildStep)
+    fun newLesson(title: String, lessonSymbols: String, buildStep: L.() -> L): LessonBuilder =
+        newLesson(title, listOf(lessonSymbols), buildStep)
 
-    private fun newLesson(
-        lessonCtr: Int,
-        title: String,
+    fun newLesson(title: String, symbols: List<String>, buildStep: L.() -> L): LessonBuilder {
+        val text = calculateLessonText(lineLength, symbolsPerLesson, symbols, symbolHistory, dictionary, buildStep)
+        if (text.isEmpty()) return this
+        val newCharacters = symbolHistory.newCharacters(symbols.joinToString(""))
+        val lastLesson = createdLessons.lastOrNull()
+        if (newCharacters.isNotEmpty() || (text.isExciting() && text.isVeryDifferent(lastLesson?.text)))
+            createdLessons.add(Lesson(title = "${lessonCtr.next()}: $title", newCharacters = newCharacters, text = text))
+        return this
+    }
+
+    private fun calculateLessonText(
         lineLength: Int,
         symbolsPerLesson: Int,
-        lessonSymbols: String,
+        symbols: List<String>,
         charsHistory: StringBuilder,
         dictionary: Collection<String>,
-        init: L.() -> L): Lesson? {
-
-        val words = dictionary.lessonWords(charsHistory.toString(), lessonSymbols)
-
-        val l = L(lessonSymbols, words).init()
-        if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0) return null
-
+        init: L.() -> L): String {
+        val l = L(symbols, charsHistory.toString(), dictionary).init()
+        if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0) return ""
         val textSingleLine = invokeConcat(symbolsPerLesson, l.buildSteps)
-        if (textSingleLine.isEmpty()) return null
-
-        val text = textSingleLine.toTextBlock(symbolsPerLesson, lineLength)
-        return Lesson(title = "${lessonCtr}: $title", newCharacters = charsHistory.newCharacters(lessonSymbols), text = text)
+        if (textSingleLine.isEmpty()) return ""
+        return textSingleLine.toTextBlock(symbolsPerLesson, lineLength)
     }
 }
 
-class L(private val symbols: String, private val words: Collection<String>) {
+class L(
+    private val symbols: List<String>,
+    private val charsHistory: String,
+    private val dictionary: Collection<String>) {
 
     val buildSteps = mutableListOf<TextGenerator>()
 
     fun shuffleSymbols(segmentLength: Int): L {
         buildSteps.add { numberOfSymbols ->
-            symbols.unpack().repeat(numberOfSymbols).shuffle().segment(segmentLength)
+            symbols.joinToString(" ") {
+                it.unpack().repeat(numberOfSymbols / symbols.size).shuffle().segment(segmentLength)
+            }
         }
         return this
     }
 
     fun repeatSymbols(segmentLength: Int): L {
         buildSteps.add { numberOfSymbols ->
-            symbols.unpack().repeat(numberOfSymbols).segment(segmentLength)
+            symbols.joinToString(" ") {
+                it.unpack().repeat(numberOfSymbols / symbols.size).segment(segmentLength)
+            }
         }
         return this
     }
 
     fun alternateSymbols(segmentLength: Int): L {
         buildSteps.add { numberOfSymbols ->
-            val stretched = symbols.unpack().map { "$it".repeat(max(segmentLength, 0)) }.joinToString("")
-            stretched.repeat(numberOfSymbols).segment(segmentLength)
+            symbols.joinToString(" ") {
+                val stretched = it.unpack().map { char -> "$char".repeat(max(segmentLength, 0)) }.joinToString("")
+                stretched.repeat(numberOfSymbols / symbols.size).segment(segmentLength)
+            }
         }
         return this
     }
 
     fun words(): L {
-        val punctuationMarks = symbols.ww().ifEmpty { symbols.punctuationMarks() }
         buildSteps.add { numberOfSymbols ->
-            if (punctuationMarks.isEmpty()) words.joinRepeat(numberOfSymbols)
-            else words.prefixOrAppendPunctuationMarks(punctuationMarks).joinRepeat(numberOfSymbols)
+            symbols.joinToString(" ") {
+                val punctuationMarks = it.ww().ifEmpty { it.punctuationMarks() }
+                val words = dictionary.lessonWords(charsHistory, it)
+                if (punctuationMarks.isEmpty()) words.joinRepeat(numberOfSymbols / symbols.size)
+                else words.prefixOrAppendPunctuationMarks(punctuationMarks).joinRepeat(numberOfSymbols / symbols.size)
+            }
         }
         return this
     }

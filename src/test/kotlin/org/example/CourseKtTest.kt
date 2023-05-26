@@ -6,7 +6,7 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldHaveLength
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldHaveMaxLength
 import io.kotest.matchers.string.shouldHaveMinLength
 import java.io.File
@@ -131,28 +131,31 @@ class CourseKtTest : IOExpectSpec({
             course.lessons.forAll { it.text.count { char -> !char.isWhitespace() } shouldBe 100 }
         }
 
-        expect("each line of each lesson's text has a length of line-length or line-length-1, except the last line can be shorter") {
+        expect("each line of each lesson's text has a length of about line-length, except the last line can be shorter") {
             val lessonSpecification = listOf("ab", "cd")
             val lineLength = 20
             val course = createCourse(lessonSpecification, emptyList(), lineLength, 100)
             course.lessons shouldHaveAtLeastSize 2
-            course.lessons.forAll { lesson ->
-                val lines = lesson.text.split('\n')
-                lines shouldHaveAtLeastSize 2
-                lines.dropLast(1).forAll { line ->
-                    line shouldHaveMinLength 19
-                    line shouldHaveMaxLength 20
+            repeat(100) {
+                course.lessons.forAll { lesson ->
+                    val lines = lesson.text.split('\n')
+                    lines shouldHaveAtLeastSize 2
+                    lines.dropLast(1).forAll { line ->
+                        line shouldHaveMinLength 10
+                        line shouldHaveMaxLength 30
+                    }
                 }
             }
         }
 
         expect("course contains word lessons when a non-empty dictionary with matching words is passed") {
-            val lessonSpecification = listOf("ab", "cd", "ef", "gh")
-            val dictionary = listOf("gag", "feed")
-            val course = createCourse(lessonSpecification, dictionary, 20, 100)
-            course.lessons shouldHaveAtLeastSize 1
-            course.lessons.count { it.text.contains("gag") } shouldBeGreaterThanOrEqual 1
-            course.lessons.count { it.text.contains("feed") } shouldBeGreaterThanOrEqual 1
+            val lessonSpecification = listOf("ab", "cd", "ef", "gh", "ij", "kl")
+            val dictionary = listOf("kkkk", "llll", "kl", "ll", "kk", "flache", "all", "gleich", "gleiche", "bald", "alle", "a", "flach")
+            repeat(100) {
+                val course = createCourse(lessonSpecification, dictionary, 20, 100)
+                course.lessons shouldHaveAtLeastSize 1
+                course.lessons.count { it.text.contains("all") } shouldBeGreaterThanOrEqual 1
+            }
         }
 
         expect("line-length range test") {
@@ -161,17 +164,20 @@ class CourseKtTest : IOExpectSpec({
             createCourse(lessonSpecification, emptyList(), -1, 200).lessons shouldHaveSize 0
             createCourse(lessonSpecification, emptyList(), 0, 200).lessons shouldHaveSize 0
             createCourse(lessonSpecification, emptyList(), 1, 200).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(lessonSpecification, emptyList(), 1, 200).lessons.forAll {
-                it.text.split('\n') shouldHaveSize 200
-                it.text.split('\n').forAll { line -> line shouldHaveLength 1 }
+            repeat(100) {
+                createCourse(lessonSpecification, emptyList(), 1, 200).lessons.forAll {
+                    it.text.split('\n') shouldNotBe emptyList<String>()
+                    it.text.split('\n').forAll { line -> line shouldHaveMinLength 1 }
+                }
+                createCourse(lessonSpecification, emptyList(), 100, 200).lessons.size shouldBeGreaterThanOrEqual 1
+                createCourse(lessonSpecification, emptyList(), 100, 200).lessons.forAll {
+                    it.text.split('\n') shouldNotBe emptyList<String>()
+                    it.text.split('\n').dropLast(1).forAll { line ->
+                        line shouldHaveMinLength 90
+                        line shouldHaveMaxLength 110
+                    }
+                }
             }
-            createCourse(lessonSpecification, emptyList(), 100, 200).lessons.size shouldBeGreaterThanOrEqual 1
-            createCourse(lessonSpecification, emptyList(), 100, 200).lessons.forAll {
-                it.text.split('\n') shouldHaveAtLeastSize 1
-                it.text.split('\n').dropLast(1) // last line can be shorter
-                    .forAll { line ->
-                        line shouldHaveMinLength 99
-                        line shouldHaveMaxLength 100 } }
         }
 
         expect("symbols-per-lesson range test") {

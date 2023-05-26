@@ -153,7 +153,9 @@ Here we have 8 segments of new symbols to learn: `ab`, `cdef`, `gh`, `AB`, `CD`,
 20. Random permutations of `,.`
 21. Words consisting of `abcdefghABCDEFGH` where `,` or `.` is prefixed or appended randomly
 
-However, no lessons containing words are generated if no matching words can be found in the dictionary.
+##### However
+- No word lessons are generated if no matching words can be found in the dictionary
+- Some lessons might be optimized out when they are too similar or when they are not diverse enough
 
 
 ### Allowed symbols
