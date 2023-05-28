@@ -223,7 +223,7 @@ java -jar build/libs/ktgen.jar docs/examples/german-layout.xml
 
 ## Combining lesson specifications
 
-Multiple lessons specifications can be combined to a single course, simply by passing them as arguments to *ktgen*.
+Multiple lesson specifications can be combined to a single course, simply by passing them as arguments to *ktgen*.
 They are applied in order. For example:
 
 ```shell
