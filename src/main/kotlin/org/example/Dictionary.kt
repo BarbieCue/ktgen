@@ -32,8 +32,11 @@ fun textFromFile(path: String): String? = try {
 
 fun extractWords(text: String?, minWordLength: Int, maxWordLength: Int): Sequence<String> =
     if (text.isNullOrEmpty() || minWordLength > maxWordLength || maxWordLength <= 0) emptySequence()
-    else text.splitToSequence("\\s+|\\p{Punct}+".toRegex())
-        .filter { it.matches(lettersRegex) && it.length in (max(minWordLength, 0)..maxWordLength) }
+    else {
+        val lengthRange = max(minWordLength, 0)..maxWordLength
+        text.splitToSequence("\\s+|\\p{Punct}+".toRegex())
+            .filter { it.matches(lettersRegex) && it.length in (lengthRange) }
+    }
 
 fun String.consistsOfAny(symbols: String): Boolean {
     if (any { !symbols.contains(it) }) return false
