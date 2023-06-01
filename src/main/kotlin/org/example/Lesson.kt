@@ -131,18 +131,22 @@ fun String.substringAtNearestWhitespace(desiredLength: Int): String {
     return substring(0, whitespaceIndex)
 }
 
-fun Collection<String>.lessonWords(charsHistory: String, lessonSymbols: String): List<String> {
-    if (isEmpty() || lessonSymbols.areDigits()) return emptyList()
-    val list = toList()
-    val rand = Random.nextInt(0, max(size / 2, 1))
-    return list.subList(rand, size).plus(list.subList(0, rand))
-        .filter { it.consistsOfAny(charsHistory.plus(lessonSymbols).letters()) &&
-                if (lessonSymbols.isLetterGroup()) // words for letter groups
-                    it.contains(lessonSymbols.unpackLetterGroup())
-                else if (lessonSymbols.containsLetters()) // words for letters
-                    it.containsAny(lessonSymbols.letters())
-                else true // words for e.g. punctuation marks
-        }
+fun Sequence<String>.lessonWords(symbolHistory: String, symbols: String): Collection<String> {
+    if (none() || symbols.areDigits()) return emptyList()
+    val historyLetters = symbolHistory.letters()
+    val letters = symbols.letters()
+    val isLetterGroup = symbols.isLetterGroup()
+    val containsLetters = symbols.containsLetters()
+    val filtered = filter {
+        it.consistsOfAny(historyLetters) &&
+        if (isLetterGroup)
+            it.contains(symbols.unpackLetterGroup())
+        else if (containsLetters)
+            it.containsAny(letters)
+        else true
+    }.toList()
+    val rand = Random.nextInt(0, max(filtered.size - 1, 1))
+    return filtered.subList(rand, filtered.size).plus(filtered.subList(0, rand))
 }
 
 fun StringBuilder.newCharacters(symbols: String): String {
@@ -188,7 +192,7 @@ internal fun String.differentWords(n: Int): Boolean {
 class LessonBuilder(
     private val lineLength: Int,
     private val symbolsPerLesson: Int,
-    private val dictionary: Collection<String>
+    private val dictionary: Sequence<String>,
 ) {
     private val lessonCtr = generateSequence(1) { it + 1 }.iterator()
     private val symbolHistory = StringBuilder()
@@ -223,7 +227,7 @@ class LessonBuilder(
         symbolsPerLesson: Int,
         symbols: List<String>,
         symbolHistory: String,
-        dictionary: Collection<String>,
+        dictionary: Sequence<String>,
         init: L.() -> L): String {
         val l = L(symbols, symbolHistory, dictionary).init()
         if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0) return ""
@@ -236,7 +240,7 @@ class LessonBuilder(
 class L(
     private val symbols: List<String>,
     private val symbolHistory: String,
-    private val dictionary: Collection<String>) {
+    private val dictionary: Sequence<String>) {
 
     val buildSteps = mutableListOf<TextGenerator>()
 

@@ -4,7 +4,7 @@ import java.io.File
 
 fun createCourse(
     lessonSpecifications: List<String>,
-    dictionary: Collection<String>,
+    dictionary: Sequence<String>,
     lineLength: Int,
     symbolsPerLesson: Int
 ): Course {
