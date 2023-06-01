@@ -1,8 +1,7 @@
 package org.example
 
 import io.kotest.inspectors.forAll
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.sequences.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -18,7 +17,7 @@ class DictionaryKtTest : IOExpectSpec({
         expect("extract words from string, where words are separated by any whitespace characters or punctuation marks") {
             val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
             val words = extractWords(text, 1, 100)
-            words shouldBe listOf(
+            words.toList() shouldBe listOf(
                 "They", "d", "lost", "their", "keys", "one", "each", "in", "the",
                 "so", "called", "Good", "Old", "Greens", "respectively", "äöü", "ÜÄÖ", "niße")
         }
@@ -26,33 +25,33 @@ class DictionaryKtTest : IOExpectSpec({
         expect("empty result collection on empty input") {
             val text = ""
             val words = extractWords(text, 1, 100)
-            words shouldBe emptyList()
+            words shouldBe emptySequence()
         }
 
         expect("empty result collection when input is null") {
             val text = null
             val words = extractWords(text, 1, 100)
-            words shouldBe emptyList()
+            words shouldBe emptySequence()
         }
 
         expect("empty result collection when max-word-length is smaller than min-word-length") {
             val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
             val words = extractWords(text, 100, 1)
-            words shouldBe emptyList()
+            words shouldBe emptySequence()
         }
 
         expect("empty result collection when max-word-length is zero or negative") {
             val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
-            extractWords(text, 100, 0) shouldBe emptyList()
-            extractWords(text, 100, -1) shouldBe emptyList()
+            extractWords(text, 100, 0) shouldBe emptySequence()
+            extractWords(text, 100, -1) shouldBe emptySequence()
         }
 
         expect("when min-word-length is negative, default to 0") {
             val text = "They'd lost their   7   keys (one each), \n\n in the so called _Good-Old-Greens_; (respectively_ äöü [ÜÄÖ] {niße})."
-            extractWords(text, 0, 100) shouldBe
+            extractWords(text, 0, 100).toList() shouldBe
                     listOf("They", "d", "lost", "their", "keys", "one", "each", "in", "the", "so",
                         "called", "Good", "Old", "Greens", "respectively", "äöü", "ÜÄÖ", "niße")
-            extractWords(text, -1, 100) shouldBe
+            extractWords(text, -1, 100).toList() shouldBe
                     listOf("They", "d", "lost", "their", "keys", "one", "each", "in", "the", "so",
                         "called", "Good", "Old", "Greens", "respectively", "äöü", "ÜÄÖ", "niße")
         }
@@ -181,7 +180,7 @@ class DictionaryKtTest : IOExpectSpec({
             file.writeText("apple pear grape")
             startLocalhostWebServer(port, Application::exampleCom)
             val dict = buildDictionary(file.absolutePathString(), "http://localhost:$port/", 0, 100, 1000)
-            dict shouldContainAll setOf(
+            dict shouldContainAll sequenceOf(
                 "Domain", "Example", "More", "This", "You", "asking",
                 "coordination", "documents", "domain", "examples", "for",
                 "Example", "illustrative", "in", "information", "is",
@@ -216,7 +215,7 @@ class DictionaryKtTest : IOExpectSpec({
         }
 
         expect("result collection is empty when text file path is empty and website url is empty") {
-            buildDictionary("", "", 0, 100, 1000) shouldBe emptyList()
+            buildDictionary("", "", 0, 100, 1000).toList() shouldBe emptyList()
         }
 
         expect("result collection contains only words having the specified minimal length") {
@@ -244,17 +243,8 @@ class DictionaryKtTest : IOExpectSpec({
         expect("result collection is empty when max-word-length is zero or negative") {
             val file = tmpFile(UUID.randomUUID().toString())
             file.writeText("to be are see apple pear grape co")
-            buildDictionary(file.absolutePathString(), "", 0, 0, 1000) shouldBe emptyList()
-            buildDictionary(file.absolutePathString(), "", 0, -1, 1000) shouldBe emptyList()
-        }
-
-        expect("repeat words when dictionary-max-length is greater than the number of existing words") {
-            val file = tmpFile(UUID.randomUUID().toString())
-            file.writeText("apple pear")
-            val dict = buildDictionary(file.absolutePathString(), "", 0, 100, 1000)
-            dict shouldHaveSize 1000
-            dict.count { it == "apple" } shouldBe 500
-            dict.count { it == "pear" } shouldBe 500
+            buildDictionary(file.absolutePathString(), "", 0, 0, 1000).toList() shouldBe emptyList()
+            buildDictionary(file.absolutePathString(), "", 0, -1, 1000).toList() shouldBe emptyList()
         }
     }
 })

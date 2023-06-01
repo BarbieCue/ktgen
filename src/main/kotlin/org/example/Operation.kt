@@ -1,6 +1,6 @@
 package org.example
 
-import java.util.Random
+import java.util.*
 import kotlin.text.repeat as charSeqRepeat
 
 
@@ -91,7 +91,7 @@ internal fun randomPair(left: String, right: String): Pair<String, String> {
     }
 }
 
-fun Collection<String>.prefixOrAppendPunctuationMarks(punctuationMarks: String): List<String> {
+fun Collection<String>.prefixOrAppendPunctuationMarks(punctuationMarks: String): Collection<String> {
     if (isEmpty() || punctuationMarks.isEmpty()) return emptyList()
     val (left, right) = punctuationMarks.splitWWLeftRight()
     return map {

@@ -30,12 +30,16 @@ fun textFromFile(path: String): String? = try {
     null
 }
 
-fun extractWords(text: String?, minWordLength: Int, maxWordLength: Int): List<String> =
-    if (text.isNullOrEmpty() || minWordLength > maxWordLength || maxWordLength <= 0) emptyList()
-    else text.split("\\s+|\\p{Punct}+".toRegex())
-        .filter { it.matches(lettersRegex) && it.length in (max(minWordLength, 0)..maxWordLength) }
+fun extractWords(text: String?, minWordLength: Int, maxWordLength: Int): Sequence<String> =
+    if (text.isNullOrEmpty() || minWordLength > maxWordLength || maxWordLength <= 0) emptySequence()
+    else {
+        val lengthRange = max(minWordLength, 0)..maxWordLength
+        text.splitToSequence("\\s+|\\p{Punct}+".toRegex())
+            .filter { it.matches(lettersRegex) && it.length in (lengthRange) }
+    }
 
 fun String.consistsOfAny(symbols: String): Boolean {
+    if (any { !symbols.contains(it) }) return false
     val chars = toCharArray().distinct()
     return chars.count { symbols.toCharArray().distinct().contains(it) } == length - (length - chars.size)
 }
@@ -50,10 +54,10 @@ fun buildDictionary(
     minWordLength: Int,
     maxWordLength: Int,
     dictionarySize: Int
-): Collection<String> {
-    if (dictionarySize <= 0) return emptyList()
+): Sequence<String> {
+    if (dictionarySize <= 0) return emptySequence()
     val file = if (dictionaryPath.isEmpty()) "" else textFromFile(dictionaryPath)
     val web = if (scrapeUrl.isEmpty()) "" else textFromWebsite(scrapeUrl)
     val dict = extractWords(file?.plus(" ").plus(web), minWordLength, maxWordLength)
-    return dict.repeatInfinite().take(dictionarySize).toList()
+    return dict.take(dictionarySize)
 }
