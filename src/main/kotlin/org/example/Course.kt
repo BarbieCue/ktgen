@@ -13,6 +13,9 @@ fun createCourse(
         return Course()
 
     val lessonBuilder = LessonBuilder(lineLength, symbolsPerLesson, dictionary)
+        .withLessonFilter(Filter.relativeLevenshteinDistanceFromLessonBefore(0.6))
+        .withLessonFilter(Filter.containsAtLeastDifferentWords(10))
+
 
     lessonSpecifications.forEachIndexed { idx, symbols ->
 

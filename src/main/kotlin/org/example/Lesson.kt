@@ -151,19 +151,38 @@ fun StringBuilder.newCharacters(symbols: String): String {
     return new
 }
 
-internal fun String.isVeryDifferent(other: String?): Boolean {
-    if (other == null) return true
-    val levenshteinDistance = LevenshteinDistance().apply(other, this)
-    if (levenshteinDistance == 0) return false
-    val similarityScore = levenshteinDistance.toDouble() / length.toDouble()
-    return similarityScore > 0.6 // 0 = equal; 1 = completely different
+typealias LessonFilter = (Lesson?, Lesson) -> Boolean
+
+class Filter {
+    companion object {
+        fun relativeLevenshteinDistanceFromLessonBefore(minimumDistance: Double): LessonFilter {
+            return { lastLesson: Lesson?, lesson: Lesson ->
+                // distance: 0 = equal; 1 = completely different
+                lesson.text.relativeLevenshteinDistance(lastLesson?.text) > minimumDistance
+            }
+        }
+        fun containsAtLeastDifferentWords(n: Int): LessonFilter {
+            return { _: Lesson?, lesson: Lesson ->
+                lesson.text.differentWords(n)
+            }
+        }
+    }
 }
 
-internal fun String.isExciting(): Boolean {
+internal fun String.relativeLevenshteinDistance(other: String?): Double {
+    if (isEmpty()) return 0.0
+    if (other.isNullOrEmpty()) return 1.0
+    val levenshteinDistance = LevenshteinDistance().apply(this, other)
+    if (levenshteinDistance == 0) return 0.0
+    return levenshteinDistance.toDouble() / length.toDouble()
+}
+
+internal fun String.differentWords(n: Int): Boolean {
+    if (isEmpty()) return false
     val words = split("\\s".toRegex())
-    if (words.size <= 10) return true
+    if (words.size <= n) return true
     val differentWords = words.distinct()
-    return differentWords.size > 10
+    return differentWords.size > n
 }
 
 class LessonBuilder(
@@ -173,19 +192,29 @@ class LessonBuilder(
 ) {
     private val lessonCtr = generateSequence(1) { it + 1 }.iterator()
     private val symbolHistory = StringBuilder()
-    private val createdLessons = mutableListOf<Lesson>()
-    val lessons: List<Lesson> get() = createdLessons
+    private val lessonFilter = mutableListOf<LessonFilter>()
+    val lessons = mutableListOf<Lesson>()
+
+    fun withLessonFilter(filter: LessonFilter): LessonBuilder {
+        lessonFilter.add(filter)
+        return this
+    }
 
     fun newLesson(title: String, lessonSymbols: String, buildStep: L.() -> L): LessonBuilder =
         newLesson(title, listOf(lessonSymbols), buildStep)
 
     fun newLesson(title: String, symbols: List<String>, buildStep: L.() -> L): LessonBuilder {
-        val text = calculateLessonText(lineLength, symbolsPerLesson, symbols, symbolHistory, dictionary, buildStep)
-        if (text.isEmpty()) return this
         val newCharacters = symbolHistory.newCharacters(symbols.joinToString(""))
-        val lastLesson = createdLessons.lastOrNull()
-        if (newCharacters.isNotEmpty() || (text.isExciting() && text.isVeryDifferent(lastLesson?.text)))
-            createdLessons.add(Lesson(title = "${lessonCtr.next()}: $title", newCharacters = newCharacters, text = text))
+        val text = calculateLessonText(lineLength, symbolsPerLesson, symbols, symbolHistory.toString(), dictionary, buildStep)
+        if (text.isEmpty()) return this
+        val draft = Lesson(title = title, newCharacters = newCharacters, text = text)
+        if (newCharacters.isNotEmpty() || lessonFilter.all { it(lessons.lastOrNull(), draft) })
+            lessons.add(
+                Lesson(
+                    title = "${lessonCtr.next()}: ${draft.title}",
+                    newCharacters = draft.newCharacters,
+                    text = draft.text)
+            )
         return this
     }
 
@@ -193,10 +222,10 @@ class LessonBuilder(
         lineLength: Int,
         symbolsPerLesson: Int,
         symbols: List<String>,
-        charsHistory: StringBuilder,
+        symbolHistory: String,
         dictionary: Collection<String>,
         init: L.() -> L): String {
-        val l = L(symbols, charsHistory.toString(), dictionary).init()
+        val l = L(symbols, symbolHistory, dictionary).init()
         if (l.buildSteps.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0) return ""
         val textSingleLine = invokeConcat(symbolsPerLesson, l.buildSteps)
         if (textSingleLine.isEmpty()) return ""
@@ -206,7 +235,7 @@ class LessonBuilder(
 
 class L(
     private val symbols: List<String>,
-    private val charsHistory: String,
+    private val symbolHistory: String,
     private val dictionary: Collection<String>) {
 
     val buildSteps = mutableListOf<TextGenerator>()
@@ -243,7 +272,7 @@ class L(
         buildSteps.add { numberOfSymbols ->
             symbols.joinToString(" ") {
                 val punctuationMarks = it.ww().ifEmpty { it.punctuationMarks() }
-                val words = dictionary.lessonWords(charsHistory, it)
+                val words = dictionary.lessonWords(symbolHistory, it)
                 if (punctuationMarks.isEmpty()) words.joinRepeat(numberOfSymbols / symbols.size)
                 else words.prefixOrAppendPunctuationMarks(punctuationMarks).joinRepeat(numberOfSymbols / symbols.size)
             }

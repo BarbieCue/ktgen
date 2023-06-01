@@ -8,6 +8,8 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.doubles.shouldBeGreaterThan
+import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.*
 import io.kotest.property.Arb
@@ -798,44 +800,6 @@ class LessonKtTest : ConcurrentExpectSpec({
                 "".normalizeWhitespaces() shouldBe ""
             }
         }
-
-        context("isVeryDifferent") {
-
-            expect("false when equals") {
-                "abc".isVeryDifferent("abc") shouldBe false
-            }
-
-            expect("true when completely different") {
-                "abc".isVeryDifferent("def") shouldBe true
-            }
-
-            expect("true when different for more than 60 percent") {
-                "0123456789".isVeryDifferent("0121111111") shouldBe true
-            }
-
-            expect("false when different for less than 60 percent") {
-                "0123456789".isVeryDifferent("0123456111") shouldBe false
-            }
-
-            expect("true when other is null") {
-                "abc".isVeryDifferent(null) shouldBe true
-            }
-        }
-
-        context("isExciting") {
-
-            expect("false when contains 10 or less different words") {
-                "abc abc abc abc abc abc abc abc abc abc abc abc".isExciting() shouldBe false
-            }
-
-            expect("true when contains 11 or more different words") {
-                "a aa b bb ab ba aaab bbba baba abab aabb bbaa".isExciting() shouldBe true
-            }
-
-            expect("true when contains less than 11 words in sum") {
-                "ab ba aa bb".isExciting() shouldBe true
-            }
-        }
     }
 
     context("LessonBuilder") {
@@ -1259,6 +1223,101 @@ class LessonKtTest : ConcurrentExpectSpec({
                     nothing()
                     repeatSymbols(10)
                 }.lessons shouldBe emptyList()
+            }
+        }
+
+        context("LessonFilter") {
+
+            context("Filter") {
+
+                context("relativeLevenshteinDistanceFromLessonBefore") {
+
+                    expect("true when different for more than X percent") {
+                        val filterFun = Filter.relativeLevenshteinDistanceFromLessonBefore(0.6)
+                        filterFun(Lesson(text = "0123456789"), Lesson(text = "0121111111")) shouldBe true
+                    }
+
+                    expect("false when different for less than X percent") {
+                        val filterFun = Filter.relativeLevenshteinDistanceFromLessonBefore(0.6)
+                        filterFun(Lesson(text = "0123456789"), Lesson(text = "0123456111")) shouldBe false
+                    }
+
+                    expect("true when last lesson is null") {
+                        val filterFun = Filter.relativeLevenshteinDistanceFromLessonBefore(0.6)
+                        filterFun(null, Lesson(text = "0123456111")) shouldBe true
+                    }
+                }
+
+                context("containsAtLeastDifferentWords") {
+
+                    expect("true when lesson text contains n different words") {
+                        val filterFun = Filter.containsAtLeastDifferentWords(3)
+                        filterFun(null, Lesson(text = "abc def ghi")) shouldBe true
+                    }
+
+                    expect("true when lesson text contains more than n different words") {
+                        val filterFun = Filter.containsAtLeastDifferentWords(3)
+                        filterFun(null, Lesson(text = "abc def ghi jkl")) shouldBe true
+                    }
+
+                    expect("true when lesson text contains less than n words in sum") {
+                        val filterFun = Filter.containsAtLeastDifferentWords(3)
+                        filterFun(null, Lesson(text = "abc")) shouldBe true
+                    }
+
+                    expect("false when lesson text is empty") {
+                        val filterFun = Filter.containsAtLeastDifferentWords(3)
+                        filterFun(null, Lesson(text = "")) shouldBe false
+                    }
+                }
+            }
+
+            context("relatedLevenshteinDistance") {
+
+                expect("0.0 when equals") {
+                    "abc".relativeLevenshteinDistance("abc") shouldBe 0.0
+                }
+
+                expect("1.0 when other is null") {
+                    "abc".relativeLevenshteinDistance(null) shouldBe 1.0
+                }
+
+                expect("1.0 when other is empty") {
+                    "abc".relativeLevenshteinDistance("") shouldBe 1.0
+                }
+
+                expect("1.0 when completely different") {
+                    "abc".relativeLevenshteinDistance("def") shouldBe 1.0
+                }
+
+                expect("[0.0..1.0] when partly different") {
+                    val distance = "abc".relativeLevenshteinDistance("axx")
+                    distance shouldBeGreaterThan 0.0
+                    distance shouldBeLessThan 1.0
+                }
+
+                expect("0.0 when source string is empty") {
+                    "".relativeLevenshteinDistance("abc") shouldBe 0.0
+                }
+            }
+
+            context("differentWords") {
+
+                expect("true when contains n or more different words") {
+                    "a aa b bb ab ba aaab".differentWords(3) shouldBe true
+                }
+
+                expect("true when contains less than n words in sum") {
+                    "ab ba aa bb".differentWords(10) shouldBe true
+                }
+
+                expect("false when contains n or less different words") {
+                    "abc abc abc abc abc".differentWords(3) shouldBe false
+                }
+
+                expect("false on empty source string") {
+                    "".differentWords(10) shouldBe false
+                }
             }
         }
     }
