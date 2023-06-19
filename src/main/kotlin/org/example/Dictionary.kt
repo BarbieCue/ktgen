@@ -38,15 +38,9 @@ fun extractWords(text: String?, minWordLength: Int, maxWordLength: Int): Sequenc
             .filter { it.matches(lettersRegex) && it.length in (lengthRange) }
     }
 
-fun String.consistsOfAny(symbols: String): Boolean {
-    if (any { !symbols.contains(it) }) return false
-    val chars = toCharArray().distinct()
-    return chars.count { symbols.toCharArray().distinct().contains(it) } == length - (length - chars.size)
-}
+fun String.consistsOf(symbols: String): Boolean = all { symbols.contains(it) }
 
-fun String.containsAny(symbols: String): Boolean {
-    return symbols.any { c -> contains(c) }
-}
+fun String.containsAny(symbols: String): Boolean = symbols.any { c -> contains(c) }
 
 fun buildDictionary(
     dictionaryPath: String,

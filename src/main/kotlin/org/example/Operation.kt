@@ -105,3 +105,57 @@ fun Collection<String>.prefixOrAppendPunctuationMarks(punctuationMarks: String):
         }
     }
 }
+
+internal fun StringBuilder.symbolsCount(): Int = count { !it.isWhitespace() }
+
+internal fun String.symbolsCount(): Int = count { !it.isWhitespace() }
+
+internal fun String.normalizeWhitespaces(): String = replace("\\s{2,}".toRegex(), " ")
+
+internal fun String.toTextBlock(symbolsTotal: Int, lineLength: Int): String {
+    if (isEmpty() || symbolsTotal <= 0 || lineLength <= 0) return ""
+    if (length < lineLength) return this
+    return if (lineLength > symbolsTotal)
+        buildString {
+            for (c in this@toTextBlock) {
+                append(c)
+                if (symbolsCount() == symbolsTotal) break
+            }
+        }.trim()
+    else {
+        buildString {
+            val bound = kotlin.math.min(symbolsTotal, this@toTextBlock.symbolsCount())
+            var mutableStr = this@toTextBlock.normalizeWhitespaces()
+            while (symbolsCount() < bound) {
+                val line = mutableStr.substringAtNearestWhitespace(lineLength)
+                appendLine(line.trim())
+                mutableStr = mutableStr.substringAfter(line).trim()
+            }
+            while (symbolsCount() > symbolsTotal) delete(length - 1, length)
+        }.trim()
+    }
+}
+
+internal fun String.substringAtNearestWhitespace(desiredLength: Int): String {
+    if (isEmpty() || desiredLength <= 0) return ""
+    if (desiredLength >= length) return this
+
+    fun String.findNearestWhitespace(startIndex: Int, currentIndex: Int,
+                                     forwardIndex: Int = 0, backwardIndex: Int = 0,
+                                     backwards: Boolean = false): Int {
+        val char = getOrNull(currentIndex) ?: return 0
+        if (char.isWhitespace()) return currentIndex
+        val nextDirection = if (currentIndex == 0) false // reached string start, only go forward
+        else if (currentIndex >= length) true // reached string end, only go backward
+        else !backwards // change direction
+        val nextForwardStep = if (nextDirection) forwardIndex else forwardIndex + 1
+        val nextBackwardStep = if (nextDirection) backwardIndex + 1 else backwardIndex
+        val nextIndex = if (nextDirection) startIndex - nextBackwardStep else startIndex + nextForwardStep
+        return findNearestWhitespace(startIndex, nextIndex, nextForwardStep, nextBackwardStep, nextDirection)
+    }
+
+    if (this[desiredLength].isWhitespace()) return substring(0, desiredLength)
+    val whitespaceIndex = findNearestWhitespace(desiredLength, desiredLength)
+    if (whitespaceIndex == 0) return substring(0, desiredLength)
+    return substring(0, whitespaceIndex)
+}

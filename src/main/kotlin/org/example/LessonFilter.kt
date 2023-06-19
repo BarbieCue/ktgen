@@ -1,0 +1,37 @@
+package org.example
+
+import org.apache.commons.text.similarity.LevenshteinDistance
+
+typealias LessonFilter = (Lesson?, Lesson) -> Boolean
+
+class Filter {
+    companion object {
+        fun relativeLevenshteinDistanceFromLessonBefore(minimumDistance: Double): LessonFilter {
+            return { lastLesson: Lesson?, lesson: Lesson ->
+                // distance: 0 = equal; 1 = completely different
+                lesson.text.relativeLevenshteinDistance(lastLesson?.text) > minimumDistance
+            }
+        }
+        fun lessonContainsAtLeastDifferentWords(n: Int): LessonFilter {
+            return { _: Lesson?, lesson: Lesson ->
+                lesson.text.differentWords(n)
+            }
+        }
+    }
+}
+
+internal fun String.relativeLevenshteinDistance(other: String?): Double {
+    if (isEmpty()) return 0.0
+    if (other.isNullOrEmpty()) return 1.0
+    val levenshteinDistance = LevenshteinDistance().apply(this, other)
+    if (levenshteinDistance == 0) return 0.0
+    return levenshteinDistance.toDouble() / length.toDouble()
+}
+
+internal fun String.differentWords(n: Int): Boolean {
+    if (isEmpty()) return false
+    val words = split("\\s".toRegex())
+    if (words.size <= n) return true
+    val differentWords = words.distinct()
+    return differentWords.size > n
+}

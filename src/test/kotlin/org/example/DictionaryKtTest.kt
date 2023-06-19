@@ -58,43 +58,46 @@ class DictionaryKtTest : IOExpectSpec({
     }
 
 
-    context("consistsOfAny") {
+    context("consistsOf") {
 
         expect("true when the target string consists of the symbols from the input string") {
-            "abc".consistsOfAny("abc") shouldBe true
+            "abc".consistsOf("abc") shouldBe true
         }
 
         expect("the symbol order does not matter") {
-            "abc".consistsOfAny("bca") shouldBe true
+            "abc".consistsOf("bca") shouldBe true
         }
 
         expect("true when the input string contains more symbols than target string") {
-            "abc".consistsOfAny("abcdef") shouldBe true
-            "abc".consistsOfAny("abcx") shouldBe true
-            "abc".consistsOfAny("abc1") shouldBe true
-            "abc".consistsOfAny("cba22") shouldBe true
+            "abc".consistsOf("abcdef") shouldBe true
+            "abc".consistsOf("abcx") shouldBe true
+            "abc".consistsOf("abc1") shouldBe true
+            "abc".consistsOf("cba22") shouldBe true
         }
 
         expect("false when not all symbols from the input string are contained in the target string") {
-            "abc".consistsOfAny("ab") shouldBe false
-            "abc".consistsOfAny("ac") shouldBe false
-            "abc".consistsOfAny("bc") shouldBe false
-            "abc".consistsOfAny("aaa") shouldBe false
-            "abc".consistsOfAny("a") shouldBe false
-            "abc".consistsOfAny("b") shouldBe false
-            "abc".consistsOfAny("c") shouldBe false
-            "abc".consistsOfAny("ABC") shouldBe false
-            "abc".consistsOfAny("A") shouldBe false
-            "abc".consistsOfAny("B") shouldBe false
-            "abc".consistsOfAny("C") shouldBe false
+            "abc".consistsOf("ab") shouldBe false
+            "abc".consistsOf("ac") shouldBe false
+            "abc".consistsOf("bc") shouldBe false
+            "abc".consistsOf("aaa") shouldBe false
+            "abc".consistsOf("a") shouldBe false
+            "abc".consistsOf("b") shouldBe false
+            "abc".consistsOf("c") shouldBe false
+            "abc".consistsOf("A") shouldBe false
+            "abc".consistsOf("B") shouldBe false
+            "abc".consistsOf("C") shouldBe false
+        }
+
+        expect("upper lower case is important") {
+            "abc".consistsOf("ABC") shouldBe false
         }
 
         expect("duplicates are ignored") {
-            "abc".consistsOfAny("aaabbaccc") shouldBe true
-            "abc".consistsOfAny("xaaabbaccc") shouldBe true
-            "abbaaab".consistsOfAny("ab") shouldBe true
-            "abcabc".consistsOfAny("cba") shouldBe true
-            "abcabc".consistsOfAny("cbaxy") shouldBe true
+            "abc".consistsOf("aaabbaccc") shouldBe true
+            "abc".consistsOf("xaaabbaccc") shouldBe true
+            "abbaaab".consistsOf("ab") shouldBe true
+            "abcabc".consistsOf("cba") shouldBe true
+            "abcabc".consistsOf("cbaxy") shouldBe true
         }
     }
 

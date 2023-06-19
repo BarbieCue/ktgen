@@ -12,6 +12,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.int
 import io.kotest.property.checkAll
 
+
 class OperationKtTest : ConcurrentExpectSpec({
 
     context("String extensions") {
@@ -114,6 +115,147 @@ class OperationKtTest : ConcurrentExpectSpec({
                 "aW".splitWWLeftRight() shouldBe Pair("aW", "aW")
                 "[{}]".splitWWLeftRight() shouldBe Pair("[{}]", "[{}]")
                 "[{".splitWWLeftRight() shouldBe Pair("[{", "[{")
+            }
+        }
+
+        context("symbolsCount") {
+
+            expect("counts non-whitespace characters") {
+                StringBuilder(". a b c ] 1").symbolsCount() shouldBe 6
+                StringBuilder("  \t  \n ").symbolsCount() shouldBe 0
+                StringBuilder().symbolsCount() shouldBe 0
+            }
+        }
+
+        context("symbolsCount") {
+
+            expect("counts non-whitespace characters") {
+                ". a b c ] 1".symbolsCount() shouldBe 6
+                "  \t  \n ".symbolsCount() shouldBe 0
+                "".symbolsCount() shouldBe 0
+            }
+        }
+
+        context("normalizeWhitespaces") {
+
+            expect("replaces two or more chained whitespaces with a single whitespace") {
+                "a  \t \tb   \n c".normalizeWhitespaces() shouldBe "a b c"
+            }
+
+            expect("input is output when the input does not contain any whitespaces") {
+                "abc".normalizeWhitespaces() shouldBe "abc"
+            }
+
+            expect("empty input leads to empty output") {
+                "".normalizeWhitespaces() shouldBe ""
+            }
+        }
+
+        context("toTextBlock") {
+
+            expect("result contains exactly symbols-total non-whitespace characters") {
+                "abcdef abc abc abcdef abc".toTextBlock(20, 5).count { !it.isWhitespace() } shouldBe 20
+            }
+
+            expect("cut symbols from the end, when source string is larger than symbols-total") {
+                "12345678901234567890" // 20 chars long
+                    .toTextBlock(18, 5) shouldEndWith "8"
+            }
+
+            expect("the result line length is about line-length, words are not split by line breaks") {
+                val result = "abcdef abc abc abcdef abc".toTextBlock(20, 5)
+                val lines = result.split("\n")
+                lines[0] shouldHaveLength 6
+                lines[1] shouldHaveLength 3
+                lines[2] shouldHaveLength 3
+                lines[3] shouldHaveLength 6
+                lines[4] shouldHaveLength 2
+                result shouldBe """
+                    abcdef
+                    abc
+                    abc
+                    abcdef
+                    ab
+                """.trimIndent()
+            }
+
+            expect("split result into lines of line-length when source string is a single word longer than line length") {
+                val lines = "abcdefabcabcabcdefabca".toTextBlock(20, 5).split("\n".toRegex())
+                lines[0] shouldHaveLength 5
+                lines[1] shouldHaveLength 5
+                lines[2] shouldHaveLength 5
+                lines[3] shouldHaveLength 5
+            }
+
+            expect("normalize multiple chained whitespace characters into a single one") {
+                "abc    abc  \t abc   abc abc abc    abc".toTextBlock(20, 5) shouldBe """
+                    abc
+                    abc
+                    abc
+                    abc
+                    abc
+                    abc
+                    ab
+                    """.trimIndent()
+            }
+
+            expect("an input string length smaller than symbols-total leads to result having input string length") {
+                "abc def ghi".toTextBlock(20, 5) shouldBe """
+                    abc
+                    def
+                    ghi
+                """.trimIndent()
+            }
+
+            expect("input string length is smaller than line-length leads to result having input string length") {
+                "ac".toTextBlock(20, 5) shouldBe "ac"
+            }
+
+            expect("return empty string when input string is empty") {
+                "".toTextBlock(20, 5) shouldBe ""
+            }
+
+            expect("return empty string when symbols-total is zero or negative") {
+                "abc abc abc".toTextBlock(0, 10) shouldBe ""
+                "abc abc abc".toTextBlock(-1, 10) shouldBe ""
+            }
+
+            expect("return empty string when line-length is zero or negative") {
+                "abc abc abc".toTextBlock(10, 0) shouldBe ""
+                "abc abc abc".toTextBlock(10, -1) shouldBe ""
+            }
+        }
+
+        context("substringAtNearestWhitespace") {
+
+            expect("return substring from 0 to the last word before or after desired-length") {
+                "hi, my name is luka, i live on the second floor"
+                    .substringAtNearestWhitespace(10) shouldBe "hi, my name"
+            }
+
+            expect("empty input leads to empty output") {
+                "".substringAtNearestWhitespace(10) shouldBe ""
+            }
+
+            expect("desired-length range test") {
+                "hi, my name is luka".substringAtNearestWhitespace(-10) shouldBe ""
+                "hi, my name is luka".substringAtNearestWhitespace(-1) shouldBe ""
+                "hi, my name is luka".substringAtNearestWhitespace(0) shouldBe ""
+                "hi, my name is luka".substringAtNearestWhitespace(1) shouldBe "h"
+                "hi, my name is luka".substringAtNearestWhitespace(2) shouldBe "hi,"
+                "hi, my name is luka".substringAtNearestWhitespace(3) shouldBe "hi,"
+                "hi, my name is luka".substringAtNearestWhitespace(10) shouldBe "hi, my name"
+            }
+
+            expect("return input string when desired-length is larger than the length of the input string") {
+                "hi, my name is luka".substringAtNearestWhitespace(20) shouldBe "hi, my name is luka"
+            }
+
+            expect("return a substring from 0 up to desired-length when the input string does not contain any whitespaces") {
+                "hi,mynameisluka".substringAtNearestWhitespace(1) shouldBe "h"
+                "hi,mynameisluka".substringAtNearestWhitespace(5) shouldBe "hi,my"
+                "hi,mynameisluka".substringAtNearestWhitespace(10) shouldBe "hi,mynamei"
+                "hi,mynameisluka".substringAtNearestWhitespace(20) shouldBe "hi,mynameisluka"
             }
         }
     }

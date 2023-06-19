@@ -1,9 +1,10 @@
 package org.example
 
 import kotlinx.cli.*
+import kotlinx.coroutines.runBlocking
 
 
-fun main(args: Array<String>) {
+fun main(args: Array<String>) = runBlocking {
 
     val parser = ArgParser("ktgen")
 
@@ -36,12 +37,12 @@ fun main(args: Array<String>) {
 
     if (symbolsPerLesson <= 0) {
         System.err.println("The lesson length must be at least 1.")
-        return
+        return@runBlocking
     }
 
     if (lineLength <= 0) {
         System.err.println("The average line length must be at least 1.")
-        return
+        return@runBlocking
     }
 
     if (minWordLength > maxWordLength)
@@ -54,9 +55,12 @@ fun main(args: Array<String>) {
 
     if (input.isEmpty()) {
         System.err.println("Missing (or empty) lesson specification. No course is created.")
-        return
+        return@runBlocking
     }
 
-    val course = createCourse(input, dictionary, lineLength, symbolsPerLesson)
+    val course = createCourse(input, dictionary, lineLength, symbolsPerLesson,
+        Filter.relativeLevenshteinDistanceFromLessonBefore(0.6),
+        Filter.lessonContainsAtLeastDifferentWords(10)
+    )
     writeCourse(course, output)
 }
