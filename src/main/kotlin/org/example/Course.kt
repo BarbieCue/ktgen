@@ -2,61 +2,62 @@ package org.example
 
 import java.io.File
 
-fun createCourse(
+suspend fun createCourse(
     lessonSpecifications: List<String>,
     dictionary: Sequence<String>,
     lineLength: Int,
-    symbolsPerLesson: Int
+    symbolsPerLesson: Int,
+    vararg lessonFilter: LessonFilter
 ): Course {
 
     if (lessonSpecifications.isEmpty() || lineLength <= 0 || symbolsPerLesson <= 0)
         return Course()
 
-    val lessonBuilder = LessonBuilder(lineLength, symbolsPerLesson, dictionary)
-        .withLessonFilter(Filter.relativeLevenshteinDistanceFromLessonBefore(0.6))
-        .withLessonFilter(Filter.containsAtLeastDifferentWords(10))
+    val lessonBuilder = LessonBuilder(lineLength, symbolsPerLesson, lessonSpecifications, dictionary)
+        .withLessonFilter(*lessonFilter)
+        .apply {
 
+            forEachLessonSpecification {
 
-    lessonSpecifications.forEachIndexed { idx, symbols ->
+                lesson {
+                    alternateSymbols(3)
+                    repeatSymbols(2)
+                    shuffleSymbols(4)
+                    alternateSymbols(1)
+                    repeatSymbols(3)
+                    shuffleSymbols(4)
+                    alternateSymbols(3)
+                }
 
-        lessonBuilder.newLesson(symbols, symbols) {
-            alternateSymbols(3)
-            repeatSymbols(2)
-            shuffleSymbols(4)
-            alternateSymbols(1)
-            repeatSymbols(3)
-            shuffleSymbols(4)
-            alternateSymbols(3)
-        }
+                lesson {
+                    words()
+                    alternateSymbols(4)
+                    words()
+                    words()
+                    words()
+                    shuffleSymbols(2)
+                    words()
+                }
 
-        lessonBuilder.newLesson("$symbols + text", symbols) {
-            words()
-            alternateSymbols(4)
-            words()
-            words()
-            words()
-            shuffleSymbols(2)
-            words()
-        }
-
-        lessonBuilder.newLesson("Text $symbols", symbols) {
-            words()
-        }
-
-        if (idx > 0 && idx % 5 == 0) {
-            lessonBuilder.newLesson(
-                "Check: ${lessonSpecifications.subList(idx - 5, idx + 1).joinToString(" ")}",
-                lessonSpecifications.subList(idx - 5, idx + 1)) {
-                words()
-                alternateSymbols(2)
-                words()
-                words()
-                words()
-                shuffleSymbols(5)
-                words()
+                lesson {
+                    words()
+                }
             }
+
+            every(3) {
+
+                summaryLesson {
+                    repeatSymbols(4)
+                    words()
+                    words()
+                    shuffleSymbols(2)
+                    words()
+                    words()
+                    shuffleSymbols(4)
+                }
+            }
+
         }
-    }
 
     return Course(lessons = lessonBuilder.lessons)
 }
