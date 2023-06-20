@@ -2,7 +2,7 @@
 
 [KTouch](https://github.com/KDE/ktouch) Course Generator
 
-[<img src="https://img.shields.io/badge/dockerhub-releases-blue.svg?logo=Docker">](https://hub.docker.com/repository/docker/barbiecue/ktgen/general)
+[<img src="https://img.shields.io/badge/dockerhub-ktgen-blue.svg?logo=Docker">](https://hub.docker.com/repository/docker/barbiecue/ktgen/general)
 
 ## Overview
 
