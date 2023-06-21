@@ -23,9 +23,19 @@ class LessonFilterKtTest : ConcurrentExpectSpec({
                     filterFun(Lesson(text = "0123456789"), Lesson(text = "0123456111")) shouldBe false
                 }
 
-                expect("true when last lesson is null") {
+                expect("true when previous lesson is null") {
                     val filterFun = Filter.relativeLevenshteinDistanceFromLessonBefore(0.6)
                     filterFun(null, Lesson(text = "0123456111")) shouldBe true
+                }
+
+                expect("true when minimumDistance exceeds the upper limit") {
+                    val filterFun = Filter.relativeLevenshteinDistanceFromLessonBefore(1.1)
+                    filterFun(Lesson(), Lesson()) shouldBe true
+                }
+
+                expect("true when minimumDistance is less than the lower limit") {
+                    val filterFun = Filter.relativeLevenshteinDistanceFromLessonBefore(-0.1)
+                    filterFun(Lesson(), Lesson()) shouldBe true
                 }
             }
 
@@ -46,9 +56,24 @@ class LessonFilterKtTest : ConcurrentExpectSpec({
                     filterFun(null, Lesson(text = "abc")) shouldBe true
                 }
 
+                expect("false when lesson text contains less than n different words") {
+                    val filterFun = Filter.lessonContainsAtLeastDifferentWords(3)
+                    filterFun(null, Lesson(text = "abc abc abc abc abc")) shouldBe false
+                }
+
                 expect("false when lesson text is empty") {
                     val filterFun = Filter.lessonContainsAtLeastDifferentWords(3)
                     filterFun(null, Lesson(text = "")) shouldBe false
+                }
+
+                expect("true when n is 0") {
+                    val filterFun = Filter.lessonContainsAtLeastDifferentWords(0)
+                    filterFun(null, Lesson(text = "abc def ghi jkl")) shouldBe true
+                }
+
+                expect("true when n is negative") {
+                    val filterFun = Filter.lessonContainsAtLeastDifferentWords(-1)
+                    filterFun(null, Lesson(text = "abc def ghi jkl")) shouldBe true
                 }
             }
         }
@@ -98,6 +123,14 @@ class LessonFilterKtTest : ConcurrentExpectSpec({
 
             expect("false on empty source string") {
                 "".differentWords(10) shouldBe false
+            }
+
+            expect("true when n is 0") {
+                "a aa b bb ab ba aaab".differentWords(0) shouldBe true
+            }
+
+            expect("true when n is negative") {
+                "a aa b bb ab ba aaab".differentWords(-1) shouldBe true
             }
         }
     }

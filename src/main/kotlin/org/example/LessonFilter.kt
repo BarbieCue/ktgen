@@ -7,9 +7,9 @@ typealias LessonFilter = (Lesson?, Lesson) -> Boolean
 class Filter {
     companion object {
         fun relativeLevenshteinDistanceFromLessonBefore(minimumDistance: Double): LessonFilter {
-            return { lastLesson: Lesson?, lesson: Lesson ->
-                // distance: 0 = equal; 1 = completely different
-                lesson.text.relativeLevenshteinDistance(lastLesson?.text) > minimumDistance
+            return { previousLesson: Lesson?, lesson: Lesson ->
+                if (minimumDistance !in (0.0 .. 1.0)) true // distance: 0 = equal; 1 = completely different
+                else lesson.text.relativeLevenshteinDistance(previousLesson?.text) > minimumDistance
             }
         }
         fun lessonContainsAtLeastDifferentWords(n: Int): LessonFilter {

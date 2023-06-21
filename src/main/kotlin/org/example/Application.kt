@@ -24,6 +24,12 @@ fun main(args: Array<String>) = runBlocking {
     val minWordLength by parser.option(ArgType.Int, "min-word-length", "min", "Take only words having this minimal length.").default(2)
     val maxWordLength by parser.option(ArgType.Int, "max-word-length", "max", "Take only words having this maximal length.").default(100)
 
+    // Lesson filters
+    val textDistance by parser.option(ArgType.Double, "text-distance", "td",
+        "The text of a created lesson must have a minimum difference from the previous lessons' text. Otherwise drop the lesson from the result. " +
+                "Value range [0.0, 1.0] where 0.0 means lessons can be equal (take all lessons). 1.0 means lessons must be completely different not to be dropped.").default(0.6)
+    val wordDiversity by parser.option(ArgType.Int, "word-diversity", "wd", "Drop a lesson from the result when it consists of less than n different words / segments.").default(10)
+
     parser.parse(args)
 
     val input = mutableListOf<String>()
@@ -45,11 +51,17 @@ fun main(args: Array<String>) = runBlocking {
         return@runBlocking
     }
 
+    if (textDistance !in (0.0 .. 1.0))
+        System.err.println("Text distance must be in [0.0, 1.0]. Proceeding without text distance check.")
+
+    if (wordDiversity <= 0)
+        System.err.println("Minimum word diversity per lesson must be at least 1. Proceeding without word diversity check.")
+
     if (minWordLength > maxWordLength)
-        System.err.println("Attention: The minimum word length is greater than maximum word length. No dictionary is used.")
+        System.err.println("The minimum word length is greater than maximum word length. No dictionary is used.")
 
     if (dictionarySize <= 0)
-        System.err.println("Attention: The dictionary size must be at least 1. No dictionary is used.")
+        System.err.println("The dictionary size must be at least 1. No dictionary is used.")
 
     val dictionary = buildDictionary(textFile, website, minWordLength, maxWordLength, dictionarySize)
 
@@ -59,8 +71,8 @@ fun main(args: Array<String>) = runBlocking {
     }
 
     val course = createCourse(input, dictionary, lineLength, symbolsPerLesson,
-        Filter.relativeLevenshteinDistanceFromLessonBefore(0.6),
-        Filter.lessonContainsAtLeastDifferentWords(10)
+        Filter.relativeLevenshteinDistanceFromLessonBefore(textDistance),
+        Filter.lessonContainsAtLeastDifferentWords(wordDiversity)
     )
     writeCourse(course, output)
 }
