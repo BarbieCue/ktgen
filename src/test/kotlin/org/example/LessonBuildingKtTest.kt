@@ -16,7 +16,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.stringPattern
 
-class LessonKtTest : ConcurrentExpectSpec({
+class LessonBuildingKtTest : ConcurrentExpectSpec({
 
     context("StringBuilder extensions") {
 

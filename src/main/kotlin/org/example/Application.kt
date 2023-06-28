@@ -26,15 +26,15 @@ fun main(args: Array<String>) = runBlocking {
 
     // Lesson filters
     val textDistance by parser.option(ArgType.Double, "text-distance", "td",
-        "The text of a created lesson must have a minimum difference from the previous lessons' text. Otherwise drop the lesson from the result. " +
-                "Value range [0.0, 1.0] where 0.0 means lessons can be equal (take all lessons). 1.0 means lessons must be completely different not to be dropped.").default(0.6)
+        "The text of a created lesson must have a minimum distance (levenshtein) from the previous lessons' text. Remove the lesson otherwise. " +
+                "Value range [0.0, 1.0] where 0.0 means lessons can be equal (take all lessons). 1.0 means lessons must be completely different not to be removed.").default(0.6)
     val wordDiversity by parser.option(ArgType.Int, "word-diversity", "wd", "Drop a lesson from the result when it consists of less than n different words / segments.").default(10)
 
     parser.parse(args)
 
     val input = mutableListOf<String>()
-    if (lessonSpecification.isEmpty()) input.addAll(readLessonSpecificationFile("lesson_specification.ktgen"))
-    else lessonSpecification.forEach { input.addAll(readLessonSpecificationFile(it)) }
+    if (lessonSpecification.isEmpty()) input.addAll(readLessonSpecification("lesson_specification.ktgen"))
+    else lessonSpecification.forEach { input.addAll(readLessonSpecification(it)) }
 
     val output = mutableListOf<String>()
     if (outputFile.isEmpty() && !stdout) output.add("ktgen_course.xml")

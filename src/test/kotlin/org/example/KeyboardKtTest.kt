@@ -4,9 +4,8 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import java.io.File
 import java.util.*
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.writeText
 
 class KeyboardKtTest : IOExpectSpec({
 
@@ -668,30 +667,30 @@ class KeyboardKtTest : IOExpectSpec({
         context("create") {
 
             expect("error no such file, return null") {
-                KeyboardLayout.create("") shouldBe null
+                KeyboardLayout.create(File("")) shouldBe null
             }
 
             expect("error invalid xml, return null") {
-                val file = tmpFile(UUID.randomUUID().toString())
+                val file = tmpFile(UUID.randomUUID().toString()).toFile()
                 file.writeText(
                     """
                       <?xml version="1.0"?>
                       <keyboa
                     """.trimEnd()
                 )
-                KeyboardLayout.create(file.absolutePathString()) shouldBe null
+                KeyboardLayout.create(file) shouldBe null
             }
 
             expect("error empty keyboard file, return null") {
-                val file = tmpFile(UUID.randomUUID().toString())
+                val file = tmpFile(UUID.randomUUID().toString()).toFile()
                 file.writeText("")
-                KeyboardLayout.create(file.absolutePathString()) shouldBe null
+                KeyboardLayout.create(file) shouldBe null
             }
 
             expect("successfully create keyboard layout with valid file content") {
-                val file = tmpFile(UUID.randomUUID().toString())
+                val file = tmpFile(UUID.randomUUID().toString()).toFile()
                 file.writeText(ktouchKeyboardLayoutEnglishUSA)
-                KeyboardLayout.create(file.absolutePathString()) shouldNotBe null
+                KeyboardLayout.create(file) shouldNotBe null
             }
         }
     }
