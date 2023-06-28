@@ -83,8 +83,8 @@ data class KeyboardLayout (
     val keys: Keys = Keys()
 ) {
     companion object {
-        fun create(path: String, printError: Boolean = true): KeyboardLayout? = try {
-            val rawXml = File(path).readText().trim()
+        fun create(file: File, printError: Boolean = true): KeyboardLayout? = try {
+            val rawXml = file.readText().trim()
             val xml = XML {
                 xmlVersion = XmlVersion.XML10
             }

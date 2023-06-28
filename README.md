@@ -18,11 +18,11 @@
 
 ## Basic use
 
+Generate a KTouch course in 3 simple steps.
 
 ### 1. Define your course
 
-Use a [keyboard layout](#keyboard-layout) or a custom course via [lesson specification](#lesson-specification)
-file (*lesson_specification.ktgen*).
+Use a [keyboard layout](#keyboard-layout) or a custom course via [lesson specification](#lesson-specification).
 
 ```text
 ab cd ef gh ij kl mn op qr st uv wx yz
@@ -41,17 +41,36 @@ WW,. WW!? WW:;
 
 **Public Docker Image**
 
+
+```shell
+docker run --rm barbiecue/ktgen:latest \
+"ab cd ef gh ij kl mn op qr st uv wx yz" \
+"AB CD EF GH IJ KL MN OP QR ST UV WX YZ" \
+"[sch] [ein] [ion]" \
+"WW,. WW(WW) {WW} [WW] <WW>" \
+"\"WW\" 'WW' \`WW\`" \
+"~ +* #$ |& ^-" \
+"01 23 45 67 89" -o > ktgen_course.xml
+```
+
+**Alternative: Lesson specification via file**
+
+<details>
+<summary>Public Docker Image</summary>
+
 ```shell
 docker run --rm -v $PWD/:/files barbiecue/ktgen:latest /files/lesson_specification.ktgen -o > ktgen_course.xml
 ```
 
-The `lesson_specification.ktgen` file is passed via bind mount.
-Make sure to have it in place (`$PWD/lesson_specification.ktgen`).
-E.g. create the file or simply clone this repository and navigate into it before running the docker command.
+The `lesson_specification.ktgen` file can be passed via bind mount,
+instead of passing the lesson specification content as string argument(s).
+Make sure to have the file in place (`$PWD/lesson_specification.ktgen`).
+E.g. create and edit the file or simply clone this repository and navigate into it before running this docker command.
+</details>
 
 
 <details>
-<summary><b>Java</b></summary>
+<summary>Java</summary>
 
 Requires Java 17 or higher
 
@@ -72,8 +91,8 @@ You can import it into KTouch.
 
 ## Dictionary
 
-Provide some kind of dictionary to **add words to your course**.
-The first lessons are mostly created with random combinations of letters,
+Provide dictionaries to **add words to your course**.
+The first lessons are mostly generated with random combinations of letters,
 because there are not enough letters to find meaningful words.
 As the number of letters increases, more and more words can be found.
 The word order will be preserved by default, making it possible to build
@@ -124,7 +143,7 @@ java -jar build/libs/ktgen.jar -web https://en.wikipedia.org/wiki/Barbie
 
 ## Lesson specification
 
-As mentioned above, the `lesson_specification.ktgen` file describes the lessons for your course.
+As mentioned above, the lesson specification describes the lessons for your course.
 The following format applies here.
 
 
@@ -132,6 +151,7 @@ The following format applies here.
 
 Each segment separated by whitespace characters defines new symbols
 for which lessons are generated. The read order is left to right and top down.
+It can be a single line.
 
 ```text
 ab cdef gh
@@ -222,9 +242,9 @@ This leads to lessons containing words like `china`, `chemie`, `letter`, `missio
 
 ## Keyboard layout
 
-Let _ktgen_ create courses for a keyboard layout of your choice.
+Let _ktgen_ generate courses for a keyboard layout of your choice.
 
-Such a course consists of finger-to-finger lessons that focus on the key neighbors,
+Such a course consists of finger-to-finger lessons that focus on the key neighbors.
 This results in an intuitive path through the layout,
 which begins with the basic finger position.
 
@@ -254,37 +274,61 @@ They are applied in order. For example:
 
 ```shell
 docker run --rm -v $PWD/:/files barbiecue/ktgen:latest \
-/files/docs/examples/german-layout.xml /files/lesson_specification.ktgen /files/docs/examples/letters.ktgen \
--o > ktgen_course.xml
+/files/lesson_specification.ktgen \
+/files/docs/examples/german-layout.xml \
+"[ion] [sh] [str] [sch]" -o > ktgen_course.xml
 ```
 
 <details>
 <summary><b>Java</b></summary>
 
 ```shell
-java -jar build/libs/ktgen.jar lesson_specification.ktgen docs/examples/german-layout.xml docs/examples/letters.ktgen
+java -jar build/libs/ktgen.jar \
+lesson_specification.ktgen \
+docs/examples/german-layout.xml \
+"[ion] [sh] [str] [sch]"
 ```
 </details>
 
-The first lessons are created from *lesson_specification.ktgen*.
-Then the lessons for the German keyboard layout follow and at the end of the course
-the lessons from the file *letters.ktgen*.
+- The first lessons are generated from *lesson_specification.ktgen*
+- Lessons mapping the german keyboard layout follow
+- At the end of the course are lessons for the letter groups
 
-The specification file `lesson_specification.ktgen` is used by default,
-if no lesson specification is passed as argument, when running locally via Java.
-When using docker, you always have to pass a lesson specification.
+When running locally via Java,
+the specification file `lesson_specification.ktgen` is used as default input,
+if no lesson specification is passed as argument.
+With docker, you always have to pass a lesson specification (as string or file path).
 
 
 ## Output
 
 You can write the course to stdout `-o` or to a file `-of <file>` or to both.
-
 The course will be written to the `ktgen_course.xml` file by default if none of the options are set.
 
 
 ## Examples
 
-The following examples work immediately after you check out this repository and navigate into it.
+-   A course for the lesson specification passed as string argument,
+    containing words from the website https://en.wikipedia.org/wiki/Barbie,
+    written to the file *ktgen_course.xml*.
+
+    ```shell
+    docker run --rm barbiecue/ktgen:latest \
+    "ab cd ef gh ij kl mn op qr st uv wx yz" \
+    -web https://en.wikipedia.org/wiki/Barbie \
+    -o > ktgen_course.xml
+    ```
+
+    <details>
+    <summary><b>Java</b></summary>
+
+    ```shell
+    java -jar build/libs/ktgen.jar "ab cd ef gh ij kl mn op qr st uv wx yz" -web https://en.wikipedia.org/wiki/Barbie
+    ```
+    </details>
+
+
+The following examples include sample input files and work immediately when you check out this repository and navigate into it.
 
 -   A course that starts with lessons for *letters.ktgen* and ends with lessons for *digits.ktgen*
     written to *ktgen_course.xml*.
@@ -294,10 +338,10 @@ The following examples work immediately after you check out this repository and 
     barbiecue/ktgen:latest /files/letters.ktgen /files/digits.ktgen \
     -o > ktgen_course.xml
     ```
-    
+
     <details>
     <summary><b>Java</b></summary>
-    
+
     ```shell
     java -jar build/libs/ktgen.jar ./docs/examples/letters.ktgen ./docs/examples/digits.ktgen
     ```
@@ -346,7 +390,7 @@ The following examples work immediately after you check out this repository and 
 -   A course for the german keyboard layout containing words from the website _https://de.wikipedia.org/wiki/Ameisen_
     where each word is max 10 characters long and each lesson has a length of 500 characters.
     Written to *ktgen_course.xml*.
-    
+
     ```shell
     docker run --rm -v $PWD/docs/examples/:/files \
     barbiecue/ktgen:latest /files/german-layout.xml \

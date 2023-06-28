@@ -2,17 +2,25 @@ package org.example
 
 import java.io.File
 
-internal fun readLessonSpecificationFile(path: String): Collection<String> = try {
-    val keyboardLayout = KeyboardLayout.create(path, false)
-    if (keyboardLayout != null) keyboardLayout.toLessonSpecification()
-    else {
-        val text = File(path).readText().trim()
-        val list = text.split("\\s+".toRegex())
-        if (list.size == 1 && list.single().isEmpty()) emptyList() else list
+internal fun readLessonSpecification(input: String): Collection<String> = try {
+    val file = File(input)
+    if (file.exists()) {
+        val keyboardLayout = KeyboardLayout.create(file, false)
+        if (keyboardLayout != null) keyboardLayout.toLessonSpecification()
+        else {
+            val text = file.readText().trim()
+            parseLessonSpecificationText(text)
+        }
     }
+    else parseLessonSpecificationText(input)
 } catch (e: Exception) {
-    System.err.println("${e.message} ($path)")
+    System.err.println("${e.message} ($input)")
     emptyList()
+}
+
+internal fun parseLessonSpecificationText(text: String): Collection<String> {
+    val list = text.split("\\s+".toRegex())
+    return if (list.all { it.isEmpty() }) emptyList() else list
 }
 
 internal fun KeyboardLayout.toLessonSpecification(): Collection<String> {

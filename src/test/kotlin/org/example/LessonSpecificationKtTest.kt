@@ -7,26 +7,56 @@ import kotlin.io.path.writeText
 
 class LessonSpecificationKtTest : IOExpectSpec({
 
-    context("readLessonSpecificationFile") {
+    context("readLessonSpecification") {
 
-        expect("read whitespace separated characters as lesson specification from file") {
+        expect("read whitespace separated character groups as lesson specification from file") {
             val file = tmpFile("ktgen_lesson_specification_test${UUID.randomUUID()}")
             file.writeText("ab cd\n{WW}     ,.\n\n  1234")
-            readLessonSpecificationFile(file.absolutePathString()) shouldBe listOf("ab", "cd", "{WW}", ",.", "1234")
+            readLessonSpecification(file.absolutePathString()) shouldBe listOf("ab", "cd", "{WW}", ",.", "1234")
         }
 
-        expect("empty collection when file is empty") {
+        expect("read lesson specification from a keyboard layout xml file") {
+            val file = tmpFile("english-usa-${UUID.randomUUID()}.xml")
+            file.writeText(ktouchKeyboardLayoutEnglishUSA)
+            readLessonSpecification(file.absolutePathString()) shouldBe listOf(
+                "fj", "dk", "sl", "a;", "gh", "ty",
+                "vm", "bn", "ru", "ei", "c,", "wo",
+                "x.", "qp", "z/", "10", "`-", "29",
+                "38", "47", "56", "=[", "]\\", "'",
+                "FJ", "DK", "SL", "A:", "GH", "TY",
+                "VM", "BN", "RU", "EI", "C<", "WO",
+                "X>", "QP", "Z?", "!)", "~_", "@(",
+                "#*", "$&", "%^", "+{", "}|", "\"")
+        }
+
+        expect("read lesson specification directly from input string, when it is not empty and not an existing file path") {
+            readLessonSpecification("ab cd ef gh") shouldBe listOf("ab", "cd", "ef", "gh")
+        }
+
+        expect("empty collection when file exists but is empty") {
             val file = tmpFile("ktgen_lesson_specification_test${UUID.randomUUID()}")
             file.writeText("")
-            readLessonSpecificationFile(file.absolutePathString()) shouldBe emptyList()
+            readLessonSpecification(file.absolutePathString()) shouldBe emptyList()
         }
 
-        expect("empty collection when file not found") {
-            readLessonSpecificationFile("a_non_existing_file") shouldBe emptyList()
+        expect("empty collection when input is empty") {
+            readLessonSpecification("") shouldBe emptyList()
+        }
+    }
+
+    context("parseLessonSpecificationText") {
+
+        expect("split content at whitespace characters (trimmed)") {
+            parseLessonSpecificationText("ab cd\n{WW}     ,.\n\n  1234") shouldBe listOf(
+                "ab", "cd", "{WW}", ",.", "1234")
         }
 
-        expect("empty collection when path is empty") {
-            readLessonSpecificationFile("") shouldBe emptyList()
+        expect("empty input leads to empty output") {
+            parseLessonSpecificationText("") shouldBe emptyList()
+        }
+
+        expect("empty output when input is empty after trim") {
+            parseLessonSpecificationText(" \n\t  ") shouldBe emptyList()
         }
     }
 
