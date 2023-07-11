@@ -1,6 +1,7 @@
 package org.example
 
 import io.kotest.matchers.shouldBe
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -23,7 +24,7 @@ class LessonSpecificationKtTest : IOExpectSpec({
         }
 
         expect("empty collection when file exists but is empty") {
-            val file = tmpFile("ktgen_lesson_specification_test${UUID.randomUUID()}")
+            val file = tmpFile("file-${UUID.randomUUID()}")
             file.writeText("")
             readLessonSpecification(file.absolutePathString()) shouldBe emptyList()
         }
@@ -194,6 +195,11 @@ class LessonSpecificationKtTest : IOExpectSpec({
                 loadText("http://localhost:$port/empty") shouldBe ""
             }
 
+            expect("empty when response code is not 200") {
+                startLocalhostWebServer(port, Application::lessonSpecification)
+                loadText("http://localhost:$port/non-200") shouldBe ""
+            }
+
             expect("result is trimmed") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
                 loadText("http://localhost:$port/spec-whitespaces") shouldBe "ab cd ef gh"
@@ -257,6 +263,10 @@ private fun Application.lessonSpecification() {
 
         get("/empty") {
             call.respond("")
+        }
+
+        get("/non-200") {
+            call.respond(HttpStatusCode.NotFound, "some text content :)")
         }
 
         get("/spec") {
