@@ -27,7 +27,7 @@ internal suspend fun readLessonSpecification(input: String): Collection<String> 
 internal suspend fun loadText(input: String): String {
     val file = File(input)
     if (file.exists()) return file.readText().trim()
-    else if (isValidUrl(input)) {
+    else if (input.isValidUri()) {
         val response = HttpClient(CIO).request(input)
         return if (response.status == HttpStatusCode.OK) {
             response.bodyAsText().trim()
@@ -39,11 +39,10 @@ internal suspend fun loadText(input: String): String {
     return input.trim()
 }
 
-// todo test me
-internal fun isValidUrl(url: String): Boolean = try {
-    if (url.trim().isEmpty()) false
+internal fun String.isValidUri(): Boolean = try {
+    if (trim().isEmpty()) false
     else {
-        Url(url).toURI()
+        Url(this).toURI()
         true
     }
 } catch (e: Exception) {

@@ -222,6 +222,21 @@ class LessonSpecificationKtTest : IOExpectSpec({
         }
     }
 
+    context("isValidUri") {
+
+        expect("true when input is a valid URI (RFC2396)") {
+            "http://www.math.uio.no/faq/compression-faq/part1.html".isValidUri() shouldBe true
+        }
+
+        expect("false when input not a valid URI (RFC2396)") {
+            "faqcompression-{}faqpart1html".isValidUri() shouldBe false
+        }
+
+        expect("false when input is empty") {
+            "".isValidUri() shouldBe false
+        }
+    }
+
     context("parseLessonSpecificationText") {
 
         expect("split content at whitespace characters (trimmed)") {
