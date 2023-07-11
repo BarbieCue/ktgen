@@ -6,7 +6,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.io.File
-import java.net.MalformedURLException
 
 internal suspend fun readLessonSpecification(input: String): Collection<String> = try {
     val text = loadText(input)
@@ -23,25 +22,25 @@ internal suspend fun readLessonSpecification(input: String): Collection<String> 
 // todo test me
 internal suspend fun loadText(input: String): String {
     val file = File(input)
-    if (file.exists()) return file.readText().trim()
+    if (file.exists())
+        return file.readText().trim()
     else if (isValidUrl(input)) {
         val response = HttpClient(CIO).request(input)
-        if (response.status == HttpStatusCode.OK) {
-            val text = response.bodyAsText()
-            if (text.isNotEmpty()) return text
+        return if (response.status == HttpStatusCode.OK) {
+            response.bodyAsText().trim()
         } else {
             System.err.println("Input URL seems to be invalid. Status Code: ${response.status}")
-            return ""
+            ""
         }
     }
-    return input
+    return input.trim()
 }
 
 // todo test me
 internal fun isValidUrl(url: String): Boolean = try {
-    Url(url)
+    Url(url).toURI()
     true
-} catch (e: MalformedURLException) {
+} catch (e: Exception) {
     false
 }
 

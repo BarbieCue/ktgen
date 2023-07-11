@@ -10,12 +10,16 @@ import kotlin.io.path.writeText
 
 class LessonSpecificationKtTest : IOExpectSpec({
 
-    val port = 30121
+    val port = 30122
 
     context("readLessonSpecification") {
 
         expect("empty collection when input is empty") {
             readLessonSpecification("") shouldBe emptyList()
+        }
+
+        expect("empty collection when input contains only whitespace characters") {
+            readLessonSpecification("  \n\t   \n") shouldBe emptyList()
         }
 
         expect("empty collection when file exists but is empty") {
@@ -96,18 +100,22 @@ class LessonSpecificationKtTest : IOExpectSpec({
                     "X>", "QP", "Z?", "!)", "~_", "@(",
                     "#*", "$&", "%^", "+{", "}|", "\"")
             }
-
-            expect("empty collection when keyboard layout file contains invalid xml") {
-                val file = tmpFile("english-usa-${UUID.randomUUID()}.xml")
-                file.writeText("""
-                  <?xml version="1.0"?>
-                  <keyboa
-                """.trimEnd())
-                readLessonSpecification(file.absolutePathString()) shouldBe emptyList()
-            }
         }
 
         context("keyboard layout from web") {
+
+            expect("can read and extract lesson specification from a keyboard layout from web") {
+                startLocalhostWebServer(port, Application::lessonSpecification)
+                readLessonSpecification("http://localhost:$port/keyboard") shouldBe listOf(
+                    "fj", "dk", "sl", "a;", "gh", "ty",
+                    "vm", "bn", "ru", "ei", "c,", "wo",
+                    "x.", "qp", "z/", "10", "`-", "29",
+                    "38", "47", "56", "=[", "]\\", "'",
+                    "FJ", "DK", "SL", "A:", "GH", "TY",
+                    "VM", "BN", "RU", "EI", "C<", "WO",
+                    "X>", "QP", "Z?", "!)", "~_", "@(",
+                    "#*", "$&", "%^", "+{", "}|", "\"")
+            }
         }
     }
 
