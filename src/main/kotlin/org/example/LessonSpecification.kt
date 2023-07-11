@@ -11,19 +11,22 @@ internal suspend fun readLessonSpecification(input: String): Collection<String> 
     val text = loadText(input)
     if (text.isEmpty()) emptyList()
     else {
-        val keyboardLayout = KeyboardLayout.create(text, false)
-        keyboardLayout?.toLessonSpecification() ?: parseLessonSpecificationText(text)
+        if (input.endsWith(".xml")) {
+            val keyboardLayout = KeyboardLayout.create(text, false)
+            keyboardLayout?.toLessonSpecification() ?: emptyList()
+        } else {
+            val keyboardLayout = KeyboardLayout.create(text, false)
+            keyboardLayout?.toLessonSpecification() ?: parseLessonSpecificationText(text)
+        }
     }
 } catch (e: Exception) {
     System.err.println("${e.message} ($input)")
     emptyList()
 }
 
-// todo test me
 internal suspend fun loadText(input: String): String {
     val file = File(input)
-    if (file.exists())
-        return file.readText().trim()
+    if (file.exists()) return file.readText().trim()
     else if (isValidUrl(input)) {
         val response = HttpClient(CIO).request(input)
         return if (response.status == HttpStatusCode.OK) {
@@ -38,8 +41,11 @@ internal suspend fun loadText(input: String): String {
 
 // todo test me
 internal fun isValidUrl(url: String): Boolean = try {
-    Url(url).toURI()
-    true
+    if (url.trim().isEmpty()) false
+    else {
+        Url(url).toURI()
+        true
+    }
 } catch (e: Exception) {
     false
 }

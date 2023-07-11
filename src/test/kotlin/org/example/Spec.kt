@@ -30,8 +30,8 @@ abstract class IOExpectSpec(body: IOExpectSpec.() -> Unit = {}) : ConcurrentExpe
 
     private val files = mutableListOf<Path>()
 
-    fun tmpFile(name: String, vararg attributes: FileAttribute<*>): Path {
-        val file = kotlin.io.path.createTempFile(prefix = name, attributes = attributes)
+    fun tmpFile(name: String, suffix: String? = null, vararg attributes: FileAttribute<*>): Path {
+        val file = kotlin.io.path.createTempFile(prefix = name, attributes = attributes, suffix = suffix)
         files.add(file)
         return file
     }
