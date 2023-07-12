@@ -7,50 +7,52 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.io.File
 
-internal suspend fun readLessonSpecification(input: String): Collection<String> = try {
-    val text = loadText(input)
-    if (text.isEmpty()) emptyList()
-    else {
+internal suspend fun readLessonSpecification(input: String): Collection<String> {
+    return if (input.isFile() || input.isHttpUri()) {
+        val text = loadTextFromFileOrWeb(input)
         if (input.endsWith(".xml")) {
             val keyboardLayout = KeyboardLayout.create(text, false)
             keyboardLayout?.toLessonSpecification() ?: emptyList()
-        } else {
-            val keyboardLayout = KeyboardLayout.create(text, false)
-            keyboardLayout?.toLessonSpecification() ?: parseLessonSpecificationText(text)
-        }
+        } else if (input.endsWith(".ktgen")) {
+            parseLessonSpecificationText(text)
+        } else emptyList()
+    } else {
+        parseLessonSpecificationText(input)
     }
-} catch (e: Exception) {
-    System.err.println("${e.message} ($input)")
-    emptyList()
 }
 
-internal suspend fun loadText(input: String): String {
+internal suspend fun loadTextFromFileOrWeb(input: String): String {
     val file = File(input)
     if (file.exists()) return file.readText().trim()
-    else if (input.isValidUri()) {
+    val text = try {
         val response = HttpClient(CIO).request(input)
         return if (response.status == HttpStatusCode.OK) {
             response.bodyAsText().trim()
         } else {
-            System.err.println("Input URL seems to be invalid. Status Code: ${response.status}")
+            System.err.println("URL seems to be invalid ($input). Status Code: ${response.status}")
             ""
         }
+    } catch (e: Exception) {
+        System.err.println("Error while requesting '$input'. Please provide a link to a valid .ktgen (lesson specification) or .xml (keyboard) file. The URL must end with .ktgen or .xml.")
+        ""
     }
-    return input.trim()
+    return text
 }
 
-internal fun String.isValidUri(): Boolean = try {
+internal fun String.isHttpUri(): Boolean = try {
     if (trim().isEmpty()) false
     else {
         Url(this).toURI()
-        true
+        startsWith("http")
     }
 } catch (e: Exception) {
     false
 }
 
+internal fun String.isFile(): Boolean = File(this).exists()
+
 internal fun parseLessonSpecificationText(text: String): Collection<String> {
-    val list = text.split("\\s+".toRegex())
+    val list = text.trim().split("\\s+".toRegex())
     return if (list.all { it.isEmpty() }) emptyList() else list
 }
 

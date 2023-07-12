@@ -23,24 +23,18 @@ class LessonSpecificationKtTest : IOExpectSpec({
             readLessonSpecification("  \n\t   \n") shouldBe emptyList()
         }
 
-        expect("empty collection when file exists but is empty") {
-            val file = tmpFile("file-${UUID.randomUUID()}")
-            file.writeText("")
-            readLessonSpecification(file.absolutePathString()) shouldBe emptyList()
-        }
-
         expect("empty collection when cannot connect to remote host") {
-            readLessonSpecification("http://localhost:12345") shouldBe emptyList()
+            readLessonSpecification("http://localhost:12345/spec.ktgen") shouldBe emptyList()
         }
 
         expect("empty collection when web ressource not found") {
             startLocalhostWebServer(port, Application::lessonSpecification)
-            readLessonSpecification("http://localhost:$port/${UUID.randomUUID()}") shouldBe emptyList()
+            readLessonSpecification("http://localhost:$port/${UUID.randomUUID()}.ktgen") shouldBe emptyList()
         }
 
-        expect("empty collection when web ressource exists, but is empty") {
+        expect("empty collection when web ressource exists but is empty") {
             startLocalhostWebServer(port, Application::lessonSpecification)
-            readLessonSpecification("http://localhost:$port/empty") shouldBe emptyList()
+            readLessonSpecification("http://localhost:$port/empty.ktgen") shouldBe emptyList()
         }
 
         context("lesson specification from string") {
@@ -57,13 +51,19 @@ class LessonSpecificationKtTest : IOExpectSpec({
         context("lesson specification from file") {
 
             expect("can read lesson specification from file") {
-                val file = tmpFile("ktgen_lesson_specification_test${UUID.randomUUID()}")
+                val file = tmpFile("ktgen_lesson_specification_test${UUID.randomUUID()}", suffix = ".ktgen")
                 file.writeText("ab cd ef gh")
                 readLessonSpecification(file.absolutePathString()) shouldBe listOf("ab", "cd", "ef", "gh")
             }
 
+            expect("empty collection when file exists but is empty") {
+                val file = tmpFile("file-${UUID.randomUUID()}", suffix = ".ktgen")
+                file.writeText("")
+                readLessonSpecification(file.absolutePathString()) shouldBe emptyList()
+            }
+
             expect("file content can have many whitespace characters") {
-                val file = tmpFile("ktgen_lesson_specification_test${UUID.randomUUID()}")
+                val file = tmpFile("ktgen_lesson_specification_test${UUID.randomUUID()}", suffix = ".ktgen")
                 file.writeText("\n   \t ab cd\n{WW}     ,.\n\n  1234")
                 readLessonSpecification(file.absolutePathString()) shouldBe listOf("ab", "cd", "{WW}", ",.", "1234")
             }
@@ -71,34 +71,25 @@ class LessonSpecificationKtTest : IOExpectSpec({
 
         context("lesson specification from web") {
 
-            expect("can read lesson specification from web") {
+            expect("can read lesson specification from web when url ends with .ktgen)") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/spec") shouldBe listOf("ab", "cd", "ef", "gh")
+                readLessonSpecification("http://localhost:$port/spec.ktgen") shouldBe listOf("ab", "cd", "ef", "gh")
+            }
+
+            expect("empty collection when url does not end with .ktgen") {
+                startLocalhostWebServer(port, Application::lessonSpecification)
+                readLessonSpecification("http://localhost:$port/spec") shouldBe emptyList()
             }
 
             expect("specification from web can have many whitespace characters") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/spec-whitespaces") shouldBe listOf("ab", "cd", "ef", "gh")
+                readLessonSpecification("http://localhost:$port/spec-whitespaces.ktgen") shouldBe listOf("ab", "cd", "ef", "gh")
             }
         }
 
         context("keyboard layout from file") {
 
-            expect("can extract lesson specification from a keyboard layout xml file (without .xml suffix)") {
-                val file = tmpFile("english-usa-${UUID.randomUUID()}")
-                file.writeText(ktouchKeyboardLayoutEnglishUSA)
-                readLessonSpecification(file.absolutePathString()) shouldBe listOf(
-                    "fj", "dk", "sl", "a;", "gh", "ty",
-                    "vm", "bn", "ru", "ei", "c,", "wo",
-                    "x.", "qp", "z/", "10", "`-", "29",
-                    "38", "47", "56", "=[", "]\\", "'",
-                    "FJ", "DK", "SL", "A:", "GH", "TY",
-                    "VM", "BN", "RU", "EI", "C<", "WO",
-                    "X>", "QP", "Z?", "!)", "~_", "@(",
-                    "#*", "$&", "%^", "+{", "}|", "\"")
-            }
-
-            expect("can extract lesson specification from a keyboard layout xml file (with .xml suffix)") {
+            expect("can extract lesson specification from a keyboard layout xml file when file path ends with .xml)") {
                 val file = tmpFile("english-usa-${UUID.randomUUID()}", suffix = ".xml")
                 file.writeText(ktouchKeyboardLayoutEnglishUSA)
                 readLessonSpecification(file.absolutePathString()) shouldBe listOf(
@@ -112,6 +103,12 @@ class LessonSpecificationKtTest : IOExpectSpec({
                     "#*", "$&", "%^", "+{", "}|", "\"")
             }
 
+            expect("empty collection when file path does not end with .xml") {
+                val file = tmpFile("english-usa-${UUID.randomUUID()}")
+                file.writeText(ktouchKeyboardLayoutEnglishUSA)
+                readLessonSpecification(file.absolutePathString()) shouldBe emptyList()
+            }
+
             expect("empty collection when file path ends with .xml but xml content cannot be parsed") {
                 val file = tmpFile("keyboard-${UUID.randomUUID()}", suffix = ".xml")
                 file.writeText("""
@@ -120,11 +117,17 @@ class LessonSpecificationKtTest : IOExpectSpec({
                 """.trimEnd())
                 readLessonSpecification(file.absolutePathString()) shouldBe emptyList()
             }
+
+            expect("empty collection when file exists but is empty") {
+                val file = tmpFile("keyboard-${UUID.randomUUID()}", suffix = ".xml")
+                file.writeText("")
+                readLessonSpecification(file.absolutePathString()) shouldBe emptyList()
+            }
         }
 
         context("keyboard layout from web") {
 
-            expect("can read and extract lesson specification from a keyboard layout from web (when url ends with .xml)") {
+            expect("can read and extract lesson specification from a keyboard layout from web when url ends with .xml") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
                 readLessonSpecification("http://localhost:$port/keyboard.xml") shouldBe listOf(
                     "fj", "dk", "sl", "a;", "gh", "ty",
@@ -137,110 +140,123 @@ class LessonSpecificationKtTest : IOExpectSpec({
                     "#*", "$&", "%^", "+{", "}|", "\"")
             }
 
-            expect("can read and extract lesson specification from a keyboard layout from web (when url does not end with .xml)") {
+            expect("empty collection when url does not end with .xml") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/keyboard") shouldBe listOf(
-                    "fj", "dk", "sl", "a;", "gh", "ty",
-                    "vm", "bn", "ru", "ei", "c,", "wo",
-                    "x.", "qp", "z/", "10", "`-", "29",
-                    "38", "47", "56", "=[", "]\\", "'",
-                    "FJ", "DK", "SL", "A:", "GH", "TY",
-                    "VM", "BN", "RU", "EI", "C<", "WO",
-                    "X>", "QP", "Z?", "!)", "~_", "@(",
-                    "#*", "$&", "%^", "+{", "}|", "\"")
+                readLessonSpecification("http://localhost:$port/keyboard") shouldBe emptyList()
             }
 
             expect("empty collection when url ends with .xml but xml content cannot be parsed") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
                 readLessonSpecification("http://localhost:$port/malformed-keyboard.xml") shouldBe emptyList()
             }
+
+            expect("empty collection when web ressource exists but is empty") {
+                startLocalhostWebServer(port, Application::lessonSpecification)
+                readLessonSpecification("http://localhost:$port/empty-keyboard.xml") shouldBe emptyList()
+            }
         }
     }
 
-    context("loadText") {
+    context("loadTextFromFileOrWeb") {
 
         context("read from file") {
             
             expect("can read string content from file") {
-                val file = tmpFile("file-${UUID.randomUUID()}")
+                val file = tmpFile("file-${UUID.randomUUID()}", suffix = ".ktgen")
                 file.writeText("some text content :)")
-                loadText(file.absolutePathString()) shouldBe "some text content :)"
+                loadTextFromFileOrWeb(file.absolutePathString()) shouldBe "some text content :)"
             }
 
             expect("empty when file is empty") {
                 val file = tmpFile("file-${UUID.randomUUID()}")
                 file.writeText("")
-                loadText(file.absolutePathString()) shouldBe ""
+                loadTextFromFileOrWeb(file.absolutePathString()) shouldBe ""
             }
 
             expect("result is trimmed") {
                 val file = tmpFile("file-${UUID.randomUUID()}")
                 file.writeText("   a b c \n\t   \t")
-                loadText(file.absolutePathString()) shouldBe "a b c"
+                loadTextFromFileOrWeb(file.absolutePathString()) shouldBe "a b c"
             }
         }
         
         context("read from web") {
 
-            expect("can read text content from web") {
+            expect("can read text content from web when url ends with .ktgen") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
-                loadText("http://localhost:$port/spec") shouldBe """
+                loadTextFromFileOrWeb("http://localhost:$port/spec.ktgen") shouldBe """
                     ab cd
                     ef gh
                 """.trimIndent()
             }
 
+            expect("can read text content from web when url ends with .xml") {
+                startLocalhostWebServer(port, Application::lessonSpecification)
+                loadTextFromFileOrWeb("http://localhost:$port/keyboard.xml") shouldBe ktouchKeyboardLayoutEnglishUSA
+            }
+
+            expect("empty when url does not end with .xml or .ktgen") {
+                startLocalhostWebServer(port, Application::lessonSpecification)
+                loadTextFromFileOrWeb("http://localhost:$port/example") shouldBe ""
+            }
+
             expect("empty when web ressource is empty") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
-                loadText("http://localhost:$port/empty") shouldBe ""
+                loadTextFromFileOrWeb("http://localhost:$port/empty.ktgen") shouldBe ""
             }
 
             expect("empty when response code is not 200") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
-                loadText("http://localhost:$port/non-200") shouldBe ""
+                loadTextFromFileOrWeb("http://localhost:$port/non-200.ktgen") shouldBe ""
             }
 
             expect("result is trimmed") {
                 startLocalhostWebServer(port, Application::lessonSpecification)
-                loadText("http://localhost:$port/spec-whitespaces") shouldBe "ab cd ef gh"
-            }
-        }
-
-        context("read from string") {
-
-            expect("can read text content from string") {
-                loadText("ab cd ef gh") shouldBe "ab cd ef gh"
-            }
-
-            expect("empty when string is empty") {
-                loadText("") shouldBe ""
-            }
-
-            expect("result is trimmed") {
-                loadText("   a b c \n\t   \t") shouldBe "a b c"
+                loadTextFromFileOrWeb("http://localhost:$port/spec-whitespaces.ktgen") shouldBe "ab cd ef gh"
             }
         }
     }
 
-    context("isValidUri") {
+    context("isHttpUri") {
 
-        expect("true when input is a valid URI (RFC2396)") {
-            "http://www.math.uio.no/faq/compression-faq/part1.html".isValidUri() shouldBe true
+        expect("true when input is a valid URI (RFC2396) and starts with http") {
+            "http://www.math.uio.no/faq/compression-faq/part1.html".isHttpUri() shouldBe true
         }
 
-        expect("false when input not a valid URI (RFC2396)") {
-            "faqcompression-{}faqpart1html".isValidUri() shouldBe false
+        expect("false when input is a valid URI (RFC2396) but does not start with http") {
+            "www.math.uio.no/faq/compression-faq/part1.html".isHttpUri() shouldBe false
+        }
+
+        expect("false when input is not a valid URI (RFC2396)") {
+            "http://faqcompression-{}faqpart1html".isHttpUri() shouldBe false
+            "ab cd ef gh".isHttpUri() shouldBe false
         }
 
         expect("false when input is empty") {
-            "".isValidUri() shouldBe false
+            "".isHttpUri() shouldBe false
+        }
+    }
+
+    context("isFile") {
+
+        expect("true when file exists") {
+            val file = tmpFile("file-${UUID.randomUUID()}")
+            file.absolutePathString().isFile()
+        }
+
+        expect("false when file not exists") {
+            "abc".isFile()
+        }
+
+        expect("false on empty input") {
+            "".isFile()
         }
     }
 
     context("parseLessonSpecificationText") {
 
         expect("split content at whitespace characters (trimmed)") {
-            parseLessonSpecificationText("ab cd\n{WW}     ,.\n\n  1234") shouldBe listOf(
+            parseLessonSpecificationText("  ab cd\n{WW}     ,.\n\n  1234 ") shouldBe listOf(
                 "ab", "cd", "{WW}", ",.", "1234")
         }
 
@@ -276,11 +292,11 @@ class LessonSpecificationKtTest : IOExpectSpec({
 private fun Application.lessonSpecification() {
     routing {
 
-        get("/empty") {
+        get("/empty.ktgen") {
             call.respond("")
         }
 
-        get("/non-200") {
+        get("/non-200.ktgen") {
             call.respond(HttpStatusCode.NotFound, "some text content :)")
         }
 
@@ -291,15 +307,22 @@ private fun Application.lessonSpecification() {
             """.trimIndent())
         }
 
-        get("/spec-whitespaces") {
+        get("/spec.ktgen") {
+            call.respondText("""
+                ab cd
+                ef gh
+            """.trimIndent())
+        }
+
+        get("/spec-whitespaces.ktgen") {
             call.respondText("   \n ab cd ef gh\n")
         }
 
-        get("/keyboard.xml") {
-            call.respondText(ktouchKeyboardLayoutEnglishUSA)
+        get("/no-suffix") {
+            call.respondText("ab cd ef gh")
         }
 
-        get("/keyboard") {
+        get("/keyboard.xml") {
             call.respondText(ktouchKeyboardLayoutEnglishUSA)
         }
 
@@ -308,6 +331,10 @@ private fun Application.lessonSpecification() {
                   <?xml version="1.0"?>
                   <keyboa
                 """.trimEnd())
+        }
+
+        get("/empty-keyboard.xml") {
+            call.respondText("")
         }
     }
 }
