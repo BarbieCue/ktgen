@@ -24,16 +24,18 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
 
-    // Scraping
-    implementation("it.skrape:skrapeit:+")
-
-    // CLI arguments
+    // cli
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
 
-    // Xml
+    // xml
     implementation("io.github.pdvrieze.xmlutil:core-jvm:0.86.0")
     implementation("io.github.pdvrieze.xmlutil:serialization-jvm:0.86.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.5.1")
+
+    // web
+    implementation("it.skrape:skrapeit:+")
+    implementation("io.ktor:ktor-client-core:2.3.2")
+    implementation("io.ktor:ktor-client-cio:2.3.2")
 
     // kotest
     testImplementation("io.kotest:kotest-runner-junit5:5.6.2")
@@ -41,9 +43,9 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.6.2")
     testImplementation("io.kotest:kotest-property:5.6.2")
 
-    // ktor
-    testImplementation("io.ktor:ktor-server-core-jvm:2.3.0")
-    testImplementation("io.ktor:ktor-server-netty-jvm:2.3.0")
+    // ktor for testing
+    testImplementation("io.ktor:ktor-server-core-jvm:2.3.2")
+    testImplementation("io.ktor:ktor-server-netty-jvm:2.3.2")
 
     testImplementation("ch.qos.logback:logback-classic:1.4.7")
 }

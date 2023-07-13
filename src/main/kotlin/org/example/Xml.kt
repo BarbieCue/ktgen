@@ -7,7 +7,6 @@ import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.*
 import org.w3c.dom.Document
 import org.xml.sax.InputSource
-import java.io.File
 import java.io.StringReader
 import java.io.StringWriter
 import java.io.Writer
@@ -83,8 +82,7 @@ data class KeyboardLayout (
     val keys: Keys = Keys()
 ) {
     companion object {
-        fun create(file: File, printError: Boolean = true): KeyboardLayout? = try {
-            val rawXml = file.readText().trim()
+        fun create(rawXml: String, printError: Boolean = true): KeyboardLayout? = try {
             val xml = XML {
                 xmlVersion = XmlVersion.XML10
             }
