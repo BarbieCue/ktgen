@@ -6,8 +6,7 @@ import io.kotest.core.spec.style.ExpectSpec
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import java.net.ServerSocket
 import java.nio.file.Path
 import java.nio.file.attribute.FileAttribute
 import kotlin.io.path.deleteIfExists
@@ -20,7 +19,7 @@ abstract class ConcurrentExpectSpec(body: ConcurrentExpectSpec.() -> Unit = {}) 
     }
 }
 
-abstract class IOExpectSpec(body: IOExpectSpec.() -> Unit = {}) : ConcurrentExpectSpec() {
+abstract class IOExpectSpec(body: IOExpectSpec.() -> Unit = {}) : ExpectSpec() {
 
     init {
         afterEach { files.forEach { it.deleteIfExists() } }
@@ -36,13 +35,14 @@ abstract class IOExpectSpec(body: IOExpectSpec.() -> Unit = {}) : ConcurrentExpe
         return file
     }
 
-    private val mutex = Mutex()
     private lateinit var server: ApplicationEngine
 
-    suspend fun startLocalhostWebServer(port: Int, module: Application.() -> Unit) {
-        mutex.withLock {
-            server = embeddedServer(Netty, port, host = "0.0.0.0", module = module)
-            server.start(false)
-        }
+    fun startLocalHttpServer(module: Application.() -> Unit): String {
+        val port = findFreePort()
+        server = embeddedServer(Netty, port, host = "0.0.0.0", module = module)
+        server.start(false)
+        return "http://0.0.0.0:$port"
     }
+
+    private fun findFreePort() = ServerSocket(0).use { it.localPort }
 }

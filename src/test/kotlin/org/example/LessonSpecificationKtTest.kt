@@ -11,8 +11,6 @@ import kotlin.io.path.writeText
 
 class LessonSpecificationKtTest : IOExpectSpec({
 
-    val port = 30122
-
     context("readLessonSpecification") {
 
         expect("empty collection when input is empty") {
@@ -28,13 +26,13 @@ class LessonSpecificationKtTest : IOExpectSpec({
         }
 
         expect("empty collection when web ressource not found") {
-            startLocalhostWebServer(port, Application::lessonSpecification)
-            readLessonSpecification("http://localhost:$port/${UUID.randomUUID()}.ktgen") shouldBe emptyList()
+            val address = startLocalHttpServer(Application::lessonSpecification)
+            readLessonSpecification("$address/${UUID.randomUUID()}.ktgen") shouldBe emptyList()
         }
 
         expect("empty collection when web ressource exists but is empty") {
-            startLocalhostWebServer(port, Application::lessonSpecification)
-            readLessonSpecification("http://localhost:$port/empty.ktgen") shouldBe emptyList()
+            val address = startLocalHttpServer(Application::lessonSpecification)
+            readLessonSpecification("$address/empty.ktgen") shouldBe emptyList()
         }
 
         context("lesson specification from string") {
@@ -72,18 +70,18 @@ class LessonSpecificationKtTest : IOExpectSpec({
         context("lesson specification from web") {
 
             expect("can read lesson specification from web when url ends with .ktgen)") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/spec.ktgen") shouldBe listOf("ab", "cd", "ef", "gh")
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                readLessonSpecification("$address/spec.ktgen") shouldBe listOf("ab", "cd", "ef", "gh")
             }
 
             expect("empty collection when url does not end with .ktgen") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/spec") shouldBe emptyList()
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                readLessonSpecification("$address/spec") shouldBe emptyList()
             }
 
             expect("specification from web can have many whitespace characters") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/spec-whitespaces.ktgen") shouldBe listOf("ab", "cd", "ef", "gh")
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                readLessonSpecification("$address/spec-whitespaces.ktgen") shouldBe listOf("ab", "cd", "ef", "gh")
             }
         }
 
@@ -128,8 +126,8 @@ class LessonSpecificationKtTest : IOExpectSpec({
         context("keyboard layout from web") {
 
             expect("can read and extract lesson specification from a keyboard layout from web when url ends with .xml") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/keyboard.xml") shouldBe listOf(
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                readLessonSpecification("$address/keyboard.xml") shouldBe listOf(
                     "fj", "dk", "sl", "a;", "gh", "ty",
                     "vm", "bn", "ru", "ei", "c,", "wo",
                     "x.", "qp", "z/", "10", "`-", "29",
@@ -141,18 +139,18 @@ class LessonSpecificationKtTest : IOExpectSpec({
             }
 
             expect("empty collection when url does not end with .xml") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/keyboard") shouldBe emptyList()
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                readLessonSpecification("$address/keyboard") shouldBe emptyList()
             }
 
             expect("empty collection when url ends with .xml but xml content cannot be parsed") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/malformed-keyboard.xml") shouldBe emptyList()
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                readLessonSpecification("$address/malformed-keyboard.xml") shouldBe emptyList()
             }
 
             expect("empty collection when web ressource exists but is empty") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                readLessonSpecification("http://localhost:$port/empty-keyboard.xml") shouldBe emptyList()
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                readLessonSpecification("$address/empty-keyboard.xml") shouldBe emptyList()
             }
         }
     }
@@ -183,36 +181,36 @@ class LessonSpecificationKtTest : IOExpectSpec({
         context("read from web") {
 
             expect("can read text content from web when url ends with .ktgen") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                loadTextFromFileOrWeb("http://localhost:$port/spec.ktgen") shouldBe """
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                loadTextFromFileOrWeb("$address/spec.ktgen") shouldBe """
                     ab cd
                     ef gh
                 """.trimIndent()
             }
 
             expect("can read text content from web when url ends with .xml") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                loadTextFromFileOrWeb("http://localhost:$port/keyboard.xml") shouldBe ktouchKeyboardLayoutEnglishUSA
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                loadTextFromFileOrWeb("$address/keyboard.xml") shouldBe ktouchKeyboardLayoutEnglishUSA
             }
 
             expect("empty when url does not end with .xml or .ktgen") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                loadTextFromFileOrWeb("http://localhost:$port/example") shouldBe ""
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                loadTextFromFileOrWeb("$address/example") shouldBe ""
             }
 
             expect("empty when web ressource is empty") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                loadTextFromFileOrWeb("http://localhost:$port/empty.ktgen") shouldBe ""
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                loadTextFromFileOrWeb("$address/empty.ktgen") shouldBe ""
             }
 
             expect("empty when response code is not 200") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                loadTextFromFileOrWeb("http://localhost:$port/non-200.ktgen") shouldBe ""
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                loadTextFromFileOrWeb("$address/non-200.ktgen") shouldBe ""
             }
 
             expect("result is trimmed") {
-                startLocalhostWebServer(port, Application::lessonSpecification)
-                loadTextFromFileOrWeb("http://localhost:$port/spec-whitespaces.ktgen") shouldBe "ab cd ef gh"
+                val address = startLocalHttpServer(Application::lessonSpecification)
+                loadTextFromFileOrWeb("$address/spec-whitespaces.ktgen") shouldBe "ab cd ef gh"
             }
         }
     }
