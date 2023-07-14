@@ -29,7 +29,6 @@ internal suspend fun List<TextGenerator>.invokeConcat(symbolsPerGenerator: Int, 
         }.awaitAll()
     }.sortedBy { it.first }.map { it.second }
 
-    if (results.any { it.isEmpty() }) return ""
     return buildString {
         while (symbolsCount() < symbolsTotal) {
             results.forEach {
@@ -159,7 +158,8 @@ internal fun List<LessonPrototype>.filter(lessonFilter: Collection<LessonFilter>
     return filterIndexed { i, current ->
         val last = this[max(i-1, 0)]
         val introducesNewCharacters = current.lesson.newCharacters.isNotEmpty()
-        if (introducesNewCharacters) true
+        val isSummary = current.kind == LessonKind.Summary
+        if (introducesNewCharacters || isSummary) true
         else lessonFilter.all { it(last.lesson, current.lesson) }
     }
 }

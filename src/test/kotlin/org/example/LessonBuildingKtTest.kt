@@ -208,15 +208,6 @@ class LessonBuildingKtTest : ConcurrentExpectSpec({
             lines[2] shouldBe "ccc"
             lines[3] shouldBe "a" // re-invoked first generator
         }
-
-        expect("return empty string when at least one generator has an empty output") {
-            fun repeatA(n: Int) = "a".repeat(n)
-            fun repeatB(n: Int) = "b".repeat(n)
-            fun emptyResult(n: Int) = ""
-            fun repeatC(n: Int) = "c".repeat(n)
-            val generators = listOf(::repeatA, ::repeatB, ::emptyResult, ::repeatC)
-            invokeConcat(3, generators) shouldBe ""
-        }
     }
 
 
@@ -268,15 +259,6 @@ class LessonBuildingKtTest : ConcurrentExpectSpec({
                 segments[5] shouldBe "ccc"
                 segments[6] shouldBe "aaa"
                 segments[7] shouldBe "bb"
-            }
-
-            expect("return empty string when there it at least one generator with empty output") {
-                fun repeatA(n: Int) = "a".repeat(n)
-                fun repeatB(n: Int) = "b".repeat(n)
-                fun emptyResult(n: Int) = ""
-                fun repeatC(n: Int) = "c".repeat(n)
-                val generators = listOf(::repeatA, ::repeatB, ::emptyResult, ::repeatC)
-                generators.invokeConcat(3, 10) shouldBe ""
             }
 
             expect("return empty string when symbols-per-generator is <= 0") {
@@ -702,24 +684,6 @@ class LessonBuildingKtTest : ConcurrentExpectSpec({
                 }
             }
 
-            expect("result is empty when at least one build step has no (empty) output") {
-
-                fun L.nothing(): L {
-                    textGenerators.add { _ -> "" }
-                    return this@nothing
-                }
-
-                LessonBuilder(10, 10, listOf("abc"), emptySequence()).apply {
-                    forEachLessonSpecification {
-                        lesson {
-                            shuffleSymbols(2)
-                            nothing()
-                            repeatSymbols(10)
-                        }
-                    }
-                }.lessons shouldBe emptyList()
-            }
-
             context("Every") {
 
                 context("summaryLesson") {
@@ -1044,7 +1008,7 @@ class LessonBuildingKtTest : ConcurrentExpectSpec({
                     filtered shouldHaveSize 5
                 }
 
-                expect("lessons introducing new characters are always kept, thus are not affected by filters") {
+                expect("lessons introducing new characters are always kept, they are not affected by filters") {
                     val iHateAbs = { _: Lesson?, current: Lesson -> current.title != "ab" }
                     val iHateCds = { _: Lesson?, current: Lesson -> current.title != "cd" }
                     val filtered = listOf(
@@ -1057,6 +1021,17 @@ class LessonBuildingKtTest : ConcurrentExpectSpec({
                     filtered shouldHaveSize 2
                     filtered[0].lesson.newCharacters shouldBe "ab"
                     filtered[1].lesson.newCharacters shouldBe "cd"
+                }
+
+                expect("summary lessons are always kept, they are not affected by filters") {
+                    val iHateAllLessons = { _: Lesson?, _: Lesson -> false }
+                    val filtered = listOf(
+                        LessonPrototype(lesson = Lesson(title = "ab")),
+                        LessonPrototype(lesson = Lesson(title = "ab")),
+                        LessonPrototype(lesson = Lesson(title = "ab summary"), kind = LessonKind.Summary),
+                    ).filter(listOf(iHateAllLessons))
+                    filtered shouldHaveSize 1
+                    filtered[0].lesson.title shouldBe "ab summary"
                 }
             }
 
