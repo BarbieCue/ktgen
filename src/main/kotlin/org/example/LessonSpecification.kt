@@ -25,8 +25,8 @@ internal suspend fun loadTextFromFileOrWeb(input: String): String {
     val file = File(input)
     if (file.exists()) return file.readText().trim()
     val text = try {
-        val response = HttpClient(CIO).request(input)
-        return if (response.status == HttpStatusCode.OK) {
+        val response = HttpClient(CIO).get(input)
+        if (response.status == HttpStatusCode.OK) {
             response.bodyAsText().trim()
         } else {
             System.err.println("URL seems to be invalid ($input). Status Code: ${response.status}")
