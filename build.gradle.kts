@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
     kotlin("jvm") version "1.8.21"
     kotlin("plugin.serialization") version "1.8.21"
@@ -20,6 +23,10 @@ repositories {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    testLogging {
+        events = mutableSetOf(TestLogEvent.FAILED)
+        exceptionFormat = TestExceptionFormat.FULL
+    }
 }
 
 dependencies {

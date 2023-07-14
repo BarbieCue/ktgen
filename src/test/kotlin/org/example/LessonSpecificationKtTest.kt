@@ -293,11 +293,11 @@ private fun Application.lessonSpecification() {
     routing {
 
         get("/empty.ktgen") {
-            call.respond("")
+            call.respondText("")
         }
 
         get("/non-200.ktgen") {
-            call.respond(HttpStatusCode.NotFound, "some text content :)")
+            call.respond(HttpStatusCode.NotFound, "ab cd ef gh")
         }
 
         get("/spec") {

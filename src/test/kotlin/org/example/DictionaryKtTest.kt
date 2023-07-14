@@ -256,7 +256,7 @@ private fun Application.exampleCom() {
     routing {
 
         get("/empty") {
-            call.respond("")
+            call.respondText("")
         }
 
         get("/") {
