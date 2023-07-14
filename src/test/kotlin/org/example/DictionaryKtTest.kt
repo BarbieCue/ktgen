@@ -143,28 +143,26 @@ class DictionaryKtTest : IOExpectSpec({
         }
     }
 
-    val port = 30121
-
     context("textFromWebsite") {
 
         expect("reads text content from a string containing html, where words are separated by any whitespace characters") {
-            startLocalhostWebServer(port, Application::exampleCom)
-            textFromWebsite("http://localhost:$port/") shouldBe "Example Domain Example Domain This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission. More information..."
+            val address = startLocalHttpServer(Application::exampleCom)
+            textFromWebsite("$address/") shouldBe "Example Domain Example Domain This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission. More information..."
         }
 
         expect("empty string when the html source string is empty") {
-            startLocalhostWebServer(port, Application::exampleCom)
-            textFromWebsite("http://localhost:$port/empty") shouldBe ""
+            val address = startLocalHttpServer(Application::exampleCom)
+            textFromWebsite("$address/empty") shouldBe ""
         }
 
         expect("empty string on error response code (non 2xx)") {
-            startLocalhostWebServer(port, Application::exampleCom)
-            textFromWebsite("http://localhost:$port/no-such-path") shouldBe ""
+            val address = startLocalHttpServer(Application::exampleCom)
+            textFromWebsite("$address/no-such-path") shouldBe ""
         }
 
         expect("empty string when protocol is missing") {
-            startLocalhostWebServer(port, Application::exampleCom)
-            textFromWebsite("localhost:$port/") shouldBe ""
+            val address = startLocalHttpServer(Application::exampleCom)
+            textFromWebsite("${address.substringAfter("http://")}/") shouldBe ""
         }
 
         expect("empty string on unknown host") {
@@ -181,8 +179,8 @@ class DictionaryKtTest : IOExpectSpec({
         expect("build collection of words from website and text file") {
             val file = tmpFile(UUID.randomUUID().toString())
             file.writeText("apple pear grape")
-            startLocalhostWebServer(port, Application::exampleCom)
-            val dict = buildDictionary(file.absolutePathString(), "http://localhost:$port/", 0, 100, 1000)
+            val address = startLocalHttpServer(Application::exampleCom)
+            val dict = buildDictionary(file.absolutePathString(), "$address/", 0, 100, 1000)
             dict shouldContainAll sequenceOf(
                 "Domain", "Example", "More", "This", "You", "asking",
                 "coordination", "documents", "domain", "examples", "for",
@@ -200,8 +198,8 @@ class DictionaryKtTest : IOExpectSpec({
         }
 
         expect("result collection contains only words from website when text file path is empty") {
-            startLocalhostWebServer(port, Application::exampleCom)
-            val dict = buildDictionary("", "http://localhost:$port/", 0, 100, 1000)
+            val address = startLocalHttpServer(Application::exampleCom)
+            val dict = buildDictionary("", "$address/", 0, 100, 1000)
             dict shouldContainAll setOf(
                 "Domain", "Example", "More", "This", "You", "asking",
                 "coordination", "documents", "domain", "examples", "for",
@@ -256,7 +254,7 @@ private fun Application.exampleCom() {
     routing {
 
         get("/empty") {
-            call.respond("")
+            call.respondText("")
         }
 
         get("/") {
