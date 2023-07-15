@@ -205,7 +205,7 @@ which begins with the basic finger position.
 
 ![keyboard path](docs/keyboardpath.jpg)
 
-The section [Input](#input) explains how to instruct *ktgen* to generate courses for keyboard layouts.
+The [input](#input) section explains how to instruct *ktgen* to generate courses for keyboard layouts.
 
 
 ## Combining lesson specifications
@@ -227,7 +227,7 @@ https://raw.githubusercontent.com/BarbieCue/ktgen/main/lesson_specification.ktge
 When running *ktgen* locally via Java,
 the specification file `lesson_specification.ktgen` is used as default input,
 if no lesson specification is passed as argument.
-With docker, you always have to pass a lesson specification (see [Input](#input)).
+With docker, you always have to pass a lesson specification (see [input](#input)).
 
 
 ## Input
@@ -271,7 +271,7 @@ The URL must start with `http` or `https`. Make sure that the response is plain 
 #### A *ktgen* lesson specification via HTTP link
 
 The URL must end with `.ktgen`.
-For example, use the **Raw** version of the GitHub **ktgen** `lesson_specification.ktgen` file.
+For example, use the **Raw** version of the GitHub *ktgen* `lesson_specification.ktgen` file.
 
 ```shell
 docker run --rm barbiecue/ktgen:latest https://raw.githubusercontent.com/BarbieCue/ktgen/main/lesson_specification.ktgen -o > ktgen_course.xml
