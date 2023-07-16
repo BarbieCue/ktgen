@@ -9,9 +9,10 @@
 
 - Generate custom courses
 - Generate courses for keyboard layouts
-- Use text from text files
-- Use text from websites (simply via URL)
-- Filter words by length
+- Use local files or link online ressources
+- Equip your lessons with words from text files
+- Or text scraped from websites of your choice
+- Limit words length
 - Individual lesson length
 - Individual average line length
 - Run *ktgen* via Docker or Java
@@ -58,7 +59,20 @@ docker run --rm barbiecue/ktgen:latest \
 Your KTouch course has been generated and written to `ktgen_course.xml`.
 You can import it into KTouch.
 
-Have a look at the **[examples](#examples)** section.
+### Example with keyboard layout
+
+A course for the *german neo 2 keyboard layout* referenced by GitHub link,
+ containing words from the website *https://de.wikipedia.org/wiki/Ameisen*,
+ written to the file *ktgen_course.xml*.
+
+ ```shell
+ docker run --rm barbiecue/ktgen:latest \
+ https://raw.githubusercontent.com/KDE/ktouch/master/data/keyboardlayouts/de.neo2.xml \
+ -web https://de.wikipedia.org/wiki/Ameisen \
+ -o > ktgen_course.xml
+ ```
+
+Have a look at the **[examples](#examples)** section for more.
 
 
 ## Dictionary
@@ -306,17 +320,6 @@ Consequently `-of <file>` may be useful when running *ktgen* locally via Java.
     docker run --rm barbiecue/ktgen:latest \
     https://raw.githubusercontent.com/BarbieCue/ktgen/main/lesson_specification.ktgen \
     -web https://en.wikipedia.org/wiki/Computational_complexity_theory \
-    -o > ktgen_course.xml
-    ```
-
--   A course for the *german neo 2 keyboard layout* referenced by GitHub link,
-    containing words from the website *https://de.wikipedia.org/wiki/Ameisen*,
-    written to the file *ktgen_course.xml*.
-
-    ```shell
-    docker run --rm barbiecue/ktgen:latest \
-    https://raw.githubusercontent.com/KDE/ktouch/master/data/keyboardlayouts/de.neo2.xml \
-    -web https://de.wikipedia.org/wiki/Ameisen \
     -o > ktgen_course.xml
     ```
 
