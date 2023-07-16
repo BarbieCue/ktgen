@@ -136,33 +136,24 @@ Here we have 8 segments of new symbols to learn: `ab`, `cdef`, `gh`, `AB`, `CD`,
 
 #### This example leads to the following lessons:
 
-1. Random permutations of `ab`
-2. Random permutations of `ab` mixed with words consisting of `ab`
-3. Words consisting of `ab`
-4. Random permutations of `cdef`
-5. Random permutations of `cdef` mixed with words consisting of `abcdef` where each
+- Random permutations of `ab`
+- Random permutations of `ab` mixed with words consisting of `ab`
+- Words consisting of `ab`
+- Random permutations of `cdef`
+- Random permutations of `cdef` mixed with words consisting of `abcdef` where each
    word contains at least one of the symbols `cdef`
-6. Such words only
-7. Random permutations of `gh`
-8. Random permutations of `gh` mixed with words consisting of `abcdefgh` where each
+- Such words only
+- Random permutations of `gh`
+- Random permutations of `gh` mixed with words consisting of `abcdefgh` where each
    word contains at least one of the symbols `gh`
-9. Such words only
-10. Random permutations of `AB`
-11. Random permutations of `AB` mixed with words consisting of `abcdefghAB` where each
-    word contains at least one of the symbols `AB`
-12. Such words only
-13. Random permutations of `CD`
-14. Random permutations of `CD` mixed with words consisting of `abcdefghABCD` where each
-    word contains at least one of the symbols `CD`
-15. Such words only
-16. Random permutations of `EFGH`
-17. Random permutations of `EFGH` mixed with words consisting of `abcdefghABCDEFGH` where each
-    word contains at least one of the symbols `EFGH`
-18. Such words only
-19. Random permutations of `123`
-20. Random permutations of `,.`
-21. Words consisting of `abcdefghABCDEFGH` where `,` or `.` is prefixed or appended randomly
+- Such words only
+- So on for `AB`, `CD` and `EFGH`
+    ...
+- Random permutations of `123`
+- Random permutations of `,.`
+- Words consisting of `abcdefghABCDEFGH` where `,` or `.` is prefixed or appended randomly
 
+In between, additional summary lessons are generated for the last 3 segments of new symbols to be learned.
 
 ##### However
 - No word lessons are generated if no matching words can be found in the dictionary
