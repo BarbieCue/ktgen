@@ -36,10 +36,10 @@ fun main(args: Array<String>) = runBlocking {
     if (lessonSpecification.isEmpty()) input.addAll(readLessonSpecification("lesson_specification.ktgen"))
     else lessonSpecification.forEach { input.addAll(readLessonSpecification(it)) }
 
-    val output = mutableListOf<String>()
-    if (outputFile.isEmpty() && !stdout) output.add("ktgen_course.xml")
-    if (outputFile.isNotEmpty()) output.add(outputFile)
-    if (stdout) output.add("stdout")
+    if (input.isEmpty()) {
+        System.err.println("Missing (or empty) lesson specification. No course is created.")
+        return@runBlocking
+    }
 
     if (symbolsPerLesson <= 0) {
         System.err.println("The lesson length must be at least 1.")
@@ -50,6 +50,11 @@ fun main(args: Array<String>) = runBlocking {
         System.err.println("The average line length must be at least 1.")
         return@runBlocking
     }
+
+    val output = mutableListOf<String>()
+    if (outputFile.isEmpty() && !stdout) output.add("ktgen_course.xml")
+    if (outputFile.isNotEmpty()) output.add(outputFile)
+    if (stdout) output.add("stdout")
 
     if (textDistance !in (0.0 .. 1.0))
         System.err.println("Text distance must be in [0.0, 1.0]. Proceeding without text distance check.")
@@ -65,14 +70,10 @@ fun main(args: Array<String>) = runBlocking {
 
     val dictionary = buildDictionary(textFile, website, minWordLength, maxWordLength, dictionarySize)
 
-    if (input.isEmpty()) {
-        System.err.println("Missing (or empty) lesson specification. No course is created.")
-        return@runBlocking
-    }
-
     val course = createCourse(input, dictionary, lineLength, symbolsPerLesson,
         Filter.relativeLevenshteinDistanceFromLessonBefore(textDistance),
         Filter.lessonContainsAtLeastDifferentWords(wordDiversity)
     )
+
     writeCourse(course, output)
 }
