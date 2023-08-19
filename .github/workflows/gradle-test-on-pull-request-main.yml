@@ -30,6 +30,6 @@ jobs:
         uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4
       
       - name: Test with Gradle
-        uses: gradle/gradle-build-action@124cb765ee4ac14086b156dd1904e30f16c6cf6f
+        uses: gradle/gradle-build-action@8cade330d4ab437f060d4cb02eb8848d5ad96973
         with:
           arguments: test
