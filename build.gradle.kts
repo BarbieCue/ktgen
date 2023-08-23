@@ -37,7 +37,7 @@ dependencies {
     // xml
     implementation("io.github.pdvrieze.xmlutil:core-jvm:0.86.1")
     implementation("io.github.pdvrieze.xmlutil:serialization-jvm:0.86.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.0")
 
     // web
     implementation("it.skrape:skrapeit:+")
