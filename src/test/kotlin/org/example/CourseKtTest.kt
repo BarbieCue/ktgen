@@ -7,9 +7,12 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldHaveMaxLength
 import io.kotest.matchers.string.shouldHaveMinLength
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintStream
 import java.nio.file.attribute.PosixFilePermissions
 import java.util.*
 import kotlin.io.path.absolutePathString
@@ -68,6 +71,25 @@ class CourseKtTest : IOExpectSpec({
 
         expect("nothing happens when path is invalid") {
             shouldNotThrow<Exception> { writeCourse(Course(), listOf("{/}....{}*")) }
+        }
+
+        context("stdio") {
+
+            val outStreamCaptor = ByteArrayOutputStream()
+            beforeEach {
+                outStreamCaptor.reset()
+                System.setOut(PrintStream(outStreamCaptor))
+            }
+
+            afterEach {
+                System.setOut(System.out)
+            }
+
+            expect("write course to stdout when 'stdout' is a target") {
+                val course = createCourse(emptyList(), emptySequence(), 0, 0)
+                writeCourse(course, listOf("stdout"))
+                outStreamCaptor.toString().trim() shouldContain course.id
+            }
         }
     }
 
