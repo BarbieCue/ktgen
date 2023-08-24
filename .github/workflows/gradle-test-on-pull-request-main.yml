@@ -29,7 +29,7 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4
       
-      - name: Test with Gradle
+      - name: Check with Gradle
         uses: gradle/gradle-build-action@3122f2c659b52a78671a7862f5bc93f72823bb43
         with:
-          arguments: test
+          arguments: check
