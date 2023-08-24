@@ -21,7 +21,7 @@ repositories {
     mavenCentral()
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
     useJUnitPlatform()
     testLogging {
         events = mutableSetOf(TestLogEvent.FAILED)
