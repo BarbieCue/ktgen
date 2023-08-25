@@ -24,8 +24,8 @@ internal fun String.relativeLevenshteinDistance(other: String?): Double {
     if (isEmpty()) return 0.0
     if (other.isNullOrEmpty()) return 1.0
     val levenshteinDistance = LevenshteinDistance().apply(this, other)
-    if (levenshteinDistance == 0) return 0.0
-    return levenshteinDistance.toDouble() / length.toDouble()
+    return if (levenshteinDistance == 0) 0.0
+           else levenshteinDistance.toDouble() / length.toDouble()
 }
 
 internal fun String.differentWords(n: Int): Boolean {
