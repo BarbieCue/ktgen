@@ -395,6 +395,42 @@ class KeyboardKtTest : ConcurrentExpectSpec({
             pairs[3].pair.second!!.chars.first().text shouldBe "j" // right index
         }
 
+        expect("comparing two fingers, the common level depth is the minimum of left level depth and right level depth") {
+            val hands = hands(KeyboardLayout(keys = Keys(keys = listOf(
+
+                // left finger at index 0 has 2 levels
+                Key(fingerIndex = 0, chars = listOf(Char(text = "a")), top = 0),
+                Key(fingerIndex = 0, chars = listOf(Char(text = "aa")), top = 1),
+
+                Key(fingerIndex = 1, chars = listOf(Char(text = "s"))),
+                Key(fingerIndex = 2, chars = listOf(Char(text = "d"))),
+                Key(fingerIndex = 3, chars = listOf(Char(text = "f"))),
+                Key(fingerIndex = 4, chars = listOf(Char(text = "j"))),
+                Key(fingerIndex = 5, chars = listOf(Char(text = "k"))),
+                Key(fingerIndex = 6, chars = listOf(Char(text = "l"))),
+
+                // right opponent finger has 3 levels
+                Key(fingerIndex = 7, chars = listOf(Char(text = ";")), top = 0),
+                Key(fingerIndex = 7, chars = listOf(Char(text = ";;")), top = 1),
+                Key(fingerIndex = 7, chars = listOf(Char(text = ";;;")), top = 2), // should have no opponent
+            ))))
+
+            // The minimum level for finger-pair 0 left ard 7 right is 2.
+            // Because the left side has only 2 levels ('top' entries).
+
+            val pairs = pairKeys(hands)
+            pairs[0].pair.first!!.chars.first().text shouldBe "a"
+            pairs[0].pair.second!!.chars.first().text shouldBe ";"
+            pairs[1].pair.first!!.chars.first().text shouldBe "aa"
+            pairs[1].pair.second!!.chars.first().text shouldBe ";;"
+            pairs[2].pair.first!!.chars.first().text shouldBe "s"
+            pairs[2].pair.second!!.chars.first().text shouldBe "l"
+            pairs[3].pair.first!!.chars.first().text shouldBe "d"
+            pairs[3].pair.second!!.chars.first().text shouldBe "k"
+            pairs[4].pair.first!!.chars.first().text shouldBe "f"
+            pairs[4].pair.second!!.chars.first().text shouldBe "j"
+        }
+
         expect("keys having no opponents are at the end of the result list") {
             val hands = hands(KeyboardLayout(keys = Keys(keys = listOf(
                 Key(fingerIndex = 0, chars = listOf(Char(text = "a"))),
