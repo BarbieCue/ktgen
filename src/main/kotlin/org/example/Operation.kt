@@ -97,8 +97,7 @@ fun Collection<String>.prefixOrAppendPunctuationMarks(punctuationMarks: String):
     return map {
         val (l, r) = randomPair(left, right)
         if (punctuationMarks.matches(wwRegex)) "$l$it$r" else {
-            if ((l+r).isEmpty()) it
-            else if (Random().nextInt(100) > 50)
+            if (Random().nextInt(100) > 50)
                 "$it${(l+r).random()}"
             else
                 "${(l+r).toSet().random()}$it"
