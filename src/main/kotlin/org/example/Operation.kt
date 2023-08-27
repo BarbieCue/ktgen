@@ -69,8 +69,8 @@ internal val pairsRevers = pairs.map { it.value to it.key }.toMap()
 internal fun String.splitWWLeftRight(): Pair<String, String> =
     substringBefore("WW") to substringAfter("WW")
 
-internal fun randomPair(left: String, right: String): Pair<String, String> {
-    return if (left.isNotEmpty() && right.isNotEmpty())
+internal fun randomPair(left: String, right: String): Pair<String, String> =
+    if (left.isNotEmpty() && right.isNotEmpty())
         if (Random().nextInt(100) > 50) {
             val l = left.random()
             val r = if (pairs.containsKey(l) && right.contains(pairs[l]!!)) pairs[l] else ""
@@ -89,7 +89,6 @@ internal fun randomPair(left: String, right: String): Pair<String, String> {
     else {
         "" to ""
     }
-}
 
 fun Collection<String>.prefixOrAppendPunctuationMarks(punctuationMarks: String): Collection<String> {
     if (isEmpty() || punctuationMarks.isEmpty()) return emptyList()
