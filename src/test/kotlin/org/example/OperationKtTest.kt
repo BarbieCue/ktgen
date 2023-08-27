@@ -393,6 +393,10 @@ class OperationKtTest : ConcurrentExpectSpec({
                 setOf("a  ").joinRepeat(1) shouldBe ""
             }
 
+            expect("result is empty when all items of the input collection are empty") {
+                setOf("", "", "").joinRepeat(1) shouldBe ""
+            }
+
             expect("ignore too long words") {
                 setOf("too_long", "ok").joinRepeat(2) shouldBe "ok"
                 setOf("too_long", "ok").joinRepeat(4) shouldBe "ok ok"
