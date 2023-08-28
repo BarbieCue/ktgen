@@ -157,6 +157,10 @@ class OperationKtTest : ConcurrentExpectSpec({
                 "abcdef abc abc abcdef abc".toTextBlock(20, 5).count { !it.isWhitespace() } shouldBe 20
             }
 
+            expect("result contains whitespace characters") {
+                "abcdef abc abc abcdef abc".toTextBlock(20, 5).count { it.isWhitespace() } shouldBe 4
+            }
+
             expect("cut symbols from the end, when source string is larger than symbols-total") {
                 "12345678901234567890" // 20 chars long
                     .toTextBlock(18, 5) shouldEndWith "8"
