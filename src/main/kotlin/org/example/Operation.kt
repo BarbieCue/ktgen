@@ -69,8 +69,8 @@ internal val pairsRevers = pairs.map { it.value to it.key }.toMap()
 internal fun String.splitWWLeftRight(): Pair<String, String> =
     substringBefore("WW") to substringAfter("WW")
 
-internal fun randomPair(left: String, right: String): Pair<String, String> {
-    return if (left.isNotEmpty() && right.isNotEmpty())
+internal fun randomPair(left: String, right: String): Pair<String, String> =
+    if (left.isNotEmpty() && right.isNotEmpty())
         if (Random().nextInt(100) > 50) {
             val l = left.random()
             val r = if (pairs.containsKey(l) && right.contains(pairs[l]!!)) pairs[l] else ""
@@ -89,7 +89,6 @@ internal fun randomPair(left: String, right: String): Pair<String, String> {
     else {
         "" to ""
     }
-}
 
 fun Collection<String>.prefixOrAppendPunctuationMarks(punctuationMarks: String): Collection<String> {
     if (isEmpty() || punctuationMarks.isEmpty()) return emptyList()
@@ -97,8 +96,7 @@ fun Collection<String>.prefixOrAppendPunctuationMarks(punctuationMarks: String):
     return map {
         val (l, r) = randomPair(left, right)
         if (punctuationMarks.matches(wwRegex)) "$l$it$r" else {
-            if ((l+r).isEmpty()) it
-            else if (Random().nextInt(100) > 50)
+            if (Random().nextInt(100) > 50)
                 "$it${(l+r).random()}"
             else
                 "${(l+r).toSet().random()}$it"
@@ -146,7 +144,6 @@ internal fun String.substringAtNearestWhitespace(desiredLength: Int): String {
         val char = getOrNull(currentIndex) ?: return 0
         if (char.isWhitespace()) return currentIndex
         val nextDirection = if (currentIndex == 0) false // reached string start, only go forward
-        else if (currentIndex >= length) true // reached string end, only go backward
         else !backwards // change direction
         val nextForwardStep = if (nextDirection) forwardIndex else forwardIndex + 1
         val nextBackwardStep = if (nextDirection) backwardIndex + 1 else backwardIndex
