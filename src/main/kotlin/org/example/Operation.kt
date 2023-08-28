@@ -144,7 +144,6 @@ internal fun String.substringAtNearestWhitespace(desiredLength: Int): String {
         val char = getOrNull(currentIndex) ?: return 0
         if (char.isWhitespace()) return currentIndex
         val nextDirection = if (currentIndex == 0) false // reached string start, only go forward
-        else if (currentIndex >= length) true // reached string end, only go backward
         else !backwards // change direction
         val nextForwardStep = if (nextDirection) forwardIndex else forwardIndex + 1
         val nextBackwardStep = if (nextDirection) backwardIndex + 1 else backwardIndex
