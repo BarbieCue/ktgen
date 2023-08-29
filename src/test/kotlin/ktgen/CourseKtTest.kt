@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.inspectors.forAll

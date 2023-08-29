@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import io.kotest.core.spec.style.ExpectSpec
 import io.kotest.matchers.shouldBe

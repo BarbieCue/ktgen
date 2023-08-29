@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.config.ProjectConfiguration

@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import kotlin.math.min
 

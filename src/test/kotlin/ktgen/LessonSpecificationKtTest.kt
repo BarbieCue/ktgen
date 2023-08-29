@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*

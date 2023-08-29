@@ -10,7 +10,7 @@ plugins {
 }
 
 application {
-    mainClass.set("org.example.ApplicationKt")
+    mainClass.set("ktgen.ApplicationKt")
 }
 
 ktor {

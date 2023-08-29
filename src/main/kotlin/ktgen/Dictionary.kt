@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import it.skrape.core.htmlDocument
 import it.skrape.fetcher.BrowserFetcher

@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import io.kotest.data.forAll
 import io.kotest.data.headers
