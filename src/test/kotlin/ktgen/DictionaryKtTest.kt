@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.sequences.shouldContainAll

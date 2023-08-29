@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll

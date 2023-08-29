@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import kotlinx.cli.*
 import kotlinx.coroutines.runBlocking
@@ -70,7 +70,8 @@ fun main(args: Array<String>) = runBlocking {
 
     val dictionary = buildDictionary(textFile, website, minWordLength, maxWordLength, dictionarySize)
 
-    val course = createCourse(input, dictionary, lineLength, symbolsPerLesson,
+    val course = createCourse(
+        input, dictionary, lineLength, symbolsPerLesson,
         Filter.relativeLevenshteinDistanceFromLessonBefore(textDistance),
         Filter.lessonContainsAtLeastDifferentWords(wordDiversity)
     )

@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import org.apache.commons.text.similarity.LevenshteinDistance
 

@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 val wwRegex = "\\p{Punct}*WW\\p{Punct}*".toRegex()
 fun String.ww(): String = wwRegex.find(this)?.value ?: ""

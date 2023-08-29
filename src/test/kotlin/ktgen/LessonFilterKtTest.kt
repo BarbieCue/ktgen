@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeLessThan

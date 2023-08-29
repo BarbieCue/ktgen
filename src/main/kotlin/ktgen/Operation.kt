@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import java.util.*
 import kotlin.text.repeat as charSeqRepeat

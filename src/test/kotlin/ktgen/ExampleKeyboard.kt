@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import kotlinx.serialization.serializer
 import nl.adaptivity.xmlutil.core.XmlVersion

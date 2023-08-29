@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize

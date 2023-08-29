@@ -1,4 +1,4 @@
-package org.example
+package ktgen
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
