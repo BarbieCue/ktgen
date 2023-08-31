@@ -48,7 +48,7 @@ dependencies {
     // web
     implementation("it.skrape:skrapeit:1.3.0-alpha.1")
     implementation("io.ktor:ktor-client-core:2.3.3")
-    implementation("io.ktor:ktor-client-cio:2.3.3")
+    implementation("io.ktor:ktor-client-cio:2.3.4")
 
     // kotest
     testImplementation("io.kotest:kotest-runner-junit5:5.6.2")
