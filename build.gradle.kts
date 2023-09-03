@@ -38,7 +38,7 @@ tasks.test {
 dependencies {
 
     // cli
-    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
 
     // xml
     implementation("io.github.pdvrieze.xmlutil:core-jvm:0.86.1")
