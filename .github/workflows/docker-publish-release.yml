@@ -34,7 +34,7 @@ jobs:
           images: barbiecue/ktgen
       
       - name: Build and push Docker image
-        uses: docker/build-push-action@04d1a3b0491bb1fbd0843d1fea3390e385bf2252
+        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09
         with:
           context: .
           file: ./Dockerfile
