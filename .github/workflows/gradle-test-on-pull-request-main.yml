@@ -30,7 +30,7 @@ jobs:
         uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4
       
       - name: Check with Gradle
-        uses: gradle/gradle-build-action@b32df40b6abdd4a47892e75b9780e0002c06de1b
+        uses: gradle/gradle-build-action@b5126f31dbc19dd434c3269bf8c28c315e121da2
         with:
           arguments: check
 
