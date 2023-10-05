@@ -6,7 +6,7 @@ plugins {
     kotlin("plugin.serialization") version "1.9.10"
 
     id("org.jetbrains.kotlinx.kover") version "0.7.3"
-    id("io.ktor.plugin") version "2.3.4"
+    id("io.ktor.plugin") version "2.3.5"
 }
 
 application {
