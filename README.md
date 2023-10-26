@@ -8,10 +8,10 @@
 
 ## Overview
 
-- Generate custom courses
 - Generate courses for keyboard layouts
-- Use local files or link online ressources
-- Equip your lessons with words from text files
+- Generate custom courses
+- Include local or online ressources
+- Equip lessons with words from text files
 - Or text scraped from websites of your choice
 - Limit words length
 - Individual lesson length
