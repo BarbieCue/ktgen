@@ -16,7 +16,6 @@
 - Limit words length
 - Individual lesson length
 - Individual average line length
-- Run *ktgen* via Docker or Java
 
 
 ## Basic use
