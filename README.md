@@ -13,19 +13,34 @@
 - Include local or online ressources
 - Equip lessons with words from text files
 - Or text scraped from websites of your choice
-- Limit words length
+- Limit word length
 - Individual lesson length
 - Individual average line length
 
 
 ## Basic use
 
-Generate a KTouch course in 3 simple steps.
+Use [keyboard layouts](#courses-for-keyboard-layouts) or
+create a custom courses via [lesson specifications](#lesson-specification).
 
 
-### 1. Define your course
+### Generate courses for keyboard layouts
 
-Use a [keyboard layout](#courses-for-keyboard-layouts) or create a custom course via [lesson specification](#lesson-specification).
+Example: a course for the *german neo 2 keyboard layout* referenced by GitHub link,
+containing words from the website *https://de.wikipedia.org/wiki/Ameisen*,
+written to the file *ktgen_course.xml*.
+
+```shell
+docker run --rm barbiecue/ktgen:latest \
+https://raw.githubusercontent.com/KDE/ktouch/master/data/keyboardlayouts/de.neo2.xml \
+-web https://de.wikipedia.org/wiki/Ameisen \
+-o > ktgen_course.xml
+```
+
+
+### Generate custom courses
+
+**1. Design the lessons you want to learn**
 
 ```text
 ab cd ef gh ij kl mn op qr st uv wx yz
@@ -39,7 +54,7 @@ WW,. WW!? WW:;
 ```
 
 
-### 2. Run ktgen
+**2. Run ktgen**
 
 ```shell
 docker run --rm barbiecue/ktgen:latest \
@@ -54,25 +69,12 @@ docker run --rm barbiecue/ktgen:latest \
 ```
 
 
-### 3. Done
+**3. Done**
 
 Your KTouch course has been generated and written to `ktgen_course.xml`.
-You can import it into KTouch.
+You can import it into KTouch. 
 
-### Example with keyboard layout
-
-A course for the *german neo 2 keyboard layout* referenced by GitHub link,
- containing words from the website *https://de.wikipedia.org/wiki/Ameisen*,
- written to the file *ktgen_course.xml*.
-
- ```shell
- docker run --rm barbiecue/ktgen:latest \
- https://raw.githubusercontent.com/KDE/ktouch/master/data/keyboardlayouts/de.neo2.xml \
- -web https://de.wikipedia.org/wiki/Ameisen \
- -o > ktgen_course.xml
- ```
-
-Have a look at the **[examples](#examples)** section for more.
+**[Here are some more examples](#examples)**.
 
 
 ## Dictionary
@@ -141,14 +143,14 @@ Here we have 8 segments of new symbols to learn: `ab`, `cdef`, `gh`, `AB`, `CD`,
 - Words consisting of `ab`
 - Random permutations of `cdef`
 - Random permutations of `cdef` mixed with words consisting of `abcdef` where each
-   word contains at least one of the symbols `cdef`
+  word contains at least one of the symbols `cdef`
 - Such words only
 - Random permutations of `gh`
 - Random permutations of `gh` mixed with words consisting of `abcdefgh` where each
-   word contains at least one of the symbols `gh`
+  word contains at least one of the symbols `gh`
 - Such words only
 - So on for `AB`, `CD` and `EFGH`
-    ...
+  ...
 - Random permutations of `123`
 - Random permutations of `,.`
 - Words consisting of `abcdefghABCDEFGH` where `,` or `.` is prefixed or appended randomly
@@ -391,16 +393,4 @@ The following examples include sample input files and work immediately when you 
 
 ```shell
 docker run --rm barbiecue/ktgen:latest --help
-```
-
-
-## Build
-
-Requires Java 17 or higher
-
-```shell
-./gradlew buildFatJar
-```
-```shell
-docker build -t ktgen .
 ```
