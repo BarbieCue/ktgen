@@ -51,7 +51,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:2.3.5")
 
     // kotest
-    testImplementation("io.kotest:kotest-runner-junit5:5.7.2")
+    testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
     testImplementation("io.kotest:kotest-assertions-json-jvm:5.7.2")
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.7.2")
     testImplementation("io.kotest:kotest-property:5.7.2")
