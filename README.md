@@ -10,6 +10,7 @@
 
 - Generate courses for keyboard layouts
 - Generate custom courses
+- Combine both
 - Include local or online ressources
 - Equip lessons with words from text files
 - Or text scraped from websites of your choice
@@ -21,7 +22,7 @@
 ## Basic use
 
 Use [keyboard layouts](#courses-for-keyboard-layouts) or
-create a custom courses via [lesson specifications](#lesson-specification).
+create custom courses via [lesson specifications](#lesson-specification).
 
 
 ### Generate courses for keyboard layouts
