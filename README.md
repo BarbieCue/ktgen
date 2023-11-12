@@ -218,7 +218,7 @@ The [input](#input) section explains how to instruct *ktgen* to generate courses
 
 ## Combining lesson specifications
 
-Multiple lesson specifications can be combined to a single course, simply by passing them as arguments to *ktgen*.
+Multiple lesson specifications (and keyboard layouts) can be combined to a single course, simply by passing them as arguments to *ktgen*.
 They are applied in order. For example:
 
 ```shell
@@ -231,11 +231,6 @@ https://raw.githubusercontent.com/BarbieCue/ktgen/main/lesson_specification.ktge
 - The first lessons are generated from *lesson_specification.ktgen*
 - Lessons mapping the german keyboard layout follow
 - At the end of the course are lessons for the letter groups
-
-When running *ktgen* locally via Java,
-the specification file `lesson_specification.ktgen` is used as default input,
-if no lesson specification is passed as argument.
-With docker, you always have to pass a lesson specification (see [input](#input)).
 
 
 ## Input
