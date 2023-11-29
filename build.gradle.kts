@@ -46,7 +46,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.1")
 
     // web
-    implementation("it.skrape:skrapeit:1.3.0-alpha.1")
+    implementation("it.skrape:skrapeit:1.3.0-alpha.2")
     implementation("io.ktor:ktor-client-core:2.3.6")
     implementation("io.ktor:ktor-client-cio:2.3.6")
 
