@@ -57,7 +57,7 @@ dependencies {
     testImplementation("io.kotest:kotest-property:5.8.1")
 
     // ktor for testing
-    testImplementation("io.ktor:ktor-server-core-jvm:2.3.9")
+    testImplementation("io.ktor:ktor-server-core-jvm:2.3.11")
     testImplementation("io.ktor:ktor-server-netty-jvm:2.3.9")
     testImplementation("io.ktor:ktor-network:2.3.9")
 
