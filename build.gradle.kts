@@ -47,8 +47,8 @@ dependencies {
 
     // web
     implementation("it.skrape:skrapeit:1.3.0-alpha.2")
-    implementation("io.ktor:ktor-client-core:2.3.9")
-    implementation("io.ktor:ktor-client-cio:2.3.9")
+    implementation("io.ktor:ktor-client-core:2.3.11")
+    implementation("io.ktor:ktor-client-cio:2.3.11")
 
     // kotest
     testImplementation("io.kotest:kotest-runner-junit5:5.8.1")
@@ -57,9 +57,9 @@ dependencies {
     testImplementation("io.kotest:kotest-property:5.8.1")
 
     // ktor for testing
-    testImplementation("io.ktor:ktor-server-core-jvm:2.3.9")
-    testImplementation("io.ktor:ktor-server-netty-jvm:2.3.9")
-    testImplementation("io.ktor:ktor-network:2.3.9")
+    testImplementation("io.ktor:ktor-server-core-jvm:2.3.11")
+    testImplementation("io.ktor:ktor-server-netty-jvm:2.3.11")
+    testImplementation("io.ktor:ktor-network:2.3.11")
 
     testImplementation("ch.qos.logback:logback-classic:1.5.3")
 }
