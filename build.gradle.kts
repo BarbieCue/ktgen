@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     kotlin("jvm") version "1.9.24"
-    kotlin("plugin.serialization") version "1.9.23"
+    kotlin("plugin.serialization") version "1.9.24"
 
     id("org.jetbrains.kotlinx.kover") version "0.7.6"
     id("io.ktor.plugin") version "2.3.9"
