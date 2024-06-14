@@ -41,8 +41,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
 
     // xml
-    implementation("io.github.pdvrieze.xmlutil:core-jvm:0.86.3")
-    implementation("io.github.pdvrieze.xmlutil:serialization-jvm:0.86.3")
+    implementation("io.github.pdvrieze.xmlutil:core:0.90.0")
+    implementation("io.github.pdvrieze.xmlutil:serialization-jvm:0.90.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.0")
 
     // web
