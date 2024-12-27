@@ -35,13 +35,19 @@ abstract class IOExpectSpec(body: IOExpectSpec.() -> Unit = {}) : ExpectSpec() {
         return file
     }
 
-    private lateinit var server: ApplicationEngine
+    private lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
 
     fun startLocalHttpServer(module: Application.() -> Unit): String {
-        val port = findFreePort()
-        server = embeddedServer(Netty, port, host = "0.0.0.0", module = module)
+        val freePort = findFreePort()
+        server = embeddedServer(Netty, configure = {
+          connector {
+              host = "0.0.0.0"
+              port = freePort
+          }
+        }, module = module)
         server.start(false)
-        return "http://0.0.0.0:$port"
+
+        return "http://0.0.0.0:$freePort"
     }
 
     private fun findFreePort() = ServerSocket(0).use { it.localPort }
