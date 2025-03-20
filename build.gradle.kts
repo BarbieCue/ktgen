@@ -2,7 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "2.1.20"
     kotlin("plugin.serialization") version "2.1.10"
 
     id("org.jetbrains.kotlinx.kover") version "0.9.1"
