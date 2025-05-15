@@ -42,7 +42,7 @@ dependencies {
 
     // xml
     implementation("io.github.pdvrieze.xmlutil:core:0.91.1")
-    implementation("io.github.pdvrieze.xmlutil:serialization-jvm:0.91.0")
+    implementation("io.github.pdvrieze.xmlutil:serialization-jvm:0.91.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
 
     // web
