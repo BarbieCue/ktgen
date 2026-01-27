@@ -61,5 +61,5 @@ dependencies {
     testImplementation("io.ktor:ktor-server-netty-jvm:3.4.0")
     testImplementation("io.ktor:ktor-network:3.4.0")
 
-    testImplementation("ch.qos.logback:logback-classic:1.5.25")
+    testImplementation("ch.qos.logback:logback-classic:1.5.26")
 }
